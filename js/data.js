@@ -201,3 +201,71 @@ function getDaysUntil(dateStr) {
   const diff = new Date(dateStr) - new Date();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
+
+/* ── Mobile Navigation — appended (no existing lines changed) ── */
+
+window.toggleSidebar = function () {
+  document.body.classList.toggle('sb-open');
+};
+
+window.closeSidebar = function () {
+  document.body.classList.remove('sb-open');
+};
+
+/* Inject mobile topbar + overlay after the sidebar is mounted */
+document.addEventListener('DOMContentLoaded', function () {
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return; // onboarding page — no sidebar needed
+
+  /* ── Mobile topbar ── */
+  if (!document.getElementById('mobile-topbar')) {
+    const profile = Profile.load();
+    const farmTag = profile ? profile.farmType : '';
+
+    const topbar = document.createElement('div');
+    topbar.id = 'mobile-topbar';
+    topbar.innerHTML = `
+      <div class="mob-logo">
+        <div class="mob-logo-dot"></div>
+        Farm Copilot
+        ${farmTag ? `<span class="mob-farm-tag">· ${farmTag}</span>` : ''}
+      </div>
+      <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+        <div class="ham-icon">
+          <div class="ham-line"></div>
+          <div class="ham-line"></div>
+          <div class="ham-line"></div>
+        </div>
+      </button>
+    `;
+    document.body.insertBefore(topbar, document.body.firstChild);
+  }
+
+  /* ── Tap-outside overlay ── */
+  if (!document.getElementById('sb-overlay')) {
+    const overlay = document.createElement('div');
+    overlay.id = 'sb-overlay';
+    overlay.addEventListener('click', closeSidebar);
+    document.body.appendChild(overlay);
+  }
+
+  /* ── Close sidebar on nav link tap (mobile UX) ── */
+  sidebar.querySelectorAll('.nav-link').forEach(function (link) {
+    link.addEventListener('click', function () {
+      // Only close immediately on mobile width
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+
+  /* ── Swipe-left to close sidebar on touch ── */
+  let touchStartX = 0;
+  document.addEventListener('touchstart', function (e) {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', function (e) {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (dx < -60 && document.body.classList.contains('sb-open')) {
+      closeSidebar();
+    }
+  }, { passive: true });
+});
