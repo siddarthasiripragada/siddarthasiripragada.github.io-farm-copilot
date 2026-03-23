@@ -292,10 +292,12 @@
   <script src="js/data.js"></script>
   <script>
     // Redirect if already profiled
+const params = new URLSearchParams(window.location.search);
 const savedProfile = Profile.load();
-const isEditMode = new URLSearchParams(window.location.search).get('edit') === '1';
+const isEditMode = params.get('edit') === '1';
+const isFreshMode = params.get('fresh') === '1';
 
-if (savedProfile && !isEditMode) {
+if (savedProfile && !isEditMode && !isFreshMode) {
   window.location.href = 'dashboard.html';
 }
 
