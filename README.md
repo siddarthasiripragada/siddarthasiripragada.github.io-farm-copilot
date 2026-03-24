@@ -4,40 +4,47 @@ AI-powered decision support platform for Canadian farmers, producers, and agribu
 
 ## Live Demo
 
-Website: https://siddarthasiripragada.github.io/siddarthasiripragada.github.io-farm-copilot/
-
-
-# Canadian Farm Copilot — Web Project
-
-AI-powered decision support platform for Canadian farmers, producers, and agribusinesses.
-
-## Live Demo
-
-- Main Site: https://siddarthasiripragada.github.io/siddarthasiripragada.github.io-farm-copilot/
-- Landing Page: https://siddarthasiripragada.github.io/siddarthasiripragada.github.io-farm-copilot/landing.html
-- Pricing Page: https://siddarthasiripragada.github.io/siddarthasiripragada.github.io-farm-copilot/pricing.html
-- Weather Page: https://siddarthasiripragada.github.io/siddarthasiripragada.github.io-farm-copilot/weather.html
-- Risk Monitor: https://siddarthasiripragada.github.io/siddarthasiripragada.github.io-farm-copilot/risk-monitor.html
+- Main Site: https://siddarthasiripragada.github.io/farm-copilot/
+- Dashboard: https://siddarthasiripragada.github.io/farm-copilot/dashboard.html
+- Landing Page: https://siddarthasiripragada.github.io/farm-copilot/landing.html
+- Pricing Page: https://siddarthasiripragada.github.io/farm-copilot/pricing.html
+- Weather Page: https://siddarthasiripragada.github.io/farm-copilot/weather.html
+- Risk Monitor: https://siddarthasiripragada.github.io/farm-copilot/risk-monitor.html
 
 ## Project Structure
 
-## Project Structure
-
-```
 farm-copilot/
-├── index.html          ← Onboarding / Farm Profile Setup (start here)
-├── dashboard.html      ← Personalized dashboard with alerts & recommendations
-├── copilot.html        ← Live AI Copilot (powered by Claude API)
-├── funding.html        ← Funding Navigator — 8 federal/provincial programs
-├── calculator.html     ← ROI Calculators (Labour, Equipment, Feed, Margin)
-├── planner.html        ← Operations Planner with task management
-│
+├── index.html
+├── landing.html
+├── dashboard.html
+├── copilot.html
+├── funding.html
+├── calculator.html
+├── planner.html
+├── pricing.html
+├── support.html
+├── weather.html
+├── risk-monitor.html
+├── manifest.json
+├── README.md
 ├── css/
-│   └── style.css       ← Global design system & all component styles
-│
+│   └── style.css
 └── js/
-    └── data.js         ← Shared data (programs, farm types) + utilities
-```
+    └── data.js
+
+## How to Run
+
+Open the live site directly:
+
+- https://siddarthasiripragada.github.io/farm-copilot/
+
+Or open individual pages:
+
+- dashboard.html
+- landing.html
+- pricing.html
+- weather.html
+- risk-monitor.html
 
 ## How to Run
 
