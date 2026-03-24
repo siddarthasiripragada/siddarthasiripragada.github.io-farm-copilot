@@ -185,7 +185,7 @@
           <div class="sp-card">
             <div class="sp-card-hd"><div class="sp-card-hd-title">Other Ways to Get Help</div></div>
             <div class="sp-card-body" style="font-size:13px;line-height:1.8;color:var(--muted);">
-              <div style="margin-bottom:10px;">📧 <a href="mailto:support@farmcopilot.ca" style="color:var(--sage);">support@farmcopilot.ca</a></div>
+              <div style="margin-bottom:10px;">📧 <a href="/cdn-cgi/l/email-protection#c4b7b1b4b4abb6b084a2a5b6a9a7abb4ada8abb0eaa7a5" style="color:var(--sage);"><span class="__cf_email__" data-cfemail="d7a4a2a7a7b8a5a397b1b6a5bab4b8a7bebbb8a3f9b4b6">[email&#160;protected]</span></a></div>
               <div style="margin-bottom:10px;">🌐 <a href="https://agriculture.canada.ca" target="_blank" style="color:var(--sage);">Agriculture Canada</a></div>
               <div style="margin-bottom:10px;">📞 <a href="tel:18003638108" style="color:var(--sage);">AAFC Info: 1-855-773-0241</a></div>
               <div>🏛️ <a href="https://www.ontario.ca/page/agriculture-rural" target="_blank" style="color:var(--sage);">OMAFRA Ontario</a></div>
@@ -214,7 +214,7 @@
   </div>
 </div>
 
-<script src="js/data.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="js/data.js"></script>
 <script>
   const profile = Profile.requireOrRedirect();
   if (!profile) throw new Error('no profile');
@@ -406,13 +406,4 @@ Style: Be concise, practical, and action-oriented. Use bullet points for lists. 
   window.submitStar = () => {
     if (!spRating) { alert('Please select a star rating first.'); return; }
     const all = JSON.parse(localStorage.getItem('supportFeedback')||'[]');
-    all.push({ rating:spRating, text:document.getElementById('sp-feedback').value, date:new Date().toISOString() });
-    localStorage.setItem('supportFeedback', JSON.stringify(all));
-    alert('Thank you for your feedback! 🌾');
-    setStar(0); document.getElementById('sp-feedback').value = '';
-  };
-
-  initSupportChat();
-</script>
-</body>
-</html>
+    all.push({ rating:spRating, text:document.getElementById('sp-feedback').value, date:new Date().toI

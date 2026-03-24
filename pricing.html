@@ -7,28 +7,167 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
   <style>
-    body { background: var(--forest); }
-    .pr-wrap { max-width:1100px; margin:0 auto; padding:64px 32px; }
+    html,
+    body {
+      background: #1B3528;
+      min-height: 100%;
+    }
 
-    /* Header */
-    .pr-nav { display:flex; align-items:center; justify-content:space-between; padding:16px 0 40px; }
-    .pr-back { font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(244,236,218,.5); text-decoration:none; letter-spacing:.5px; transition:color .14s; }
-    .pr-back:hover { color:var(--wheat); }
-    .pr-nav-logo { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--amber-lt); }
+    body {
+      background: var(--forest);
+      color: var(--wheat);
+      overflow-x: hidden;
+      margin: 0;
+    }
 
-    .pr-hero { text-align:center; margin-bottom:60px; }
-    .pr-eyebrow { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2.5px; text-transform:uppercase; color:var(--amber-lt); margin-bottom:16px; }
-    .pr-title { font-family:'DM Serif Display',serif; font-size:46px; color:var(--wheat); letter-spacing:-1px; line-height:1.1; margin-bottom:16px; }
-    .pr-title em { font-style:italic; color:var(--amber-lt); }
-    .pr-desc { font-size:15px; color:rgba(244,236,218,.55); max-width:520px; margin:0 auto; line-height:1.75; }
-    .pr-toggle { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:28px; }
-    .pr-toggle-btn { padding:8px 20px; border-radius:20px; font-family:'Sora',sans-serif; font-size:13px; cursor:pointer; transition:all .15s; border:none; }
-    .pr-toggle-btn.active { background:var(--amber); color:white; }
-    .pr-toggle-btn.inactive { background:rgba(255,255,255,.07); color:rgba(244,236,218,.6); }
-    .pr-save { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#4ac878; letter-spacing:.5px; background:rgba(74,200,120,.12); padding:3px 10px; border-radius:12px; }
+    .pr-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 64px 32px;
+      position: relative;
+      z-index: 1;
+    }
 
-    /* Cards */
-    .pr-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-bottom:60px; }
+    .pr-wrap::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at top right, rgba(212,154,58,0.08), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(255,255,255,0.04), transparent 28%);
+      z-index: -1;
+    }
+
+    .pr-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0 40px;
+      gap: 16px;
+    }
+
+    .pr-back {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: rgba(244,236,218,.5);
+      text-decoration: none;
+      letter-spacing: .5px;
+      transition: color .14s;
+    }
+
+    .pr-back:hover {
+      color: var(--wheat);
+    }
+
+    .pr-nav-logo {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--amber-lt);
+    }
+
+    .pr-nav-cta {
+      padding: 9px 18px;
+      background: var(--amber);
+      color: white;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: transform .15s, box-shadow .15s, background .15s;
+      box-shadow: 0 10px 26px rgba(184,114,14,.18);
+    }
+
+    .pr-nav-cta:hover {
+      background: var(--amber-lt);
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(184,114,14,.26);
+    }
+
+    .pr-hero {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .pr-eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--amber-lt);
+      margin-bottom: 16px;
+    }
+
+    .pr-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 46px;
+      color: var(--wheat);
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .pr-title em {
+      font-style: italic;
+      color: var(--amber-lt);
+    }
+
+    .pr-desc {
+      font-size: 15px;
+      color: rgba(244,236,218,.55);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.75;
+    }
+
+    .pr-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+
+    .pr-toggle-btn {
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .15s;
+      border: none;
+    }
+
+    .pr-toggle-btn.active {
+      background: var(--amber);
+      color: white;
+    }
+
+    .pr-toggle-btn.inactive {
+      background: rgba(255,255,255,.07);
+      color: rgba(244,236,218,.6);
+    }
+
+    .pr-save {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: #4ac878;
+      letter-spacing: .5px;
+      background: rgba(74,200,120,.12);
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    .pr-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 22px;
+      margin-bottom: 60px;
+    }
+
     .pr-card {
       background: rgba(255,255,255,.04);
       border: 1.5px solid rgba(255,255,255,.09);
@@ -38,274 +177,596 @@
       flex-direction: column;
       transition: all .2s;
       position: relative;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 18px 44px rgba(0,0,0,.15);
     }
-    .pr-card:hover { border-color:rgba(255,255,255,.18); transform:translateY(-3px); }
-    .pr-card.featured { background:rgba(184,114,14,.1); border-color:var(--amber); }
-    .pr-featured-badge { position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--amber); color:white; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:1px; padding:4px 14px; border-radius:12px; white-space:nowrap; text-transform:uppercase; }
-    .pr-tier { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(244,236,218,.4); margin-bottom:8px; }
-    .pr-tier.ft { color:var(--amber-lt); }
-    .pr-price { font-family:'DM Serif Display',serif; font-size:48px; color:var(--wheat); letter-spacing:-2px; line-height:1; margin-bottom:4px; }
-    .pr-per { font-size:13px; color:rgba(244,236,218,.4); margin-bottom:6px; }
-    .pr-annual { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#4ac878; margin-bottom:20px; }
-    .pr-tagline { font-size:13.5px; color:rgba(244,236,218,.6); line-height:1.5; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.08); padding-bottom:20px; }
-    .pr-features { flex:1; list-style:none; margin-bottom:28px; }
-    .pr-features li { font-size:13px; color:rgba(244,236,218,.7); padding:7px 0; border-bottom:1px solid rgba(255,255,255,.05); display:flex; align-items:flex-start; gap:9px; line-height:1.45; }
-    .pr-features li:last-child { border-bottom:none; }
-    .pr-check { flex-shrink:0; font-size:11px; margin-top:2px; }
-    .pr-check.y { color:#4ac878; }
-    .pr-check.n { color:rgba(255,255,255,.2); }
-    .pr-cta { display:block; width:100%; padding:13px; text-align:center; border-radius:10px; font-family:'Sora',sans-serif; font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; border:none; transition:all .15s; }
-    .pr-cta.c-free { background:rgba(255,255,255,.07); color:rgba(244,236,218,.75); border:1.5px solid rgba(255,255,255,.12); }
-    .pr-cta.c-free:hover { background:rgba(255,255,255,.14); }
-    .pr-cta.c-pro  { background:var(--amber); color:white; }
-    .pr-cta.c-pro:hover { background:var(--amber-lt); transform:translateY(-2px); box-shadow:0 6px 20px rgba(184,114,14,.35); }
-    .pr-cta.c-adv  { background:rgba(255,255,255,.07); color:rgba(244,236,218,.75); border:1.5px solid rgba(255,255,255,.12); }
-    .pr-cta.c-adv:hover { background:rgba(255,255,255,.14); }
 
-    /* Comparison table */
-    .pr-compare { margin-bottom:60px; }
-    .pr-compare-title { font-family:'DM Serif Display',serif; font-size:24px; color:var(--wheat); margin-bottom:20px; text-align:center; }
-    .pr-table { width:100%; border-collapse:collapse; }
-    .pr-table th { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(244,236,218,.45); padding:12px 16px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08); }
-    .pr-table th:not(:first-child) { text-align:center; }
-    .pr-table td { padding:11px 16px; font-size:13px; color:rgba(244,236,218,.7); border-bottom:1px solid rgba(255,255,255,.06); line-height:1.4; }
-    .pr-table td:not(:first-child) { text-align:center; }
-    .pr-table tr:hover td { background:rgba(255,255,255,.03); }
-    .pr-table .section-row td { background:rgba(255,255,255,.03); font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; color:var(--amber-lt); text-transform:uppercase; padding:14px 16px 7px; font-weight:600; }
-    .tc-y { color:#4ac878; font-size:16px; }
-    .tc-n { color:rgba(255,255,255,.18); font-size:14px; }
-    .tc-val { font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(244,236,218,.65); }
-    .tc-pro { background:rgba(184,114,14,.06); }
+    .pr-card:hover {
+      border-color: rgba(255,255,255,.18);
+      transform: translateY(-3px);
+    }
 
-    /* FAQ */
-    .pr-faq { margin-bottom:60px; }
-    .pr-faq-title { font-family:'DM Serif Display',serif; font-size:26px; color:var(--wheat); text-align:center; margin-bottom:28px; }
-    .pf-item { border:1px solid rgba(255,255,255,.09); border-radius:10px; margin-bottom:10px; overflow:hidden; }
-    .pf-q { padding:15px 18px; cursor:pointer; font-size:13.5px; color:rgba(244,236,218,.8); display:flex; justify-content:space-between; align-items:center; gap:12px; transition:background .14s; user-select:none; }
-    .pf-q:hover { background:rgba(255,255,255,.04); }
-    .pf-chevron { font-size:11px; color:rgba(244,236,218,.3); transition:transform .2s; flex-shrink:0; }
-    .pf-item.open .pf-chevron { transform:rotate(180deg); }
-    .pf-a { display:none; padding:12px 18px 16px; font-size:13px; color:rgba(244,236,218,.5); line-height:1.7; border-top:1px solid rgba(255,255,255,.06); background:rgba(0,0,0,.15); }
-    .pf-item.open .pf-a { display:block; animation:fadeIn .18s ease; }
+    .pr-card.featured {
+      background: rgba(184,114,14,.1);
+      border-color: var(--amber);
+      box-shadow: 0 22px 48px rgba(184,114,14,.16);
+    }
 
-    /* CTA strip */
-    .pr-cta-strip { text-align:center; padding:52px 32px; background:rgba(184,114,14,.1); border:1px solid rgba(184,114,14,.2); border-radius:20px; margin-bottom:40px; }
-    .pr-cta-strip h2 { font-family:'DM Serif Display',serif; font-size:32px; color:var(--wheat); margin-bottom:12px; }
-    .pr-cta-strip p  { font-size:14px; color:rgba(244,236,218,.55); margin-bottom:24px; }
+    .pr-featured-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--amber);
+      color: white;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 1px;
+      padding: 4px 14px;
+      border-radius: 12px;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
 
-    /* Footer */
-    .pr-footer { text-align:center; font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(244,236,218,.2); letter-spacing:.5px; padding:20px 0 40px; }
+    .pr-tier {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(244,236,218,.4);
+      margin-bottom: 8px;
+    }
 
-    @media(max-width:900px){
-      .pr-grid { grid-template-columns:1fr; max-width:420px; margin:0 auto 40px; }
-      .pr-table { font-size:11px; display:block; overflow-x:auto; }
-      .pr-title { font-size:34px; }
+    .pr-tier.ft {
+      color: var(--amber-lt);
+    }
+
+    .pr-price {
+      font-family: 'DM Serif Display', serif;
+      font-size: 48px;
+      color: var(--wheat);
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .pr-per {
+      font-size: 13px;
+      color: rgba(244,236,218,.4);
+      margin-bottom: 6px;
+    }
+
+    .pr-annual {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: #4ac878;
+      margin-bottom: 20px;
+    }
+
+    .pr-tagline {
+      font-size: 13.5px;
+      color: rgba(244,236,218,.6);
+      line-height: 1.5;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding-bottom: 20px;
+    }
+
+    .pr-features {
+      flex: 1;
+      list-style: none;
+      margin-bottom: 28px;
+      padding-left: 0;
+    }
+
+    .pr-features li {
+      font-size: 13px;
+      color: rgba(244,236,218,.7);
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      line-height: 1.45;
+    }
+
+    .pr-features li:last-child {
+      border-bottom: none;
+    }
+
+    .pr-check {
+      flex-shrink: 0;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .pr-check.y {
+      color: #4ac878;
+    }
+
+    .pr-check.n {
+      color: rgba(255,255,255,.2);
+    }
+
+    .pr-cta {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      text-align: center;
+      border-radius: 10px;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all .15s;
+      box-sizing: border-box;
+    }
+
+    .pr-cta.c-free {
+      background: rgba(255,255,255,.07);
+      color: rgba(244,236,218,.75);
+      border: 1.5px solid rgba(255,255,255,.12);
+    }
+
+    .pr-cta.c-free:hover {
+      background: rgba(255,255,255,.14);
+    }
+
+    .pr-cta.c-pro {
+      background: var(--amber);
+      color: white;
+    }
+
+    .pr-cta.c-pro:hover {
+      background: var(--amber-lt);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(184,114,14,.35);
+    }
+
+    .pr-cta.c-adv {
+      background: rgba(255,255,255,.07);
+      color: rgba(244,236,218,.75);
+      border: 1.5px solid rgba(255,255,255,.12);
+    }
+
+    .pr-cta.c-adv:hover {
+      background: rgba(255,255,255,.14);
+    }
+
+    .pr-compare {
+      margin-bottom: 60px;
+    }
+
+    .pr-compare-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 24px;
+      color: var(--wheat);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .pr-table-wrap {
+      overflow-x: auto;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .pr-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    .pr-table th {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(244,236,218,.45);
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.08);
+    }
+
+    .pr-table th:not(:first-child) {
+      text-align: center;
+    }
+
+    .pr-table td {
+      padding: 11px 16px;
+      font-size: 13px;
+      color: rgba(244,236,218,.7);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      line-height: 1.4;
+    }
+
+    .pr-table td:not(:first-child) {
+      text-align: center;
+    }
+
+    .pr-table tr:hover td {
+      background: rgba(255,255,255,.03);
+    }
+
+    .pr-table .section-row td {
+      background: rgba(255,255,255,.03);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--amber-lt);
+      text-transform: uppercase;
+      padding: 14px 16px 7px;
+      font-weight: 600;
+    }
+
+    .tc-y {
+      color: #4ac878;
+      font-size: 16px;
+    }
+
+    .tc-n {
+      color: rgba(255,255,255,.18);
+      font-size: 14px;
+    }
+
+    .tc-val {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: rgba(244,236,218,.65);
+    }
+
+    .tc-pro {
+      background: rgba(184,114,14,.06);
+    }
+
+    .pr-faq {
+      margin-bottom: 60px;
+    }
+
+    .pr-faq-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px;
+      color: var(--wheat);
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .pf-item {
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      background: rgba(255,255,255,.03);
+    }
+
+    .pf-q {
+      padding: 15px 18px;
+      cursor: pointer;
+      font-size: 13.5px;
+      color: rgba(244,236,218,.8);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      transition: background .14s;
+      user-select: none;
+    }
+
+    .pf-q:hover {
+      background: rgba(255,255,255,.04);
+    }
+
+    .pf-chevron {
+      font-size: 11px;
+      color: rgba(244,236,218,.3);
+      transition: transform .2s;
+      flex-shrink: 0;
+    }
+
+    .pf-item.open .pf-chevron {
+      transform: rotate(180deg);
+    }
+
+    .pf-a {
+      display: none;
+      padding: 12px 18px 16px;
+      font-size: 13px;
+      color: rgba(244,236,218,.5);
+      line-height: 1.7;
+      border-top: 1px solid rgba(255,255,255,.06);
+      background: rgba(0,0,0,.15);
+    }
+
+    .pf-item.open .pf-a {
+      display: block;
+      animation: fadeIn .18s ease;
+    }
+
+    .pr-cta-strip {
+      text-align: center;
+      padding: 52px 32px;
+      background: rgba(184,114,14,.1);
+      border: 1px solid rgba(184,114,14,.2);
+      border-radius: 20px;
+      margin-bottom: 40px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.12);
+    }
+
+    .pr-cta-strip h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 32px;
+      color: var(--wheat);
+      margin-bottom: 12px;
+    }
+
+    .pr-cta-strip p {
+      font-size: 14px;
+      color: rgba(244,236,218,.55);
+      margin-bottom: 24px;
+    }
+
+    .pr-cta-strip-link {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--amber);
+      color: white;
+      border-radius: 10px;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background .15s, transform .15s, box-shadow .15s;
+    }
+
+    .pr-cta-strip-link:hover {
+      background: var(--amber-lt);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(184,114,14,.24);
+    }
+
+    .pr-footer {
+      text-align: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: rgba(244,236,218,.2);
+      letter-spacing: .5px;
+      padding: 20px 0 40px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-2px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .pr-wrap {
+        padding: 42px 20px;
+      }
+
+      .pr-nav {
+        flex-wrap: wrap;
+      }
+
+      .pr-grid {
+        grid-template-columns: 1fr;
+        max-width: 420px;
+        margin: 0 auto 40px;
+      }
+
+      .pr-title {
+        font-size: 34px;
+      }
+
+      .pr-cta-strip {
+        padding: 36px 22px;
+      }
     }
   </style>
 </head>
 <body>
-<div class="pr-wrap">
+  <div class="pr-wrap">
 
-  <!-- Nav -->
-  <div class="pr-nav">
-    <a href="landing.html" class="pr-back">← Back to Home</a>
-    <div class="pr-nav-logo">Farm Copilot</div>
-    <a href="index.html" style="padding:9px 18px;background:var(--amber);color:white;border-radius:8px;font-size:13px;font-weight:500;text-decoration:none;">Get Started Free →</a>
-  </div>
-
-  <!-- Hero -->
-  <div class="pr-hero">
-    <div class="pr-eyebrow">Simple, transparent pricing</div>
-    <h1 class="pr-title">Start free.<br><em>Scale as you grow.</em></h1>
-    <p class="pr-desc">No credit card required for free plan. Pro and Advisor plans include a 14-day free trial.</p>
-    <div class="pr-toggle">
-      <button class="pr-toggle-btn active" id="tog-monthly" onclick="setBilling('monthly')">Monthly</button>
-      <button class="pr-toggle-btn inactive" id="tog-annual" onclick="setBilling('annual')">Annual</button>
-      <span class="pr-save">Save 25% annually</span>
-    </div>
-  </div>
-
-  <!-- Cards -->
-  <div class="pr-grid">
-    <!-- Free -->
-    <div class="pr-card">
-      <div class="pr-tier">Free</div>
-      <div class="pr-price">$0</div>
-      <div class="pr-per">forever</div>
-      <div class="pr-annual" style="color:rgba(244,236,218,.3);">No credit card needed</div>
-      <div class="pr-tagline">Everything you need to explore and get started. Perfect for individual farmers discovering what's available.</div>
-      <ul class="pr-features">
-        <li><span class="pr-check y">✓</span>AI Copilot — 10 questions/month</li>
-        <li><span class="pr-check y">✓</span>Funding Navigator (all 8 programs)</li>
-        <li><span class="pr-check y">✓</span>Live weather + 7-day forecast</li>
-        <li><span class="pr-check y">✓</span>Crop calendar by province</li>
-        <li><span class="pr-check y">✓</span>Basic ROI calculator (2 tabs)</li>
-        <li><span class="pr-check y">✓</span>Operations planner (basic)</li>
-        <li><span class="pr-check y">✓</span>Deadline notifications</li>
-        <li><span class="pr-check n">–</span>Funding deadline email alerts</li>
-        <li><span class="pr-check n">–</span>PDF export</li>
-        <li><span class="pr-check n">–</span>Advisor calls</li>
-        <li><span class="pr-check n">–</span>Commodity price feed</li>
-      </ul>
-      <a href="index.html" class="pr-cta c-free">Get Started Free</a>
+    <div class="pr-nav">
+      <a href="landing.html" class="pr-back">← Back to Home</a>
+      <div class="pr-nav-logo">Farm Copilot</div>
+      <a href="index.html" class="pr-nav-cta">Get Started Free →</a>
     </div>
 
-    <!-- Pro -->
-    <div class="pr-card featured">
-      <div class="pr-featured-badge">Most Popular</div>
-      <div class="pr-tier ft">Farm Pro</div>
-      <div class="pr-price" id="pro-price">$39</div>
-      <div class="pr-per" id="pro-per">/ month CAD</div>
-      <div class="pr-annual" id="pro-annual">Billed monthly · Cancel anytime</div>
-      <div class="pr-tagline">Unlimited AI, human advisors, and export tools for the serious farm operator.</div>
-      <ul class="pr-features">
-        <li><span class="pr-check y">✓</span>Unlimited AI Copilot queries</li>
-        <li><span class="pr-check y">✓</span>Everything in Free</li>
-        <li><span class="pr-check y">✓</span>Funding deadline email alerts</li>
-        <li><span class="pr-check y">✓</span>All 4 ROI calculator tabs</li>
-        <li><span class="pr-check y">✓</span>PDF export (calc + profile)</li>
-        <li><span class="pr-check y">✓</span>Commodity price feed</li>
-        <li><span class="pr-check y">✓</span>Priority email support (24hr)</li>
-        <li><span class="pr-check y">✓</span>1 × 30-min advisor call/month</li>
-        <li><span class="pr-check y">✓</span>Saved scenarios in calculator</li>
-        <li><span class="pr-check y">✓</span>Operations planner full access</li>
-        <li><span class="pr-check n">–</span>Multi-farm management</li>
-      </ul>
-      <button class="pr-cta c-pro" onclick="startProTrial()">Start 14-Day Free Trial →</button>
-    </div>
-
-    <!-- Advisor -->
-    <div class="pr-card">
-      <div class="pr-tier">Advisor Pro</div>
-      <div class="pr-price" id="adv-price">$199</div>
-      <div class="pr-per" id="adv-per">/ month CAD</div>
-      <div class="pr-annual" id="adv-annual">Billed monthly · Cancel anytime</div>
-      <div class="pr-tagline">For agricultural advisors, consultants, and co-ops managing multiple farm clients.</div>
-      <ul class="pr-features">
-        <li><span class="pr-check y">✓</span>Everything in Farm Pro</li>
-        <li><span class="pr-check y">✓</span>Manage up to 25 client farms</li>
-        <li><span class="pr-check y">✓</span>Client report generation</li>
-        <li><span class="pr-check y">✓</span>Unlimited advisor calls</li>
-        <li><span class="pr-check y">✓</span>White-label branding option</li>
-        <li><span class="pr-check y">✓</span>Dedicated account manager</li>
-        <li><span class="pr-check y">✓</span>Priority phone support</li>
-        <li><span class="pr-check y">✓</span>Custom program database</li>
-        <li><span class="pr-check y">✓</span>Bulk export (CSV/PDF)</li>
-        <li><span class="pr-check y">✓</span>SLA — 99.5% uptime guarantee</li>
-        <li><span class="pr-check y">✓</span>Custom onboarding</li>
-      </ul>
-      <a href="support.html" class="pr-cta c-adv">Contact Sales →</a>
-    </div>
-  </div>
-
-  <!-- Comparison table -->
-  <div class="pr-compare">
-    <div class="pr-compare-title">Full feature comparison</div>
-    <table class="pr-table">
-      <thead>
-        <tr>
-          <th style="width:40%">Feature</th>
-          <th>Free</th>
-          <th class="tc-pro">Farm Pro</th>
-          <th>Advisor Pro</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="section-row"><td colspan="4">AI Copilot</td></tr>
-        <tr><td>AI queries</td><td><span class="tc-val">10/month</span></td><td class="tc-pro"><span class="tc-val">Unlimited</span></td><td><span class="tc-val">Unlimited</span></td></tr>
-        <tr><td>Farm profile context</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-        <tr><td>Conversation history</td><td><span class="tc-val">Session only</span></td><td class="tc-pro"><span class="tc-val">30 days</span></td><td><span class="tc-val">Unlimited</span></td></tr>
-
-        <tr class="section-row"><td colspan="4">Funding Navigator</td></tr>
-        <tr><td>View all 8 programs</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-        <tr><td>Application checklists</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-        <tr><td>Deadline email alerts</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-        <tr><td>Custom program database</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-n">–</span></td><td><span class="tc-y">✓</span></td></tr>
-
-        <tr class="section-row"><td colspan="4">ROI Calculator</td></tr>
-        <tr><td>Labour savings tab</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-        <tr><td>All 4 calculator tabs</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-        <tr><td>PDF export</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-        <tr><td>Saved scenarios</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-val">5 saved</span></td><td><span class="tc-val">Unlimited</span></td></tr>
-
-        <tr class="section-row"><td colspan="4">Weather & Crops</td></tr>
-        <tr><td>Live weather + 7-day forecast</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-        <tr><td>Crop calendar by province</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-        <tr><td>Commodity price feed</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-
-        <tr class="section-row"><td colspan="4">Support & Advisors</td></tr>
-        <tr><td>AI support chat</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-        <tr><td>1-on-1 advisor calls</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-val">1/month</span></td><td><span class="tc-val">Unlimited</span></td></tr>
-        <tr><td>Response time</td><td><span class="tc-val">48hr email</span></td><td class="tc-pro"><span class="tc-val">24hr priority</span></td><td><span class="tc-val">Phone + Dedicated</span></td></tr>
-
-        <tr class="section-row"><td colspan="4">Multi-farm & Enterprise</td></tr>
-        <tr><td>Farm profiles</td><td><span class="tc-val">1</span></td><td class="tc-pro"><span class="tc-val">1</span></td><td><span class="tc-val">Up to 25</span></td></tr>
-        <tr><td>Client report generation</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-n">–</span></td><td><span class="tc-y">✓</span></td></tr>
-        <tr><td>White-label option</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-n">–</span></td><td><span class="tc-y">✓</span></td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- FAQ -->
-  <div class="pr-faq">
-    <div class="pr-faq-title">Frequently Asked Questions</div>
-    <div id="pr-faq-list"></div>
-  </div>
-
-  <!-- CTA Strip -->
-  <div class="pr-cta-strip">
-    <h2>Ready to transform your farm decisions?</h2>
-    <p>Join farmers across Canada using Farm Copilot to find funding, plan operations, and make smarter investments.</p>
-    <a href="index.html" style="display:inline-block;padding:14px 32px;background:var(--amber);color:white;border-radius:10px;font-family:'Sora',sans-serif;font-size:14px;font-weight:600;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='#D8921E'" onmouseout="this.style.background='var(--amber)'">Start Free — No Credit Card Required →</a>
-  </div>
-
-  <div class="pr-footer">Canadian Farm Copilot · v2.0 · 2026 · Covering federal & provincial programs across all 10 provinces</div>
-</div>
-
-<script src="js/data.js"></script>
-<script>
-  let billing = 'monthly';
-
-  window.setBilling = function(b) {
-    billing = b;
-    document.getElementById('tog-monthly').className = 'pr-toggle-btn ' + (b==='monthly'?'active':'inactive');
-    document.getElementById('tog-annual').className  = 'pr-toggle-btn ' + (b==='annual' ?'active':'inactive');
-    document.getElementById('pro-price').textContent = b==='annual' ? '$29' : '$39';
-    document.getElementById('adv-price').textContent = b==='annual' ? '$149' : '$199';
-    document.getElementById('pro-per').textContent   = b==='annual' ? '/ month CAD (billed annually)' : '/ month CAD';
-    document.getElementById('adv-per').textContent   = b==='annual' ? '/ month CAD (billed annually)' : '/ month CAD';
-    document.getElementById('pro-annual').textContent = b==='annual' ? 'Save $120/yr · Cancel anytime' : 'Billed monthly · Cancel anytime';
-    document.getElementById('adv-annual').textContent = b==='annual' ? 'Save $600/yr · Cancel anytime' : 'Billed monthly · Cancel anytime';
-  };
-
-  window.startProTrial = function() {
-    const wl = JSON.parse(localStorage.getItem('waitlist') || '[]');
-    const email = prompt('Enter your email to start your 14-day Pro trial:');
-    if (!email || !email.includes('@')) return;
-    wl.push({ email, tier:'pro_trial', date:new Date().toISOString() });
-    localStorage.setItem('waitlist', JSON.stringify(wl));
-    alert('✓ Pro trial request received! We\'ll be in touch within 24 hours to activate your account. 🌾');
-  };
-
-  const FAQS = [
-    { q:'Is there really a free plan with no credit card?', a:'Yes — the free plan is completely free with no credit card required. You get 10 AI queries/month, the full funding navigator, live weather, crop calendar, and the operations planner. No time limit.' },
-    { q:'What happens to my data if I cancel?', a:'Your farm profile is stored locally in your browser. We don\'t collect or store personal data in the free tier. If you\'re on a paid plan and cancel, we provide a 30-day data export window.' },
-    { q:'Can I use this tool if I\'m an agricultural advisor, not a farmer?', a:'Absolutely. The Advisor Pro plan is built specifically for ag consultants and advisors managing multiple farm clients. You get multi-farm profiles, client reports, and white-label options.' },
-    { q:'How current is the funding program data?', a:'We monitor federal and provincial program announcements and update the database when new programs launch or existing ones change. The current data reflects the 2025–2026 policy landscape, including the February 2026 AgriMarketing expansion.' },
-    { q:'What does the 1-on-1 advisor call include?', a:'A 30-minute video or phone call with a Canadian agriculture specialist — typically a retired AAFC extension officer or ag consultant. You\'ll get a personalized intake form beforehand so your advisor comes prepared.' },
-    { q:'Does this work for all provinces and farm types?', a:'Yes — all 10 provinces are supported with tailored weather data, crop calendars, and funding program eligibility. We cover grain, dairy, livestock, produce, greenhouse, specialty crops, mixed farms, poultry, and aquaculture.' },
-  ];
-
-  document.getElementById('pr-faq-list').innerHTML = FAQS.map((f,i) => `
-    <div class="pf-item" id="pf-${i}">
-      <div class="pf-q" onclick="togglePf(${i})">
-        <span>${f.q}</span>
-        <span class="pf-chevron">▾</span>
+    <div class="pr-hero">
+      <div class="pr-eyebrow">Simple, transparent pricing</div>
+      <h1 class="pr-title">Start free.<br><em>Scale as you grow.</em></h1>
+      <p class="pr-desc">No credit card required for free plan. Pro and Advisor plans include a 14-day free trial.</p>
+      <div class="pr-toggle">
+        <button class="pr-toggle-btn active" id="tog-monthly" onclick="setBilling('monthly')">Monthly</button>
+        <button class="pr-toggle-btn inactive" id="tog-annual" onclick="setBilling('annual')">Annual</button>
+        <span class="pr-save">Save 25% annually</span>
       </div>
-      <div class="pf-a">${f.a}</div>
-    </div>`).join('');
+    </div>
 
-  window.togglePf = i => document.getElementById('pf-'+i).classList.toggle('open');
-</script>
+    <div class="pr-grid">
+      <div class="pr-card">
+        <div class="pr-tier">Free</div>
+        <div class="pr-price">$0</div>
+        <div class="pr-per">forever</div>
+        <div class="pr-annual" style="color:rgba(244,236,218,.3);">No credit card needed</div>
+        <div class="pr-tagline">Everything you need to explore and get started. Perfect for individual farmers discovering what's available.</div>
+        <ul class="pr-features">
+          <li><span class="pr-check y">✓</span>AI Copilot — 10 questions/month</li>
+          <li><span class="pr-check y">✓</span>Funding Navigator (all 8 programs)</li>
+          <li><span class="pr-check y">✓</span>Live weather + 7-day forecast</li>
+          <li><span class="pr-check y">✓</span>Crop calendar by province</li>
+          <li><span class="pr-check y">✓</span>Basic ROI calculator (2 tabs)</li>
+          <li><span class="pr-check y">✓</span>Operations planner (basic)</li>
+          <li><span class="pr-check y">✓</span>Deadline notifications</li>
+          <li><span class="pr-check n">–</span>Funding deadline email alerts</li>
+          <li><span class="pr-check n">–</span>PDF export</li>
+          <li><span class="pr-check n">–</span>Advisor calls</li>
+          <li><span class="pr-check n">–</span>Commodity price feed</li>
+        </ul>
+        <a href="index.html" class="pr-cta c-free">Get Started Free</a>
+      </div>
+
+      <div class="pr-card featured">
+        <div class="pr-featured-badge">Most Popular</div>
+        <div class="pr-tier ft">Farm Pro</div>
+        <div class="pr-price" id="pro-price">$39</div>
+        <div class="pr-per" id="pro-per">/ month CAD</div>
+        <div class="pr-annual" id="pro-annual">Billed monthly · Cancel anytime</div>
+        <div class="pr-tagline">Unlimited AI, human advisors, and export tools for the serious farm operator.</div>
+        <ul class="pr-features">
+          <li><span class="pr-check y">✓</span>Unlimited AI Copilot queries</li>
+          <li><span class="pr-check y">✓</span>Everything in Free</li>
+          <li><span class="pr-check y">✓</span>Funding deadline email alerts</li>
+          <li><span class="pr-check y">✓</span>All 4 ROI calculator tabs</li>
+          <li><span class="pr-check y">✓</span>PDF export (calc + profile)</li>
+          <li><span class="pr-check y">✓</span>Commodity price feed</li>
+          <li><span class="pr-check y">✓</span>Priority email support (24hr)</li>
+          <li><span class="pr-check y">✓</span>1 × 30-min advisor call/month</li>
+          <li><span class="pr-check y">✓</span>Saved scenarios in calculator</li>
+          <li><span class="pr-check y">✓</span>Operations planner full access</li>
+          <li><span class="pr-check n">–</span>Multi-farm management</li>
+        </ul>
+        <button class="pr-cta c-pro" onclick="startProTrial()">Start 14-Day Free Trial →</button>
+      </div>
+
+      <div class="pr-card">
+        <div class="pr-tier">Advisor Pro</div>
+        <div class="pr-price" id="adv-price">$199</div>
+        <div class="pr-per" id="adv-per">/ month CAD</div>
+        <div class="pr-annual" id="adv-annual">Billed monthly · Cancel anytime</div>
+        <div class="pr-tagline">For agricultural advisors, consultants, and co-ops managing multiple farm clients.</div>
+        <ul class="pr-features">
+          <li><span class="pr-check y">✓</span>Everything in Farm Pro</li>
+          <li><span class="pr-check y">✓</span>Manage up to 25 client farms</li>
+          <li><span class="pr-check y">✓</span>Client report generation</li>
+          <li><span class="pr-check y">✓</span>Unlimited advisor calls</li>
+          <li><span class="pr-check y">✓</span>White-label branding option</li>
+          <li><span class="pr-check y">✓</span>Dedicated account manager</li>
+          <li><span class="pr-check y">✓</span>Priority phone support</li>
+          <li><span class="pr-check y">✓</span>Custom program database</li>
+          <li><span class="pr-check y">✓</span>Bulk export (CSV/PDF)</li>
+          <li><span class="pr-check y">✓</span>SLA — 99.5% uptime guarantee</li>
+          <li><span class="pr-check y">✓</span>Custom onboarding</li>
+        </ul>
+        <a href="support.html" class="pr-cta c-adv">Contact Sales →</a>
+      </div>
+    </div>
+
+    <div class="pr-compare">
+      <div class="pr-compare-title">Full feature comparison</div>
+      <div class="pr-table-wrap">
+        <table class="pr-table">
+          <thead>
+            <tr>
+              <th style="width:40%">Feature</th>
+              <th>Free</th>
+              <th class="tc-pro">Farm Pro</th>
+              <th>Advisor Pro</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="section-row"><td colspan="4">AI Copilot</td></tr>
+            <tr><td>AI queries</td><td><span class="tc-val">10/month</span></td><td class="tc-pro"><span class="tc-val">Unlimited</span></td><td><span class="tc-val">Unlimited</span></td></tr>
+            <tr><td>Farm profile context</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Conversation history</td><td><span class="tc-val">Session only</span></td><td class="tc-pro"><span class="tc-val">30 days</span></td><td><span class="tc-val">Unlimited</span></td></tr>
+
+            <tr class="section-row"><td colspan="4">Funding Navigator</td></tr>
+            <tr><td>View all 8 programs</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Application checklists</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Deadline email alerts</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Custom program database</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-n">–</span></td><td><span class="tc-y">✓</span></td></tr>
+
+            <tr class="section-row"><td colspan="4">ROI Calculator</td></tr>
+            <tr><td>Labour savings tab</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>All 4 calculator tabs</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>PDF export</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Saved scenarios</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-val">5 saved</span></td><td><span class="tc-val">Unlimited</span></td></tr>
+
+            <tr class="section-row"><td colspan="4">Weather & Crops</td></tr>
+            <tr><td>Live weather + 7-day forecast</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Crop calendar by province</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Commodity price feed</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+
+            <tr class="section-row"><td colspan="4">Support & Advisors</td></tr>
+            <tr><td>AI support chat</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>1-on-1 advisor calls</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-val">1/month</span></td><td><span class="tc-val">Unlimited</span></td></tr>
+            <tr><td>Response time</td><td><span class="tc-val">48hr email</span></td><td class="tc-pro"><span class="tc-val">24hr priority</span></td><td><span class="tc-val">Phone + Dedicated</span></td></tr>
+
+            <tr class="section-row"><td colspan="4">Multi-farm & Enterprise</td></tr>
+            <tr><td>Farm profiles</td><td><span class="tc-val">1</span></td><td class="tc-pro"><span class="tc-val">1</span></td><td><span class="tc-val">Up to 25</span></td></tr>
+            <tr><td>Client report generation</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-n">–</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>White-label option</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-n">–</span></td><td><span class="tc-y">✓</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pr-faq">
+      <div class="pr-faq-title">Frequently Asked Questions</div>
+      <div id="pr-faq-list"></div>
+    </div>
+
+    <div class="pr-cta-strip">
+      <h2>Ready to transform your farm decisions?</h2>
+      <p>Join farmers across Canada using Farm Copilot to find funding, plan operations, and make smarter investments.</p>
+      <a href="index.html" class="pr-cta-strip-link">Start Free — No Credit Card Required →</a>
+    </div>
+
+    <div class="pr-footer">Canadian Farm Copilot · v2.0 · 2026 · Covering federal & provincial programs across all 10 provinces</div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    let billing = 'monthly';
+
+    window.setBilling = function(b) {
+      billing = b;
+      document.getElementById('tog-monthly').className = 'pr-toggle-btn ' + (b === 'monthly' ? 'active' : 'inactive');
+      document.getElementById('tog-annual').className = 'pr-toggle-btn ' + (b === 'annual' ? 'active' : 'inactive');
+      document.getElementById('pro-price').textContent = b === 'annual' ? '$29' : '$39';
+      document.getElementById('adv-price').textContent = b === 'annual' ? '$149' : '$199';
+      document.getElementById('pro-per').textContent = b === 'annual' ? '/ month CAD (billed annually)' : '/ month CAD';
+      document.getElementById('adv-per').textContent = b === 'annual' ? '/ month CAD (billed annually)' : '/ month CAD';
+      document.getElementById('pro-annual').textContent = b === 'annual' ? 'Save $120/yr · Cancel anytime' : 'Billed monthly · Cancel anytime';
+      document.getElementById('adv-annual').textContent = b === 'annual' ? 'Save $600/yr · Cancel anytime' : 'Billed monthly · Cancel anytime';
+    };
+
+    window.startProTrial = function() {
+      const wl = JSON.parse(localStorage.getItem('waitlist') || '[]');
+      const email = prompt('Enter your email to start your 14-day Pro trial:');
+      if (!email || !email.includes('@')) return;
+      wl.push({ email, tier: 'pro_trial', date: new Date().toISOString() });
+      localStorage.setItem('waitlist', JSON.stringify(wl));
+      alert('✓ Pro trial request received! We\\'ll be in touch within 24 hours to activate your account. 🌾');
+    };
+
+    const FAQS = [
+      { q: 'Is there really a free plan with no credit card?', a: 'Yes — the free plan is completely free with no credit card required. You get 10 AI queries/month, the full funding navigator, live weather, crop calendar, and the operations planner. No time limit.' },
+      { q: 'What happens to my data if I cancel?', a: 'Your farm profile is stored locally in your browser. We don\\'t collect or store personal data in the free tier. If you\\'re on a paid plan and cancel, we provide a 30-day data export window.' },
+      { q: 'Can I use this tool if I\\'m an agricultural advisor, not a farmer?', a: 'Absolutely. The Advisor Pro plan is built specifically for ag consultants and advisors managing multiple farm clients. You get multi-farm profiles, client reports, and white-label options.' },
+      { q: 'How current is the funding program data?', a: 'We monitor federal and provincial program announcements and update the database when new programs launch or existing ones change. The current data reflects the 2025–2026 policy landscape, including the February 2026 AgriMarketing expansion.' },
+      { q: 'What does the 1-on-1 advisor call include?', a: 'A 30-minute video or phone call with a Canadian agriculture specialist — typically a retired AAFC extension officer or ag consultant. You\\'ll get a personalized intake form beforehand so your advisor comes prepared.' },
+      { q: 'Does this work for all provinces and farm types?', a: 'Yes — all 10 provinces are supported with tailored weather data, crop calendars, and funding program eligibility. We cover grain, dairy, livestock, produce, greenhouse, specialty crops, mixed farms, poultry, and aquaculture.' }
+    ];
+
+    document.getElementById('pr-faq-list').innerHTML = FAQS.map((f, i) => `
+      <div class="pf-item" id="pf-${i}">
+        <div class="pf-q" onclick="togglePf(${i})">
+          <span>${f.q}</span>
+          <span class="pf-chevron">▾</span>
+        </div>
+        <div class="pf-a">${f.a}</div>
+      </div>
+    `).join('');
+
+    window.togglePf = i => document.getElementById('pf-' + i).classList.toggle('open');
+  </script>
 </body>
 </html>

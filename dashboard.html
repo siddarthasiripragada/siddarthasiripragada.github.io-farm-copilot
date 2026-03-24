@@ -6,6 +6,7 @@
   <title>Dashboard — Canadian Farm Copilot</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     .welcome-bar {
       background: linear-gradient(135deg, var(--forest) 0%, var(--forest-lite) 100%);
@@ -25,8 +26,153 @@
     .wb-primary:hover { background:var(--amber-lt); }
     .wb-secondary { background:rgba(255,255,255,0.1);color:var(--wheat);border:1px solid rgba(255,255,255,0.15); }
     .wb-secondary:hover { background:rgba(255,255,255,0.18); }
+    .wb-risk      { background:rgba(192,57,43,0.25);color:#ffb3b3;border:1px solid rgba(192,57,43,0.35); }
+    .wb-risk:hover { background:rgba(192,57,43,0.35); }
     .wb-demo { background:rgba(255,213,0,0.15);color:#FFD580;border:1px solid rgba(255,213,0,0.25); }
     .wb-demo:hover { background:rgba(255,213,0,0.25); }
+
+    /* Environmental risk overview section */
+    .env-risk-banner {
+      background: linear-gradient(135deg, #1a2e24 0%, #1B3528 50%, #1d3a2c 100%);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--r-lg);
+      padding: 0;
+      margin-bottom: 22px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .erb-header {
+      padding: 14px 22px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0,0,0,0.12);
+    }
+    .erb-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 16px;
+      color: var(--wheat);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .erb-live {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      color: var(--amber-lt);
+    }
+    .erb-live-dot {
+      width: 6px; height: 6px;
+      background: var(--amber-lt);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    .erb-body { padding: 16px 22px; }
+    .erb-alerts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .erb-alert-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--r);
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: background 0.13s;
+      border-top: 2px solid;
+      text-decoration: none;
+    }
+    .erb-alert-card:hover { background: rgba(255,255,255,0.1); }
+    .erb-alert-card.fire  { border-top-color: #e67e22; }
+    .erb-alert-card.flood { border-top-color: #2980b9; }
+    .erb-alert-card.storm { border-top-color: #8e44ad; }
+    .erb-alert-card.smoke { border-top-color: #95a5a6; }
+    .erb-alert-card.cold  { border-top-color: #5dade2; }
+    .erb-ac-icon { font-size: 18px; margin-bottom: 6px; }
+    .erb-ac-title { font-size: 12px; color: rgba(244,236,218,0.82); margin-bottom: 3px; line-height: 1.35; }
+    .erb-ac-loc { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: rgba(244,236,218,0.35); }
+    .erb-ac-sev {
+      display: inline-flex;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8.5px;
+      padding: 2px 7px;
+      border-radius: 8px;
+      margin-top: 6px;
+      letter-spacing: 0.5px;
+    }
+    .erb-ac-sev.warning  { background: rgba(192,57,43,0.3);  color: #ff9999; }
+    .erb-ac-sev.elevated { background: rgba(230,126,34,0.3); color: #ffcc88; }
+    .erb-ac-sev.watch    { background: rgba(212,146,10,0.3); color: #ffd880; }
+    .erb-ac-sev.advisory { background: rgba(41,128,185,0.2); color: #99ccff; }
+
+    .erb-footer {
+      padding: 10px 22px 12px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .erb-stats {
+      display: flex;
+      gap: 20px;
+    }
+    .erb-stat {
+      text-align: center;
+    }
+    .erb-stat-val { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--wheat); }
+    .erb-stat-label { font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 1px; color: rgba(244,236,218,0.3); text-transform: uppercase; margin-top: 2px; }
+
+    /* Hazard score gauge */
+    .erb-score-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0,0,0,0.18);
+      border-radius: var(--r);
+      padding: 10px 16px;
+    }
+    .erb-score-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 32px;
+      color: #ffaa44;
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+    .erb-score-info {}
+    .erb-score-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(244,236,218,0.3); margin-bottom: 3px; }
+    .erb-score-status { font-size: 12px; color: #ffcc88; }
+
+    /* Quick tools grid */
+    .quick-tools-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .qt-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      transition: all 0.13s;
+    }
+    .qt-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+    .qt-icon { font-size: 22px; }
+    .qt-title { font-family: 'DM Serif Display', serif; font-size: 14px; color: var(--forest); }
+    .qt-sub   { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+    .qt-link  { font-family: 'IBM Plex Mono', monospace; font-size: 10px; margin-top: auto; letter-spacing: 0.5px; }
+
     .card-hover-lift { box-shadow:var(--shadow-sm); }
     .card-hover-lift:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
   </style>
@@ -78,10 +224,10 @@
             <p id="welcome-sub">Your personalized agricultural intelligence dashboard</p>
           </div>
           <div class="welcome-actions">
-            <a href="copilot.html"  class="welcome-btn wb-primary">✦ AI Copilot</a>
-            <a href="funding.html"  class="welcome-btn wb-secondary">◈ Funding</a>
-            <a href="weather.html"  class="welcome-btn wb-secondary">🌤 Weather</a>
-            <a href="support.html"  class="welcome-btn wb-secondary">💬 Support</a>
+            <a href="copilot.html"      class="welcome-btn wb-primary">✦ AI Copilot</a>
+            <a href="funding.html"      class="welcome-btn wb-secondary">◈ Funding</a>
+            <a href="weather.html"      class="welcome-btn wb-secondary">🌤 Weather</a>
+            <a href="risk-monitor.html" class="welcome-btn wb-risk">🛡 Risk Monitor <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:1px 5px;background:rgba(192,57,43,0.4);border-radius:8px;margin-left:2px;">6</span></a>
             <button class="welcome-btn wb-demo" onclick="activateDemoMode()">🎭 Demo</button>
           </div>
         </div>
@@ -110,6 +256,89 @@
           </div>
         </div>
 
+        <!-- ══ ENVIRONMENTAL RISK OVERVIEW ══ -->
+        <div class="env-risk-banner anim-fade-up anim-delay-1">
+          <div class="erb-header">
+            <div class="erb-title">
+              🛡 Environmental Risk Intelligence
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;">
+              <div class="erb-live"><div class="erb-live-dot"></div>LIVE MONITORING</div>
+              <a href="risk-monitor.html" class="btn btn-ghost btn-sm" style="border-color:rgba(255,255,255,0.2);color:rgba(244,236,218,0.7);">Full Risk Monitor →</a>
+            </div>
+          </div>
+          <div class="erb-body">
+            <div class="erb-alerts">
+              <a href="risk-monitor.html" class="erb-alert-card fire" style="text-decoration:none;">
+                <div class="erb-ac-icon">🔥</div>
+                <div class="erb-ac-title">Elevated Wildfire Risk — Lac La Biche Region</div>
+                <div class="erb-ac-loc">Alberta · 35 km zone</div>
+                <div class="erb-ac-sev elevated">ELEVATED</div>
+              </a>
+              <a href="risk-monitor.html" class="erb-alert-card flood" style="text-decoration:none;">
+                <div class="erb-ac-icon">🌊</div>
+                <div class="erb-ac-title">Spring Flood Watch — Ottawa River Valley</div>
+                <div class="erb-ac-loc">Ontario / Quebec · Official</div>
+                <div class="erb-ac-sev watch">WATCH</div>
+              </a>
+              <a href="risk-monitor.html" class="erb-alert-card storm" style="text-decoration:none;">
+                <div class="erb-ac-icon">⛈</div>
+                <div class="erb-ac-title">Severe Weather Warning — GTA &amp; Golden Horseshoe</div>
+                <div class="erb-ac-loc">Ontario · Tonight</div>
+                <div class="erb-ac-sev warning">WARNING</div>
+              </a>
+              <a href="risk-monitor.html" class="erb-alert-card smoke" style="text-decoration:none;">
+                <div class="erb-ac-icon">💨</div>
+                <div class="erb-ac-title">Air Quality Advisory — BC Interior</div>
+                <div class="erb-ac-loc">British Columbia · AQHI 4–6</div>
+                <div class="erb-ac-sev advisory">ADVISORY</div>
+              </a>
+              <a href="risk-monitor.html" class="erb-alert-card cold" style="text-decoration:none;">
+                <div class="erb-ac-icon">🥶</div>
+                <div class="erb-ac-title">Extreme Cold Warning — Northern Manitoba</div>
+                <div class="erb-ac-loc">Manitoba · −48°C wind chill</div>
+                <div class="erb-ac-sev warning">WARNING</div>
+              </a>
+              <a href="risk-monitor.html" class="erb-alert-card flood" style="text-decoration:none;">
+                <div class="erb-ac-icon">🌊</div>
+                <div class="erb-ac-title">Red River Spring Flood Watch — Winnipeg Region</div>
+                <div class="erb-ac-loc">Manitoba · 125% upstream snowpack</div>
+                <div class="erb-ac-sev watch">WATCH</div>
+              </a>
+            </div>
+          </div>
+          <div class="erb-footer">
+            <div class="erb-stats">
+              <div class="erb-stat">
+                <div class="erb-stat-val">6</div>
+                <div class="erb-stat-label">Active Events</div>
+              </div>
+              <div style="width:1px;background:rgba(255,255,255,0.08);"></div>
+              <div class="erb-stat">
+                <div class="erb-stat-val">14</div>
+                <div class="erb-stat-label">Communities</div>
+              </div>
+              <div style="width:1px;background:rgba(255,255,255,0.08);"></div>
+              <div class="erb-stat">
+                <div class="erb-stat-val">83</div>
+                <div class="erb-stat-label">Schools Flagged</div>
+              </div>
+              <div style="width:1px;background:rgba(255,255,255,0.08);"></div>
+              <div class="erb-stat">
+                <div class="erb-stat-val">25</div>
+                <div class="erb-stat-label">Hospitals Near Hazards</div>
+              </div>
+            </div>
+            <div class="erb-score-wrap">
+              <div class="erb-score-num">67</div>
+              <div class="erb-score-info">
+                <div class="erb-score-label">Hazard Score / 100</div>
+                <div class="erb-score-status">⚠ Elevated — Above 30-day avg</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Weather + Quick tools -->
         <div class="grid-2 mb-24 anim-fade-up anim-delay-1">
           <a href="weather.html" class="dash-weather" id="dash-weather">
@@ -121,19 +350,31 @@
               <div class="dw-crops" id="dw-crops"></div>
             </div>
           </a>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <a href="support.html" class="card card-hover-lift" style="padding:16px 18px;text-decoration:none;display:flex;flex-direction:column;gap:5px;">
-              <div style="font-size:22px;">💬</div>
-              <div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);">Live Support</div>
-              <div style="font-size:11.5px;color:var(--muted);line-height:1.4;">AI advisor available now</div>
-              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--sage);margin-top:auto;letter-spacing:.5px;">CHAT NOW →</div>
+          <div class="quick-tools-grid">
+            <a href="support.html" class="qt-card">
+              <div class="qt-icon">💬</div>
+              <div class="qt-title">Live Support</div>
+              <div class="qt-sub">AI advisor available now</div>
+              <div class="qt-link" style="color:var(--sage);">CHAT NOW →</div>
             </a>
-            <div class="card" style="padding:16px 18px;display:flex;flex-direction:column;gap:5px;">
-              <div style="font-size:22px;">📅</div>
-              <div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);">Book a Call</div>
-              <div style="font-size:11.5px;color:var(--muted);line-height:1.4;">1-on-1 ag advisor</div>
-              <a href="support.html" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);margin-top:auto;letter-spacing:.5px;text-decoration:none;">SCHEDULE →</a>
-            </div>
+            <a href="risk-monitor.html" class="qt-card" style="border-color:rgba(192,57,43,0.15);background:#fff8f8;">
+              <div class="qt-icon">🛡</div>
+              <div class="qt-title">Risk Monitor</div>
+              <div class="qt-sub">6 active hazard events · 4 provinces</div>
+              <div class="qt-link" style="color:var(--red);">VIEW ALERTS →</div>
+            </a>
+            <a href="calculator.html" class="qt-card">
+              <div class="qt-icon">◎</div>
+              <div class="qt-title">ROI Calculator</div>
+              <div class="qt-sub">Model technology investments</div>
+              <div class="qt-link" style="color:var(--amber);">CALCULATE →</div>
+            </a>
+            <a href="planner.html" class="qt-card">
+              <div class="qt-icon">📅</div>
+              <div class="qt-title">Planner</div>
+              <div class="qt-sub">Spring operations checklist</div>
+              <div class="qt-link" style="color:var(--forest);">PLAN NOW →</div>
+            </a>
           </div>
         </div>
 
@@ -146,7 +387,7 @@
           <div class="card-body" style="padding:10px 20px;">
             <div id="commodity-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;"></div>
           </div>
-          <div class="card-footer" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);">Reference prices based on recent Canadian market data · Verify with your elevator or board for trading decisions</div>
+          <div class="card-footer" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);">Reference prices · Verify with your elevator or board for trading decisions</div>
         </div>
 
         <!-- Row 1 -->
@@ -160,15 +401,15 @@
             <div class="card-body">
               <div class="alert alert-urgent">
                 <div class="alert-title">⏱ AgriStability — Deadline April 30, 2026</div>
-                <div class="alert-desc">Enrollment closes in ~40 days. Gather production margin documentation and pasture-related feed costs now. Expanded 2026 rules may increase your eligible support.</div>
+                <div class="alert-desc">Enrollment closes in ~40 days. Gather production margin documentation and pasture-related feed costs now.</div>
               </div>
               <div class="alert alert-warn">
                 <div class="alert-title">◈ New AgriMarketing Diversification Stream Open</div>
-                <div class="alert-desc">Announced February 2026. Supports ag exporters accessing new international markets. Up to $500K available — rolling deadline, apply before pool is exhausted.</div>
+                <div class="alert-desc">Announced February 2026. Up to $500K — rolling deadline, apply before pool is exhausted.</div>
               </div>
               <div class="alert alert-info">
                 <div class="alert-title">✦ AI Copilot Ready for Your Questions</div>
-                <div class="alert-desc">Ask anything about funding eligibility, ROI calculations, market intelligence, or operational planning. Responses are grounded in Canadian agricultural context.</div>
+                <div class="alert-desc">Ask anything about funding eligibility, ROI calculations, or operational planning.</div>
               </div>
             </div>
           </div>
@@ -271,13 +512,23 @@
 
       // Notifications
       const urgent = PROGRAMS.filter(p => { const d=getDaysUntil(p.deadlineDate); return d!==null&&d>=0&&d<=60; });
-      if (urgent.length) {
+      const hazardAlerts = ENV_HAZARDS.filter(h => h.severity === 'warning');
+      const totalAlerts = urgent.length + hazardAlerts.length;
+      if (totalAlerts) {
         document.getElementById('notif-dot').style.display = 'block';
-        document.getElementById('notif-count-lbl').textContent = urgent.length + ' alert' + (urgent.length>1?'s':'');
-        document.getElementById('notif-list').innerHTML = urgent.map(p => {
-          const d = getDaysUntil(p.deadlineDate);
-          return `<a href="funding.html" class="notif-item"><div class="notif-item-title">${p.name}</div><div class="notif-item-sub">⏱ ${d} day${d!==1?'s':''} left · ${p.deadline}</div></a>`;
-        }).join('') + `<a href="funding.html" class="notif-item" style="text-align:center;color:var(--sage);font-size:12px;font-family:'IBM Plex Mono',monospace;">View all →</a>`;
+        document.getElementById('notif-count-lbl').textContent = totalAlerts + ' alert' + (totalAlerts>1?'s':'');
+        document.getElementById('notif-list').innerHTML =
+          hazardAlerts.map(h => `
+            <a href="risk-monitor.html" class="notif-item">
+              <div class="notif-item-title">${h.icon} ${h.title}</div>
+              <div class="notif-item-sub">🛡 Environmental · ${h.location}</div>
+            </a>
+          `).join('') +
+          urgent.map(p => {
+            const d = getDaysUntil(p.deadlineDate);
+            return `<a href="funding.html" class="notif-item"><div class="notif-item-title">${p.name}</div><div class="notif-item-sub">⏱ ${d} day${d!==1?'s':''} left · ${p.deadline}</div></a>`;
+          }).join('') +
+          `<a href="risk-monitor.html" class="notif-item" style="text-align:center;color:var(--red);font-size:12px;font-family:'IBM Plex Mono',monospace;">🛡 View Risk Monitor →</a>`;
       }
       window.toggleNotif = function() { document.getElementById('notif-dropdown').classList.toggle('open'); };
       document.addEventListener('click', e => { if (!document.getElementById('notif-bell').contains(e.target)) document.getElementById('notif-dropdown').classList.remove('open'); });
@@ -308,36 +559,24 @@
           <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:${c.dir==='up'?'var(--green)':'var(--red)'};margin-top:2px;">${c.dir==='up'?'▲':'▼'} ${Math.abs(c.change).toFixed(1)} &nbsp;${c.unit}</div>
         </div>`).join('');
 
-      // Dynamic recommended actions based on profile
+      // Dynamic recommended actions
       const actionsByType = {
-        'Grain & Oilseeds': [
+        'Grain & Oilseeds':   [
           {text:'Review AgriStability enrollment — deadline April 30',pri:'HIGH',priClass:'pri-high',href:'funding.html'},
           {text:'Check canola & wheat basis levels at local elevator',pri:'HIGH',priClass:'pri-high',href:'calculator.html'},
-          {text:'Plan spring seeding schedule with crop calendar',pri:'MED',priClass:'pri-medium',href:'weather.html'},
+          {text:'Monitor wildfire risk near your Alberta or SK operation',pri:'MED',priClass:'pri-medium',href:'risk-monitor.html'},
           {text:'Explore AgriMarketing diversification stream',pri:'LOW',priClass:'pri-low',href:'funding.html'},
         ],
         'Dairy': [
           {text:'Review AgriStability enrollment — deadline April 30',pri:'HIGH',priClass:'pri-high',href:'funding.html'},
           {text:'Calculate ROI on automated milking equipment',pri:'MED',priClass:'pri-medium',href:'calculator.html'},
-          {text:'Check feed cost inputs vs AgriStability 2026 changes',pri:'HIGH',priClass:'pri-high',href:'copilot.html'},
+          {text:'Check extreme cold preparedness for herd facilities',pri:'HIGH',priClass:'pri-high',href:'risk-monitor.html'},
           {text:'Explore labour-saving technology funding programs',pri:'MED',priClass:'pri-medium',href:'funding.html'},
-        ],
-        'Livestock': [
-          {text:'Review AgriStability pasture feed cost expansion',pri:'HIGH',priClass:'pri-high',href:'copilot.html'},
-          {text:'Model ROI on corral/handling equipment upgrades',pri:'MED',priClass:'pri-medium',href:'calculator.html'},
-          {text:'Check Resilient Agricultural Landscape Program',pri:'MED',priClass:'pri-medium',href:'funding.html'},
-          {text:'Plan spring/summer operations with planner',pri:'LOW',priClass:'pri-low',href:'planner.html'},
-        ],
-        'Produce / Vegetables': [
-          {text:'Review AgriStability enrollment — deadline April 30',pri:'HIGH',priClass:'pri-high',href:'funding.html'},
-          {text:'Run ROI estimate on labour-saving packing tech',pri:'MED',priClass:'pri-medium',href:'calculator.html'},
-          {text:'Check spring planting calendar for your province',pri:'MED',priClass:'pri-medium',href:'weather.html'},
-          {text:'Explore Local Food Infrastructure Fund ($30M)',pri:'MED',priClass:'pri-medium',href:'funding.html'},
         ],
         'default': [
           {text:'Review AgriStability enrollment — deadline April 30',pri:'HIGH',priClass:'pri-high',href:'funding.html'},
+          {text:'Check active environmental hazards in your region',pri:'HIGH',priClass:'pri-high',href:'risk-monitor.html'},
           {text:'Run ROI estimate on labour-saving technology',pri:'MED',priClass:'pri-medium',href:'calculator.html'},
-          {text:'Complete spring operations checklist',pri:'MED',priClass:'pri-medium',href:'planner.html'},
           {text:'Explore market diversification programs',pri:'LOW',priClass:'pri-low',href:'funding.html'},
         ]
       };
@@ -355,7 +594,7 @@
         const ck = JSON.parse(localStorage.getItem('checklist')||'[]');
         cl.innerHTML = SPRING_CHECKLIST.map((item,i) => `
           <div class="check-item" onclick="toggleCheck(${i})">
-            <div class="check-box ${ck.includes(i)?'checked':''}">${ck.includes(i)?'✓':''}</div>
+            <div class="check-box ${ck.includes(i)?'checked':''}">​${ck.includes(i)?'✓':''}</div>
             <span class="check-text ${ck.includes(i)?'done':''}">${item}</span>
           </div>`).join('');
         document.getElementById('checklist-count').textContent = `${ck.length} / ${SPRING_CHECKLIST.length} done`;

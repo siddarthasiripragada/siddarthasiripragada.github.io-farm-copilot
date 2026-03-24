@@ -332,214 +332,37 @@ const HAZARD_TREND_30D = {
 };
 
 /* ── Weather data per province ── */
-/* ── Weather + agronomy helpers ── */
 const WEATHER_BY_PROVINCE = {
-  'Alberta':          { m: 'March', high: 6,  low: -8,  cond: 'Partly cloudy', icon: '⛅' },
-  'British Columbia': { m: 'March', high: 11, low: 4,   cond: 'Light rain',    icon: '🌧' },
-  'Manitoba':         { m: 'March', high: -4, low: -16, cond: 'Mainly clear',  icon: '☀️' },
-  'New Brunswick':    { m: 'March', high: 3,  low: -5,  cond: 'Overcast',      icon: '☁️' },
+  'Alberta':          { m: 'March', high: 6,  low: -8, cond: 'Partly cloudy',    icon: '⛅' },
+  'British Columbia': { m: 'March', high: 11, low: 4,  cond: 'Light rain',       icon: '🌧' },
+  'Manitoba':         { m: 'March', high: -4, low: -16,cond: 'Mainly clear',     icon: '☀️' },
+  'New Brunswick':    { m: 'March', high: 3,  low: -5, cond: 'Overcast',         icon: '☁️' },
   'Newfoundland & Labrador': { m: 'March', high: 0, low: -9, cond: 'Light snow', icon: '🌨' },
-  'Nova Scotia':      { m: 'March', high: 5,  low: -3,  cond: 'Rain showers',  icon: '🌦' },
-  'Ontario':          { m: 'March', high: 8,  low: -2,  cond: 'Mostly cloudy', icon: '☁️' },
-  'P.E.I.':           { m: 'March', high: 3,  low: -6,  cond: 'Flurries',      icon: '🌨' },
-  'Quebec':           { m: 'March', high: 2,  low: -9,  cond: 'Partly cloudy', icon: '⛅' },
-  'Saskatchewan':     { m: 'March', high: 2,  low: -13, cond: 'Clear',         icon: '☀️' },
+  'Nova Scotia':      { m: 'March', high: 5,  low: -3, cond: 'Rain showers',     icon: '🌦' },
+  'Ontario':          { m: 'March', high: 8,  low: -2, cond: 'Mostly cloudy',    icon: '☁️' },
+  'P.E.I.':           { m: 'March', high: 3,  low: -6, cond: 'Flurries',         icon: '🌨' },
+  'Quebec':           { m: 'March', high: 2,  low: -9, cond: 'Partly cloudy',    icon: '⛅' },
+  'Saskatchewan':     { m: 'March', high: 2,  low: -13,cond: 'Clear',            icon: '☀️' },
   'Northwest Territories': { m: 'March', high: -15, low: -30, cond: 'Clear cold', icon: '🌬' },
-  'Nunavut':          { m: 'March', high: -23, low: -38, cond: 'Clear arctic', icon: '❄️' },
-  'Yukon':            { m: 'March', high: -8, low: -22, cond: 'Clear',         icon: '☀️' },
+  'Nunavut':          { m: 'March', high: -23, low: -38,cond: 'Clear arctic',    icon: '❄️' },
+  'Yukon':            { m: 'March', high: -8, low: -22, cond: 'Clear',           icon: '☀️' },
 };
-
-const FROST_DATA = {
-  'Ontario': { lastSpring: 'May 9–20', firstFall: 'Sep 28–Oct 10' },
-  'Quebec': { lastSpring: 'May 12–24', firstFall: 'Sep 20–Oct 5' },
-  'British Columbia': { lastSpring: 'Apr 1–25', firstFall: 'Oct 20–Nov 10' },
-  'Alberta': { lastSpring: 'May 20–Jun 5', firstFall: 'Sep 5–20' },
-  'Manitoba': { lastSpring: 'May 15–30', firstFall: 'Sep 10–25' },
-  'Saskatchewan': { lastSpring: 'May 20–Jun 5', firstFall: 'Sep 5–20' },
-  'default': { lastSpring: 'Varies by region', firstFall: 'Varies by region' }
-};
-
-const PROVINCE_SEASONS = {
-  'Alberta': 'Prairie short-season window',
-  'British Columbia': 'Coastal / interior split season',
-  'Manitoba': 'Prairie continental season',
-  'New Brunswick': 'Atlantic cool season',
-  'Newfoundland & Labrador': 'Atlantic short season',
-  'Nova Scotia': 'Atlantic moderate season',
-  'Ontario': 'Mixed temperate growing season',
-  'P.E.I.': 'Atlantic potato / field crop season',
-  'Quebec': 'Short-to-medium temperate season',
-  'Saskatchewan': 'Prairie seeding season',
-  'Northwest Territories': 'Northern short growing season',
-  'Nunavut': 'Arctic protected growing season',
-  'Yukon': 'Northern short growing season'
-};
-
-function getCropCalendar(province) {
-  const calendars = {
-    'Ontario': {
-      planting: 'Apr–Jun',
-      harvest: 'Aug–Nov',
-      notes: 'Corn, soy, wheat, vegetables and mixed horticulture windows.'
-    },
-    'British Columbia': {
-      planting: 'Feb–May',
-      harvest: 'Jun–Oct',
-      notes: 'Coastal and interior timelines vary widely by crop.'
-    },
-    'Alberta': {
-      planting: 'Apr–Jun',
-      harvest: 'Aug–Oct',
-      notes: 'Strong focus on cereals, canola and forage.'
-    },
-    'Manitoba': {
-      planting: 'Apr–Jun',
-      harvest: 'Aug–Oct',
-      notes: 'Prairie annual crop timing with flood-watch sensitivity.'
-    },
-    'default': {
-      planting: 'Varies by region',
-      harvest: 'Varies by crop',
-      notes: 'Refer to local agronomy guidance.'
-    }
-  };
-
-  return calendars[province] || calendars.default;
-}
 
 function getCurrentMonthWeather(province) {
   return WEATHER_BY_PROVINCE[province] || WEATHER_BY_PROVINCE['Ontario'];
 }
 
 function getCurrentSeasonCrops(province) {
-  const crops = {
+  const CROPS = {
     'Alberta':          { season: 'Pre-season prep', crops: ['Canola', 'Spring Wheat', 'Barley', 'Oats'] },
     'British Columbia': { season: 'Early spring', crops: ['Potatoes', 'Vegetables', 'Berries', 'Tree Fruits'] },
     'Manitoba':         { season: 'Pre-season', crops: ['Wheat', 'Canola', 'Flaxseed', 'Soybeans'] },
     'Ontario':          { season: 'Pre-plant', crops: ['Soybeans', 'Corn', 'Winter Wheat', 'Vegetables'] },
     'Quebec':           { season: 'Pre-season', crops: ['Corn', 'Soybeans', 'Potatoes', 'Vegetables'] },
     'Saskatchewan':     { season: 'Pre-seeding', crops: ['Wheat', 'Canola', 'Lentils', 'Peas'] },
-    'default':          { season: 'Early spring', crops: ['Cereals', 'Oilseeds', 'Vegetables', 'Forage'] }
+    'default':          { season: 'Early spring', crops: ['Cereals', 'Oilseeds', 'Vegetables', 'Forage'] },
   };
-
-  return crops[province] || crops.default;
-}
-
-function getWMO(code) {
-  const map = {
-    0: { label: 'Clear sky', icon: '☀️' },
-    1: { label: 'Mainly clear', icon: '🌤️' },
-    2: { label: 'Partly cloudy', icon: '⛅' },
-    3: { label: 'Overcast', icon: '☁️' },
-    45: { label: 'Fog', icon: '🌫️' },
-    48: { label: 'Rime fog', icon: '🌫️' },
-    51: { label: 'Light drizzle', icon: '🌦️' },
-    53: { label: 'Moderate drizzle', icon: '🌦️' },
-    55: { label: 'Dense drizzle', icon: '🌧️' },
-    61: { label: 'Slight rain', icon: '🌧️' },
-    63: { label: 'Moderate rain', icon: '🌧️' },
-    65: { label: 'Heavy rain', icon: '🌧️' },
-    66: { label: 'Freezing rain', icon: '🧊' },
-    67: { label: 'Heavy freezing rain', icon: '🧊' },
-    71: { label: 'Slight snow', icon: '🌨️' },
-    73: { label: 'Moderate snow', icon: '❄️' },
-    75: { label: 'Heavy snow', icon: '❄️' },
-    80: { label: 'Rain showers', icon: '🌦️' },
-    81: { label: 'Heavy rain showers', icon: '🌧️' },
-    82: { label: 'Violent rain showers', icon: '⛈️' },
-    95: { label: 'Thunderstorm', icon: '⛈️' },
-    96: { label: 'Thunderstorm with hail', icon: '⛈️' },
-    99: { label: 'Severe hailstorm', icon: '⛈️' }
-  };
-
-  return map[code] || { label: 'Unknown', icon: '🌤️' };
-}
-
-function weatherCacheKey(province) {
-  return `weatherCache:${province}`;
-}
-
-async function loadProvinceWeather(province) {
-  const coords = PROVINCE_COORDS[province] || PROVINCE_COORDS['Ontario'];
-  const fallback = getCurrentMonthWeather(province);
-
-  const url =
-    `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}` +
-    `&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code` +
-    `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
-    `&forecast_days=7&timezone=auto`;
-
-  try {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Weather request failed: ${res.status}`);
-
-    const data = await res.json();
-    const wmo = getWMO(data.current.weather_code);
-
-    const normalized = {
-      province,
-      city: coords.city,
-      timezone: coords.tz,
-      current: {
-        temperature: data.current.temperature_2m,
-        humidity: data.current.relative_humidity_2m,
-        precipitation: data.current.precipitation,
-        wind: data.current.wind_speed_10m,
-        code: data.current.weather_code,
-        label: wmo.label,
-        icon: wmo.icon
-      },
-      daily: {
-        max: data.daily.temperature_2m_max || [],
-        min: data.daily.temperature_2m_min || [],
-        precipitationProbability: data.daily.precipitation_probability_max || []
-      },
-      agronomy: {
-        season: PROVINCE_SEASONS[province] || PROVINCE_SEASONS['Ontario'],
-        cropCalendar: getCropCalendar(province),
-        frost: FROST_DATA[province] || FROST_DATA.default
-      },
-      updatedAt: new Date().toISOString(),
-      updatedLabel: 'just now'
-    };
-
-    localStorage.setItem(weatherCacheKey(province), JSON.stringify(normalized));
-    return normalized;
-  } catch (err) {
-    const cached = localStorage.getItem(weatherCacheKey(province));
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      parsed.updatedLabel = 'from cache';
-      return parsed;
-    }
-
-    return {
-      province,
-      city: coords.city,
-      timezone: coords.tz,
-      current: {
-        temperature: fallback.high,
-        humidity: null,
-        precipitation: null,
-        wind: null,
-        code: null,
-        label: fallback.cond,
-        icon: fallback.icon
-      },
-      daily: {
-        max: [fallback.high],
-        min: [fallback.low],
-        precipitationProbability: []
-      },
-      agronomy: {
-        season: PROVINCE_SEASONS[province] || PROVINCE_SEASONS['Ontario'],
-        cropCalendar: getCropCalendar(province),
-        frost: FROST_DATA[province] || FROST_DATA.default
-      },
-      updatedAt: null,
-      updatedLabel: 'fallback data'
-    };
-  }
+  return CROPS[province] || CROPS['default'];
 }
 
 /* ── Utility: days until deadline ── */

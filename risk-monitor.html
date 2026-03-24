@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Risk Monitor — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Leaflet map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ── Risk Monitor local styles ── */
+
+    /* Stats bar */
+    .risk-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .risk-stat {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 15px 16px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .risk-stat:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+    .risk-stat-accent {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .risk-stat-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+    .risk-stat-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px;
+      color: var(--forest);
+      letter-spacing: -0.6px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .risk-stat-sub {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .risk-stat-sparkline {
+      margin-top: 8px;
+      height: 24px;
+    }
+
+    /* Main layout: alerts list + map */
+    .risk-split {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    /* Hazard alerts list */
+    .hazard-list-wrap {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .hazard-list-header {
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .hazard-list-filters {
+      display: flex;
+      gap: 6px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .haz-filter-btn {
+      padding: 5px 11px;
+      border: 1.5px solid var(--border-md);
+      border-radius: 14px;
+      font-size: 11.5px;
+      cursor: pointer;
+      background: white;
+      color: var(--muted);
+      font-family: 'Sora', sans-serif;
+      transition: all 0.13s;
+    }
+    .haz-filter-btn:hover  { border-color: var(--forest); color: var(--forest); }
+    .haz-filter-btn.active { background: var(--forest); color: var(--wheat); border-color: var(--forest); }
+    .hazard-list-scroll {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .hazard-card {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+      border-left: 3px solid transparent;
+    }
+    .hazard-card:hover { background: var(--cream); }
+    .hazard-card.selected { background: rgba(27,53,40,0.04); border-left-color: var(--forest); }
+    .hazard-card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin-bottom: 6px;
+    }
+    .hazard-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .hazard-card-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 13.5px;
+      color: var(--forest);
+      line-height: 1.3;
+      flex: 1;
+    }
+    .hazard-card-loc {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      color: var(--faint);
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+    .hazard-card-summary {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .hazard-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+    .hazard-meta-pills {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .haz-impact {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* Severity pill */
+    .sev-pill {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+    .sev-warning   { background: rgba(192,57,43,0.12);  color: var(--red);    }
+    .sev-elevated  { background: rgba(230,126,34,0.12); color: var(--orange); }
+    .sev-watch     { background: rgba(212,146,10,0.15); color: var(--amber);  }
+    .sev-advisory  { background: rgba(41,128,185,0.1);  color: var(--blue);   }
+    .sev-clear     { background: rgba(39,174,96,0.12);  color: var(--green);  }
+
+    /* Trend */
+    .trend-up   { color: var(--red);    }
+    .trend-down { color: var(--green);  }
+    .trend-flat { color: var(--muted);  }
+
+    /* Map panel */
+    .map-panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .map-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .map-layer-toggles {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .layer-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border: 1.5px solid var(--border-md);
+      border-radius: 12px;
+      font-size: 11.5px;
+      cursor: pointer;
+      background: white;
+      color: var(--muted);
+      font-family: 'Sora', sans-serif;
+      transition: all 0.13s;
+    }
+    .layer-toggle.on { background: var(--forest); color: var(--wheat); border-color: var(--forest); }
+    .layer-toggle-dot { width: 7px; height: 7px; border-radius: 50%; }
+    #risk-map {
+      flex: 1;
+      min-height: 380px;
+    }
+
+    /* Charts row */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+    .chart-panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .chart-panel-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 15px;
+      color: var(--forest);
+      margin-bottom: 4px;
+    }
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.chart-wrap-lg {
+  height: 300px;
+}
+
+.chart-wrap-sm {
+  height: 300px;
+}
+
+.chart-panel.compact {
+  padding: 18px 18px 16px;
+}
+
+.chart-panel.compact .chart-panel-title {
+  font-size: 14px;
+  line-height: 1.25;
+  margin-bottom: 4px;
+}
+
+.chart-panel.compact .chart-panel-sub {
+  font-size: 9px;
+  margin-bottom: 12px;
+  letter-spacing: 0.6px;
+  line-height: 1.4;
+}
+
+#regional-table {
+  margin-top: 12px;
+}
+
+.regional-name {
+  width: 96px;
+  font-size: 12px;
+}
+
+.regional-row {
+  gap: 8px;
+  padding: 7px 0;
+}
+
+.regional-score {
+  width: 26px;
+  font-size: 10px;
+}
+
+.regional-trend {
+  width: 16px;
+  font-size: 11px;
+}
+
+@media (max-width: 1024px) {
+  .chart-wrap-lg,
+  .chart-wrap-sm {
+    height: 240px;
+  }
+}etter-spacing: 0.3px;
+    }
+
+    /* Community impact grid */
+    .community-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .community-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
+      border-top: 3px solid;
+      transition: box-shadow 0.13s;
+    }
+    .community-card:hover { box-shadow: var(--shadow); }
+    .community-card.crit   { border-top-color: var(--red); }
+    .community-card.elev   { border-top-color: var(--orange); }
+    .community-card.watch  { border-top-color: var(--amber); }
+    .community-card.low    { border-top-color: var(--green); }
+    .community-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 14.5px;
+      color: var(--forest);
+      margin-bottom: 3px;
+    }
+    .community-region {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      color: var(--faint);
+      margin-bottom: 10px;
+      letter-spacing: 0.3px;
+    }
+    .community-risk-bar {
+      height: 5px;
+      background: var(--border-md);
+      border-radius: 3px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .community-risk-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+    .community-impacts {
+      display: flex;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* Subscribe section */
+    .subscribe-panel {
+      background: linear-gradient(135deg, var(--forest) 0%, var(--forest-mid) 60%, #1c4a35 100%);
+      border-radius: var(--r-xl);
+      padding: 30px 32px;
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .subscribe-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 80% 20%, rgba(184,114,14,0.15) 0%, transparent 50%),
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.015) 39px, rgba(255,255,255,0.015) 40px);
+      pointer-events: none;
+    }
+    .subscribe-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: center;
+      position: relative;
+    }
+    .subscribe-text h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 24px;
+      color: var(--wheat);
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+    .subscribe-text p {
+      font-size: 13.5px;
+      color: rgba(244,236,218,0.65);
+      line-height: 1.65;
+      margin-bottom: 14px;
+    }
+    .subscribe-features {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .subscribe-feat {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 13px;
+      color: rgba(244,236,218,0.72);
+    }
+    .subscribe-feat-icon {
+      width: 20px;
+      height: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .subscribe-form {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--r-lg);
+      padding: 22px 24px;
+      backdrop-filter: blur(6px);
+    }
+    .subscribe-form-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--amber-lt);
+      margin-bottom: 14px;
+    }
+    .sub-input {
+      width: 100%;
+      padding: 10px 13px;
+      background: rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(255,255,255,0.18);
+      border-radius: var(--r-sm);
+      color: var(--wheat);
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .sub-input::placeholder { color: rgba(244,236,218,0.35); }
+    .sub-input:focus { outline: none; border-color: var(--amber-lt); }
+    .sub-select {
+      width: 100%;
+      padding: 10px 13px;
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: var(--r-sm);
+      color: rgba(244,236,218,0.75);
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .sub-select option { background: var(--forest); color: var(--wheat); }
+    .sub-checkboxes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .sub-check-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: rgba(244,236,218,0.65);
+      cursor: pointer;
+    }
+    .sub-check-item input { accent-color: var(--amber-lt); }
+    .sub-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--amber);
+      color: white;
+      border: none;
+      border-radius: var(--r-sm);
+      font-family: 'Sora', sans-serif;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.14s;
+      letter-spacing: 0.2px;
+    }
+    .sub-btn:hover { background: var(--amber-lt); }
+
+    /* AI Copilot promo section */
+    .copilot-env-panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      margin-bottom: 22px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .env-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 14px 20px;
+    }
+    .env-chip {
+      padding: 8px 14px;
+      border: 1.5px solid var(--border-md);
+      border-radius: 18px;
+      font-size: 12.5px;
+      cursor: pointer;
+      color: var(--text);
+      background: white;
+      transition: all 0.13s;
+    }
+    .env-chip:hover { background: var(--forest); color: var(--wheat); border-color: var(--forest); }
+
+    /* Incident detail drawer */
+    .incident-drawer {
+      position: fixed;
+      right: 0; top: 0; bottom: 0;
+      width: 480px;
+      background: white;
+      border-left: 1px solid var(--border-md);
+      box-shadow: var(--shadow-xl);
+      z-index: 600;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .incident-drawer.open { transform: translateX(0); }
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.25);
+      z-index: 599;
+      display: none;
+      backdrop-filter: blur(2px);
+    }
+    .drawer-overlay.open { display: block; }
+    .drawer-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      flex-shrink: 0;
+    }
+    .drawer-close {
+      margin-left: auto;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--muted);
+      flex-shrink: 0;
+      line-height: 1;
+      padding: 2px;
+    }
+    .drawer-body { flex: 1; overflow-y: auto; padding: 20px 22px; }
+    .drawer-section { margin-bottom: 20px; }
+    .drawer-section-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 7px;
+    }
+    .drawer-section-content {
+      font-size: 13.5px;
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .drawer-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .drawer-metric {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 12px 14px;
+    }
+    .drawer-metric-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; color: var(--faint); text-transform: uppercase; margin-bottom: 5px; }
+    .drawer-metric-value { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--forest); }
+    .drawer-action-box {
+      background: var(--amber-pale);
+      border: 1px solid rgba(184,114,14,0.2);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .drawer-action-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 7px;
+    }
+    .drawer-action-text { font-size: 13px; color: #6b3c0a; line-height: 1.6; }
+    .source-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .source-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .source-dot {
+      width: 6px; height: 6px;
+      background: var(--sage);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .freshness-bar {
+      height: 4px;
+      background: var(--border-md);
+      border-radius: 2px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .freshness-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 2px;
+    }
+
+    /* Timeline */
+    .alert-timeline {
+      border-left: 2px solid var(--border-md);
+      padding-left: 16px;
+      margin-left: 6px;
+    }
+    .timeline-event {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .timeline-event::before {
+      content: '';
+      position: absolute;
+      left: -21px;
+      top: 5px;
+      width: 8px; height: 8px;
+      background: white;
+      border: 2px solid var(--faint);
+      border-radius: 50%;
+    }
+    .timeline-event.active::before { border-color: var(--orange); background: var(--orange); }
+    .timeline-time { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--faint); margin-bottom: 3px; }
+    .timeline-desc { font-size: 12.5px; color: var(--text); line-height: 1.45; }
+
+    /* Score ring */
+    .score-ring-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .score-ring {
+      width: 52px; height: 52px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .score-ring svg { transform: rotate(-90deg); }
+    .score-ring-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--forest);
+    }
+
+    /* Overall risk header card */
+    .risk-header-card {
+      background: linear-gradient(135deg, var(--forest) 0%, var(--forest-mid) 100%);
+      border-radius: var(--r-lg);
+      padding: 18px 22px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .risk-header-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(45deg, transparent, transparent 19px, rgba(255,255,255,0.02) 19px, rgba(255,255,255,0.02) 20px);
+      pointer-events: none;
+    }
+    .rhc-left { position: relative; }
+    .rhc-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(244,236,218,0.4); margin-bottom: 6px; }
+    .rhc-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--wheat); margin-bottom: 5px; }
+    .rhc-sub { font-size: 13px; color: rgba(244,236,218,0.58); line-height: 1.5; }
+    .rhc-right { display: flex; gap: 20px; align-items: center; position: relative; }
+    .rhc-metric { text-align: center; }
+    .rhc-metric-val { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--wheat); letter-spacing: -0.5px; }
+    .rhc-metric-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; color: rgba(244,236,218,0.38); text-transform: uppercase; margin-top: 3px; }
+    .rhc-divider { width: 1px; height: 44px; background: rgba(255,255,255,0.1); }
+
+    /* Live indicator */
+    .live-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 1px;
+      color: var(--amber-lt);
+    }
+    .live-dot-circle {
+      width: 6px; height: 6px;
+      background: var(--amber-lt);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    /* Regional risk mini table */
+    .regional-table {
+      width: 100%;
+    }
+    .regional-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .regional-row:last-child { border-bottom: none; }
+    .regional-name { font-size: 13px; color: var(--text); width: 160px; flex-shrink: 0; }
+    .regional-bar-wrap { flex: 1; height: 6px; background: var(--border-md); border-radius: 3px; overflow: hidden; }
+    .regional-bar-fill { height: 100%; border-radius: 3px; }
+    .regional-score { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; width: 30px; text-align: right; }
+    .regional-trend { width: 20px; text-align: center; font-size: 12px; }
+
+    /* Success toast */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--forest);
+      color: var(--wheat);
+      padding: 12px 22px;
+      border-radius: var(--r-lg);
+      font-size: 13.5px;
+      box-shadow: var(--shadow-lg);
+      z-index: 700;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 1200px) {
+      .risk-split { grid-template-columns: 350px 1fr; }
+    }
+    @media (max-width: 1024px) {
+      .risk-stat-grid { grid-template-columns: repeat(3, 1fr); }
+      .risk-split { grid-template-columns: 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .community-grid { grid-template-columns: repeat(2, 1fr); }
+      .subscribe-inner { grid-template-columns: 1fr; }
+      .incident-drawer { width: 100%; max-width: 480px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-mount"></div>
+
+    <div class="main-content">
+      <div class="page-header">
+        <div class="page-header-row">
+          <div>
+            <div class="page-title">🛡 Risk Monitor</div>
+            <div class="page-subtitle" id="risk-sub">Environmental & hazard intelligence for Canada — updated continuously</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div class="live-dot"><div class="live-dot-circle"></div>LIVE DATA</div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);background:var(--wheat-dk);padding:4px 10px;border-radius:12px;" id="last-updated">Updated just now</span>
+            <a href="dashboard.html" class="btn btn-ghost btn-sm">← Dashboard</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-body">
+
+        <!-- Overall Risk Header -->
+        <div class="risk-header-card anim-fade-up">
+          <div class="rhc-left">
+            <div class="rhc-eyebrow">◉ ENVIRONMENTAL RISK INTELLIGENCE · MARCH 23, 2026</div>
+            <div class="rhc-title">Canada Risk Overview — <em style="color:var(--amber-lt);">Elevated</em></div>
+            <div class="rhc-sub">6 active hazard events across 4 provinces · 14 communities under alert · Monitoring wildfire, flood, storm, smoke, and extreme cold</div>
+          </div>
+          <div class="rhc-right">
+            <div class="rhc-metric">
+              <div class="rhc-metric-val">6</div>
+              <div class="rhc-metric-label">Active Events</div>
+            </div>
+            <div class="rhc-divider"></div>
+            <div class="rhc-metric">
+              <div class="rhc-metric-val" style="color:var(--amber-lt);">67</div>
+              <div class="rhc-metric-label">Hazard Score</div>
+            </div>
+            <div class="rhc-divider"></div>
+            <div class="rhc-metric">
+              <div class="rhc-metric-val">14</div>
+              <div class="rhc-metric-label">Communities</div>
+            </div>
+            <div class="rhc-divider"></div>
+            <div class="rhc-metric">
+              <div class="rhc-metric-val">83</div>
+              <div class="rhc-metric-label">Schools Flagged</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Stat Cards -->
+        <div class="risk-stat-grid anim-fade-up anim-delay-1">
+          <div class="risk-stat">
+            <div class="risk-stat-label">Overall Hazard Score</div>
+            <div class="risk-stat-value" style="color:var(--orange);">67<span style="font-size:14px;color:var(--muted);margin-left:2px;">/100</span></div>
+            <div class="risk-stat-sub">Elevated — above 30-day avg of 44</div>
+            <div class="risk-stat-accent" style="background:linear-gradient(90deg,var(--orange),var(--amber));"></div>
+          </div>
+          <div class="risk-stat">
+            <div class="risk-stat-label">Active Alerts</div>
+            <div class="risk-stat-value">6</div>
+            <div class="risk-stat-sub">2 official · 4 advisory-level</div>
+            <div class="risk-stat-accent" style="background:var(--red);"></div>
+          </div>
+          <div class="risk-stat">
+            <div class="risk-stat-label">Communities Under Alert</div>
+            <div class="risk-stat-value">14</div>
+            <div class="risk-stat-sub">Across AB, ON, MB, BC</div>
+            <div class="risk-stat-accent" style="background:var(--orange);"></div>
+          </div>
+          <div class="risk-stat">
+            <div class="risk-stat-label">Schools in Watch Zones</div>
+            <div class="risk-stat-value">83</div>
+            <div class="risk-stat-sub">Storm: 31 · Flood: 21 · Smoke: 18 · Fire: 7 · Cold: 6</div>
+            <div class="risk-stat-accent" style="background:var(--amber);"></div>
+          </div>
+          <div class="risk-stat">
+            <div class="risk-stat-label">Hospitals Near Hazards</div>
+            <div class="risk-stat-value">25</div>
+            <div class="risk-stat-sub">4 within active flood zones</div>
+            <div class="risk-stat-accent" style="background:var(--blue);"></div>
+          </div>
+        </div>
+
+        <!-- Alerts + Map -->
+        <div class="risk-split anim-fade-up anim-delay-1">
+          <!-- Hazard Alerts List -->
+          <div class="hazard-list-wrap">
+            <div class="hazard-list-header">
+              <span class="card-title">🔔 Active Hazard Events</span>
+              <span class="badge badge-red">6 Active</span>
+            </div>
+            <div class="hazard-list-filters">
+              <button class="haz-filter-btn active" onclick="filterHazards('all', this)">All</button>
+              <button class="haz-filter-btn" onclick="filterHazards('wildfire', this)">🔥 Fire</button>
+              <button class="haz-filter-btn" onclick="filterHazards('flood', this)">🌊 Flood</button>
+              <button class="haz-filter-btn" onclick="filterHazards('storm', this)">⛈ Storm</button>
+              <button class="haz-filter-btn" onclick="filterHazards('smoke', this)">💨 Smoke</button>
+              <button class="haz-filter-btn" onclick="filterHazards('cold', this)">🥶 Cold</button>
+            </div>
+            <div class="hazard-list-scroll" id="hazard-list">
+              <!-- populated by JS -->
+            </div>
+          </div>
+
+          <!-- Map -->
+          <div class="map-panel">
+            <div class="map-header">
+              <span class="card-title">📍 Hazard Map</span>
+              <div class="map-layer-toggles" id="layer-toggles">
+                <button class="layer-toggle on" data-layer="wildfire" onclick="toggleLayer(this)">
+                  <div class="layer-toggle-dot" style="background:#e67e22;"></div> Fire
+                </button>
+                <button class="layer-toggle on" data-layer="flood" onclick="toggleLayer(this)">
+                  <div class="layer-toggle-dot" style="background:#2980b9;"></div> Flood
+                </button>
+                <button class="layer-toggle on" data-layer="storm" onclick="toggleLayer(this)">
+                  <div class="layer-toggle-dot" style="background:#8e44ad;"></div> Storm
+                </button>
+                <button class="layer-toggle on" data-layer="smoke" onclick="toggleLayer(this)">
+                  <div class="layer-toggle-dot" style="background:#7f8c8d;"></div> Smoke
+                </button>
+                <button class="layer-toggle on" data-layer="cold" onclick="toggleLayer(this)">
+                  <div class="layer-toggle-dot" style="background:#5dade2;"></div> Cold
+                </button>
+              </div>
+            </div>
+            <div id="risk-map"></div>
+          </div>
+        </div>
+
+        <!-- Charts row -->
+<div class="charts-grid anim-fade-up anim-delay-2">
+  <div class="chart-panel compact">
+    <div class="chart-panel-title">📈 30-Day Hazard Event Trend</div>
+    <div class="chart-panel-sub">ACTIVE EVENTS BY TYPE · FEBRUARY 22 – MARCH 23, 2026</div>
+    <div class="chart-wrap chart-wrap-lg">
+      <canvas id="trend-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-panel compact">
+    <div class="chart-panel-title">🗺 Regional Risk Comparison</div>
+    <div class="chart-panel-sub">CURRENT RISK SCORE BY PROVINCE</div>
+    <div class="chart-wrap chart-wrap-sm">
+      <canvas id="region-chart"></canvas>
+    </div>
+    <div id="regional-table"></div>
+  </div>
+</div>
+
+        <!-- Community Impact -->
+        <div class="mb-16">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div>
+              <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--forest);margin-bottom:2px;">Community Impact Overview</div>
+              <div style="font-size:12.5px;color:var(--muted);">Risk scores and facility exposure for communities under active hazard alerts</div>
+            </div>
+          </div>
+          <div class="community-grid anim-fade-up anim-delay-2" id="community-grid"></div>
+        </div>
+
+        <!-- AI Copilot Environmental Prompts -->
+        <div class="copilot-env-panel anim-fade-up anim-delay-3">
+          <div class="card-header">
+            <span class="card-title">✦ Ask the AI Copilot about Environmental Risks</span>
+            <a href="copilot.html" class="btn btn-primary btn-sm">Open Copilot →</a>
+          </div>
+          <div style="padding:12px 20px 6px;font-size:13px;color:var(--muted);">
+            The AI Copilot can explain current hazards, summarize risk for your region, draft advisories, and recommend preparedness actions.
+          </div>
+          <div class="env-suggestions" id="env-suggestions"></div>
+        </div>
+
+        <!-- Subscribe to Alerts -->
+        <div class="subscribe-panel anim-fade-up anim-delay-3">
+          <div class="subscribe-inner">
+            <div class="subscribe-text">
+              <h2>Get Alerts Before They Escalate</h2>
+              <p>
+                Subscribe to receive timely environmental risk alerts for your watched communities.
+                Choose your hazard types, severity threshold, and notification frequency.
+              </p>
+              <div class="subscribe-features">
+                <div class="subscribe-feat"><div class="subscribe-feat-icon">🔥</div>Wildfire, smoke, and fire weather alerts</div>
+                <div class="subscribe-feat"><div class="subscribe-feat-icon">🌊</div>Flood, snowmelt, and storm surge warnings</div>
+                <div class="subscribe-feat"><div class="subscribe-feat-icon">⛈</div>Severe weather, tornado, and hail watches</div>
+                <div class="subscribe-feat"><div class="subscribe-feat-icon">🥶</div>Extreme cold, wind chill, and frost events</div>
+                <div class="subscribe-feat"><div class="subscribe-feat-icon">💨</div>Air quality and smoke advisories</div>
+                <div class="subscribe-feat"><div class="subscribe-feat-icon">🏫</div>School, hospital, and facility proximity alerts</div>
+              </div>
+            </div>
+
+            <div class="subscribe-form" id="sub-form">
+              <div class="subscribe-form-label">◉ Community Alert Subscription</div>
+              <input class="sub-input" type="email" id="sub-email" placeholder="Your email address">
+              <input class="sub-input" type="text" id="sub-location" placeholder="Community / postal code (e.g. Winnipeg or R2C)">
+              <select class="sub-select" id="sub-audience">
+                <option value="">I am a… (audience type)</option>
+                <option value="public">General public / household</option>
+                <option value="parent">Parent / family</option>
+                <option value="school">School administrator</option>
+                <option value="hospital">Hospital / healthcare facility</option>
+                <option value="municipality">Municipality / emergency manager</option>
+                <option value="farm">Farm / rural operator</option>
+                <option value="business">Local business</option>
+                <option value="community">Community organization</option>
+              </select>
+              <select class="sub-select" id="sub-severity">
+                <option value="all">Alert me for all severity levels</option>
+                <option value="high">High severity and above only</option>
+                <option value="critical">Critical events only</option>
+              </select>
+              <div class="sub-checkboxes">
+                <label class="sub-check-item"><input type="checkbox" checked> 🔥 Wildfire</label>
+                <label class="sub-check-item"><input type="checkbox" checked> 🌊 Flood</label>
+                <label class="sub-check-item"><input type="checkbox" checked> ⛈ Storms</label>
+                <label class="sub-check-item"><input type="checkbox" checked> 💨 Smoke/AQ</label>
+                <label class="sub-check-item"><input type="checkbox" checked> 🥶 Extreme cold</label>
+                <label class="sub-check-item"><input type="checkbox"> 🌍 Earthquake</label>
+              </div>
+              <button class="sub-btn" onclick="handleSubscribe()">🛡 Subscribe to Risk Alerts →</button>
+            </div>
+
+            <!-- Success state -->
+            <div id="sub-success" style="display:none;" class="subscribe-form">
+              <div style="text-align:center;padding:20px 10px;">
+                <div style="font-size:40px;margin-bottom:14px;">✅</div>
+                <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--wheat);margin-bottom:8px;">You're subscribed!</div>
+                <div style="font-size:13px;color:rgba(244,236,218,0.65);line-height:1.6;margin-bottom:14px;">
+                  You'll receive risk alerts for your watched location. Check your inbox for a confirmation.
+                </div>
+                <button class="sub-btn" onclick="document.getElementById('sub-success').style.display='none';document.getElementById('sub-form').style.display='block';">
+                  + Add another location
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alert History Timeline -->
+        <div class="card anim-fade-up anim-delay-4">
+          <div class="card-header">
+            <span class="card-title">🕐 Alert History — Last 72 Hours</span>
+            <span class="badge badge-grey">Canada-wide</span>
+          </div>
+          <div class="card-body">
+            <div class="alert-timeline" id="alert-timeline"></div>
+          </div>
+          <div class="card-footer" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);">
+            Showing most recent 8 events · Environmental signals from ECCC, CWFIS, Water Survey Canada, and provincial sources
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Incident Detail Drawer -->
+  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  <div class="incident-drawer" id="incident-drawer">
+    <div class="drawer-header">
+      <div id="drawer-icon" style="font-size:28px;"></div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:4px;" id="drawer-eyebrow">INCIDENT DETAIL</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:17px;color:var(--forest);line-height:1.2;" id="drawer-title">Loading…</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px;" id="drawer-loc"></div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">×</button>
+    </div>
+
+    <div class="drawer-body" id="drawer-body">
+      <!-- populated dynamically -->
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script>
+    const profile = Profile.requireOrRedirect();
+    if (!profile) throw new Error('no profile');
+
+    document.getElementById('sidebar-mount').innerHTML = renderSidebar('risk-monitor');
+    document.getElementById('risk-sub').textContent =
+      `Monitoring wildfire, flood, storm, smoke & cold for Canada · Your region: ${profile.province}`;
+
+    // Update timestamp
+    document.getElementById('last-updated').textContent =
+      'Updated ' + new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+
+    /* ── Hazard list ── */
+    let activeFilter = 'all';
+    let selectedHazardId = null;
+
+    function severityLabel(s) {
+      const m = { warning: 'WARNING', elevated: 'ELEVATED', watch: 'WATCH', advisory: 'ADVISORY', clear: 'CLEAR' };
+      return m[s] || s.toUpperCase();
+    }
+    function trendIcon(t) {
+      if (t === 'worsening')  return '<span class="trend-up">▲ Worsening</span>';
+      if (t === 'improving')  return '<span class="trend-down">▼ Improving</span>';
+      return '<span class="trend-flat">— Stable</span>';
+    }
+    function officialTag(h) {
+      return h.isOfficial
+        ? '<span class="badge badge-red" style="font-size:8px;">⚑ OFFICIAL</span>'
+        : '<span class="badge badge-grey" style="font-size:8px;">◎ Advisory</span>';
+    }
+
+    function renderHazardList(filter) {
+      const list = ENV_HAZARDS.filter(h => filter === 'all' || h.type === filter);
+      const el = document.getElementById('hazard-list');
+      if (!list.length) {
+        el.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--faint);font-size:13px;">No events for this filter.</div>';
+        return;
+      }
+      el.innerHTML = list.map(h => `
+        <div class="hazard-card ${selectedHazardId === h.id ? 'selected' : ''}" onclick="openDrawer('${h.id}')" id="hc-${h.id}">
+          <div class="hazard-card-top">
+            <div class="hazard-icon">${h.icon}</div>
+            <div class="hazard-card-title">${h.title}</div>
+          </div>
+          <div class="hazard-card-loc">📍 ${h.location}</div>
+          <div class="hazard-card-summary">${h.summary}</div>
+          <div class="hazard-card-footer">
+            <div class="hazard-meta-pills">
+              <span class="sev-pill sev-${h.severity}">${severityLabel(h.severity)}</span>
+              ${officialTag(h)}
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--faint);">${timeAgo(h.timestamp)}</span>
+            </div>
+            <div class="haz-impact" style="font-size:10px;">
+              ${trendIcon(h.trend)}
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:6px;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">
+            <span>🏘 ${h.affectedCommunities.length} communities</span>
+            <span>🏫 ${h.schoolsInZone} schools</span>
+            <span>🏥 ${h.hospitalsInZone} hospitals</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterHazards(type, btn) {
+      activeFilter = type;
+      document.querySelectorAll('.haz-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderHazardList(type);
+    }
+
+    renderHazardList('all');
+
+    /* ── Leaflet Map ── */
+    const map = L.map('risk-map', {
+      center: [55.0, -96.0],
+      zoom: 4,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap contributors, © CARTO',
+      subdomains: 'abcd',
+      maxZoom: 18,
+    }).addTo(map);
+
+    const TYPE_COLORS = {
+      wildfire: '#e67e22',
+      flood:    '#2980b9',
+      storm:    '#8e44ad',
+      smoke:    '#7f8c8d',
+      cold:     '#5dade2',
+    };
+
+    const mapMarkers = {};
+
+    function createCustomIcon(hazard) {
+      const color = TYPE_COLORS[hazard.type] || '#888';
+      const sev = hazard.severity;
+      const size = sev === 'warning' ? 38 : sev === 'elevated' ? 34 : 30;
+      return L.divIcon({
+        className: '',
+        html: `
+          <div style="
+            width:${size}px;height:${size}px;
+            background:${color};
+            border-radius:50% 50% 50% 0;
+            transform:rotate(-45deg);
+            border:3px solid white;
+            box-shadow:0 3px 10px rgba(0,0,0,0.3);
+            display:flex;align-items:center;justify-content:center;
+          ">
+            <div style="transform:rotate(45deg);font-size:${size*0.45}px;line-height:1;">${hazard.icon}</div>
+          </div>
+          ${sev === 'warning' ? `<div style="
+            position:absolute;
+            top:-3px;right:-3px;
+            width:12px;height:12px;
+            background:var(--red);
+            border-radius:50%;
+            border:2px solid white;
+          "></div>` : ''}
+        `,
+        iconSize: [size+4, size+4],
+        iconAnchor: [size/2, size+4],
+        popupAnchor: [0, -(size+4)],
+      });
+    }
+
+    ENV_HAZARDS.forEach(h => {
+      const marker = L.marker([h.lat, h.lon], { icon: createCustomIcon(h) })
+        .addTo(map)
+        .bindPopup(`
+          <div style="font-family:'Sora',sans-serif;min-width:200px;">
+            <div style="font-family:'DM Serif Display',serif;font-size:14px;color:#1B3528;margin-bottom:5px;">${h.icon} ${h.title}</div>
+            <div style="font-size:11.5px;color:#6b7c72;margin-bottom:7px;">📍 ${h.location}</div>
+            <div style="font-size:12px;color:#1a2820;line-height:1.5;margin-bottom:8px;">${h.summary}</div>
+            <div style="display:flex;gap:6px;margin-bottom:8px;">
+              <span style="background:${TYPE_COLORS[h.type]}20;color:${TYPE_COLORS[h.type]};font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:10px;">${severityLabel(h.severity)}</span>
+            </div>
+            <div style="font-size:11.5px;color:#4a7a5a;font-weight:600;cursor:pointer;" onclick="openDrawer('${h.id}');this.closest('.leaflet-popup').querySelector('.leaflet-popup-close-button').click();">View Full Detail →</div>
+          </div>
+        `, { maxWidth: 260 });
+      mapMarkers[h.id] = { marker, type: h.type, visible: true };
+    });
+
+    // Add radius circles for flood events
+    ENV_HAZARDS.filter(h => h.type === 'flood').forEach(h => {
+      L.circle([h.lat, h.lon], {
+        radius: 40000,
+        color: '#2980b9',
+        fillColor: '#2980b9',
+        fillOpacity: 0.06,
+        weight: 1.5,
+        dashArray: '4 4',
+      }).addTo(map);
+    });
+
+    // Wildfire heat zones
+    ENV_HAZARDS.filter(h => h.type === 'wildfire').forEach(h => {
+      L.circle([h.lat, h.lon], {
+        radius: 55000,
+        color: '#e67e22',
+        fillColor: '#e67e22',
+        fillOpacity: 0.05,
+        weight: 1,
+        dashArray: '5 5',
+      }).addTo(map);
+    });
+
+    function toggleLayer(btn) {
+      const layer = btn.dataset.layer;
+      btn.classList.toggle('on');
+      const isOn = btn.classList.contains('on');
+      Object.values(mapMarkers).forEach(m => {
+        if (m.type === layer) {
+          if (isOn) map.addLayer(m.marker);
+          else map.removeLayer(m.marker);
+        }
+      });
+    }
+
+    /* ── Chart.js: 30-day trend ── */
+    const trendCtx = document.getElementById('trend-chart').getContext('2d');
+    new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: HAZARD_TREND_30D.labels,
+        datasets: [
+          { label: 'Wildfire',      data: HAZARD_TREND_30D.wildfire, borderColor: '#e67e22', backgroundColor: 'rgba(230,126,34,0.08)', tension: 0.4, fill: true, pointRadius: 0 },
+          { label: 'Flood',         data: HAZARD_TREND_30D.flood,    borderColor: '#2980b9', backgroundColor: 'rgba(41,128,185,0.06)', tension: 0.4, fill: false, pointRadius: 0 },
+          { label: 'Storm',         data: HAZARD_TREND_30D.storm,    borderColor: '#8e44ad', backgroundColor: 'rgba(142,68,173,0.06)', tension: 0.4, fill: false, pointRadius: 0 },
+          { label: 'Smoke',         data: HAZARD_TREND_30D.smoke,    borderColor: '#7f8c8d', backgroundColor: 'rgba(127,140,141,0.06)', tension: 0.4, fill: false, pointRadius: 0 },
+          { label: 'Extreme Cold',  data: HAZARD_TREND_30D.cold,     borderColor: '#5dade2', backgroundColor: 'rgba(93,173,226,0.06)', tension: 0.4, fill: false, pointRadius: 0 },
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 12, padding: 14 }
+          },
+          tooltip: {
+            backgroundColor: '#1B3528',
+            titleFont: { family: 'DM Serif Display', size: 13 },
+            bodyFont:  { family: 'Sora', size: 12 },
+            padding: 10,
+          }
+        },
+        scales: {
+          x: {
+            ticks: { font: { family: 'IBM Plex Mono', size: 9 }, maxTicksLimit: 8, color: '#a0afa6' },
+            grid: { color: 'rgba(0,0,0,0.04)' }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { font: { family: 'IBM Plex Mono', size: 9 }, color: '#a0afa6', stepSize: 2 },
+            grid: { color: 'rgba(0,0,0,0.04)' }
+          }
+        }
+      }
+    });
+
+    /* ── Chart.js: Regional risk horizontal bar ── */
+    const regionData = Object.entries(REGIONAL_RISK).map(([prov, data]) => ({ prov, ...data }))
+      .sort((a, b) => b.score - a.score);
+
+    const regionCtx = document.getElementById('region-chart').getContext('2d');
+    new Chart(regionCtx, {
+      type: 'bar',
+      data: {
+        labels: regionData.map(r => r.prov),
+        datasets: [{
+          data: regionData.map(r => r.score),
+          backgroundColor: regionData.map(r =>
+            r.score >= 70 ? 'rgba(192,57,43,0.75)' :
+            r.score >= 55 ? 'rgba(230,126,34,0.75)' :
+            r.score >= 40 ? 'rgba(212,146,10,0.75)' :
+            'rgba(39,174,96,0.6)'
+          ),
+          borderRadius: 4,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1B3528',
+            callbacks: { label: ctx => ` Risk score: ${ctx.raw}/100` }
+          }
+        },
+        scales: {
+          x: { max: 100, ticks: { font: { family: 'IBM Plex Mono', size: 9 }, color: '#a0afa6' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+          y: { ticks: { font: { family: 'IBM Plex Mono', size: 9.5 }, color: '#1a2820' }, grid: { display: false } }
+        }
+      }
+    });
+
+    /* ── Regional risk table ── */
+    // (shown under chart) — small row list
+    // (skipped for space, chart already shows this)
+
+    /* ── Community impact cards ── */
+    const COMMUNITIES = [
+      { name: 'Fort McMurray', region: 'Alberta',  score: 82, level: 'crit',  hazard: 'Wildfire', schools: 11, hospitals: 2, action: 'Evacuation routes confirmed' },
+      { name: 'Ottawa–Gatineau', region: 'Ontario / Quebec', score: 68, level: 'elev', hazard: 'Flood', schools: 28, hospitals: 7, action: 'Low-lying areas under advisory' },
+      { name: 'Greater Toronto Area', region: 'Ontario', score: 71, level: 'elev', hazard: 'Severe Storm', schools: 55, hospitals: 14, action: 'Warning in effect for tonight' },
+      { name: 'Kamloops–Kelowna', region: 'British Columbia', score: 54, level: 'watch', hazard: 'Smoke / AQ', schools: 22, hospitals: 4, action: 'AQHI 4–6; sensitive groups advised' },
+      { name: 'Thompson–The Pas', region: 'Manitoba', score: 78, level: 'crit', hazard: 'Extreme Cold', schools: 7, hospitals: 2, action: 'Extreme Cold Warning in effect' },
+      { name: 'Winnipeg Metro', region: 'Manitoba', score: 61, level: 'watch', hazard: 'Spring Flood', schools: 18, hospitals: 5, action: 'Dikes operational; monitoring' },
+    ];
+
+    const cgEl = document.getElementById('community-grid');
+    cgEl.innerHTML = COMMUNITIES.map(c => `
+      <div class="community-card ${c.level}">
+        <div class="community-name">${c.name}</div>
+        <div class="community-region">${c.region}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+          <span class="badge badge-${c.level === 'crit' ? 'red' : c.level === 'elev' ? 'orange' : 'amber'}">${c.hazard}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:${c.score >= 70 ? 'var(--red)' : c.score >= 55 ? 'var(--orange)' : 'var(--amber)'};">${c.score}/100</span>
+        </div>
+        <div class="community-risk-bar">
+          <div class="community-risk-fill" style="width:${c.score}%;background:${c.score>=70?'var(--red)':c.score>=55?'var(--orange)':'var(--amber)'}"></div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.4;">${c.action}</div>
+        <div class="community-impacts">
+          <span>🏫 ${c.schools}</span>
+          <span>🏥 ${c.hospitals}</span>
+        </div>
+      </div>
+    `).join('');
+
+    /* ── AI Copilot suggestions ── */
+    const sugWrap = document.getElementById('env-suggestions');
+    ENV_SUGGESTED_QUESTIONS.forEach(q => {
+      const chip = document.createElement('div');
+      chip.className = 'env-chip';
+      chip.textContent = q;
+      chip.onclick = () => {
+        localStorage.setItem('copilot_prefill', q);
+        window.location.href = 'copilot.html';
+      };
+      sugWrap.appendChild(chip);
+    });
+
+    /* ── Alert history timeline ── */
+    const TIMELINE_EVENTS = [
+      { time: 'Today 10:45', desc: '⛈ Severe Weather Warning issued for GTA and Golden Horseshoe — Environment Canada', active: true },
+      { time: 'Today 08:30', desc: '🔥 Elevated Wildfire Risk advisory updated for Lac La Biche region — CWFIS', active: true },
+      { time: 'Today 06:15', desc: '🌊 Spring Flood Watch issued for Ottawa River — Water Survey Canada', active: true },
+      { time: 'Today 04:00', desc: '🥶 Extreme Cold Warning renewed for Thompson & The Pas — ECCC', active: true },
+      { time: 'Yesterday 20:00', desc: '💨 Air Quality Advisory issued for Kamloops–Kelowna corridor — BC Ministry', active: false },
+      { time: 'Yesterday 12:00', desc: '🌊 Red River Spring Flood Watch updated — MB Flood Forecast Centre', active: false },
+      { time: 'Mar 22 08:00', desc: '🔥 Wildfire Risk Index elevated to HIGH for AB Boreal Plains — CWFIS', active: false },
+      { time: 'Mar 21 14:30', desc: '⛈ Thunderstorm Watch expired — SW Ontario — ECCC', active: false },
+    ];
+    document.getElementById('alert-timeline').innerHTML = TIMELINE_EVENTS.map(e => `
+      <div class="timeline-event ${e.active ? 'active' : ''}">
+        <div class="timeline-time">${e.time}</div>
+        <div class="timeline-desc">${e.desc}</div>
+      </div>
+    `).join('');
+
+    /* ── Incident Drawer ── */
+    function openDrawer(id) {
+      const h = ENV_HAZARDS.find(x => x.id === id);
+      if (!h) return;
+      selectedHazardId = id;
+      renderHazardList(activeFilter);
+
+      // Fly to marker
+      map.flyTo([h.lat, h.lon], 7, { animate: true, duration: 1.2 });
+      if (mapMarkers[id]) mapMarkers[id].marker.openPopup();
+
+      // Populate drawer
+      document.getElementById('drawer-icon').textContent = h.icon;
+      document.getElementById('drawer-eyebrow').textContent = `${h.type.toUpperCase()} · ${severityLabel(h.severity)}`;
+      document.getElementById('drawer-title').textContent = h.title;
+      document.getElementById('drawer-loc').textContent = '📍 ' + h.location;
+
+      const freshPct = Math.max(10, 100 - h.freshness * 1.2);
+      const freshColor = h.freshness < 15 ? 'var(--green)' : h.freshness < 45 ? 'var(--amber)' : 'var(--orange)';
+
+      document.getElementById('drawer-body').innerHTML = `
+        <div class="drawer-section">
+          <div class="drawer-metrics">
+            <div class="drawer-metric">
+              <div class="drawer-metric-label">Severity</div>
+              <div class="drawer-metric-value"><span class="sev-pill sev-${h.severity}" style="font-size:12px;">${severityLabel(h.severity)}</span></div>
+            </div>
+            <div class="drawer-metric">
+              <div class="drawer-metric-label">Confidence</div>
+              <div class="drawer-metric-value">${h.confidence}</div>
+            </div>
+            <div class="drawer-metric">
+              <div class="drawer-metric-label">Communities</div>
+              <div class="drawer-metric-value">${h.affectedCommunities.length}</div>
+            </div>
+            <div class="drawer-metric">
+              <div class="drawer-metric-label">Trend</div>
+              <div class="drawer-metric-value" style="font-size:14px;">${trendIcon(h.trend)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="drawer-section">
+          <div class="drawer-section-label">SUMMARY</div>
+          <div class="drawer-section-content">${h.summary}</div>
+        </div>
+
+        <div class="drawer-section">
+          <div class="drawer-section-label">DETAILED ASSESSMENT</div>
+          <div class="drawer-section-content">${h.detail}</div>
+        </div>
+
+        <div class="drawer-action-box">
+          <div class="drawer-action-label">◎ Recommended Next Step</div>
+          <div class="drawer-action-text">${h.recommendedAction}</div>
+        </div>
+
+        <div class="drawer-section">
+          <div class="drawer-section-label">FACILITIES IN WATCH ZONE</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:11px 13px;">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--faint);margin-bottom:4px;">SCHOOLS</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--forest);">${h.schoolsInZone}</div>
+            </div>
+            <div style="background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:11px 13px;">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--faint);margin-bottom:4px;">HOSPITALS</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--forest);">${h.hospitalsInZone}</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;font-size:12.5px;color:var(--muted);">
+            Affected communities: ${h.affectedCommunities.join(', ')}
+          </div>
+        </div>
+
+        <div class="drawer-section">
+          <div class="drawer-section-label">DATA SOURCES</div>
+          <div class="source-list">
+            ${h.sources.map(s => `<div class="source-item"><div class="source-dot"></div>${s}</div>`).join('')}
+          </div>
+          <div style="margin-top:8px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);margin-bottom:4px;">Data freshness — last updated ${h.freshness} min ago</div>
+            <div class="freshness-bar"><div class="freshness-fill" style="width:${freshPct}%;background:${freshColor};"></div></div>
+          </div>
+        </div>
+
+        <div class="drawer-section">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-amber btn-sm" onclick="askCopilotAbout('${h.type}','${h.location}')">✦ Ask AI Copilot</button>
+            <button class="btn btn-secondary btn-sm" onclick="showToast('Alert shared to clipboard ✓')">Share Alert</button>
+            <button class="btn btn-ghost btn-sm" onclick="showToast('Subscribed to updates for this event ✓')">Subscribe to Updates</button>
+          </div>
+          <div style="font-size:11px;color:var(--faint);margin-top:10px;font-family:'IBM Plex Mono',monospace;line-height:1.5;">
+            ${h.isOfficial ? '⚑ This is an official government-issued alert.' : '◎ Advisory-level signal — not an official government emergency alert. Always follow official guidance.'}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('incident-drawer').classList.add('open');
+      document.getElementById('drawer-overlay').classList.add('open');
+    }
+
+    function closeDrawer() {
+      selectedHazardId = null;
+      document.getElementById('incident-drawer').classList.remove('open');
+      document.getElementById('drawer-overlay').classList.remove('open');
+      renderHazardList(activeFilter);
+    }
+
+    function askCopilotAbout(type, location) {
+      localStorage.setItem('copilot_prefill', `What is the current ${type} risk near ${location}? What actions should residents take?`);
+      window.location.href = 'copilot.html';
+    }
+
+    /* ── Subscribe handler ── */
+    function handleSubscribe() {
+      const email = document.getElementById('sub-email').value.trim();
+      const loc   = document.getElementById('sub-location').value.trim();
+      if (!email || !email.includes('@')) { showToast('Please enter a valid email address.'); return; }
+      if (!loc) { showToast('Please enter your community or postal code.'); return; }
+
+      // Save subscription locally
+      const subs = JSON.parse(localStorage.getItem('riskSubscriptions') || '[]');
+      subs.push({ email, location: loc, audience: document.getElementById('sub-audience').value, severity: document.getElementById('sub-severity').value, date: new Date().toISOString() });
+      localStorage.setItem('riskSubscriptions', JSON.stringify(subs));
+
+      document.getElementById('sub-form').style.display = 'none';
+      document.getElementById('sub-success').style.display = 'block';
+      showToast(`✅ Subscribed! Watch alerts for ${loc} will be sent to ${email}`);
+    }
+
+    /* ── Toast ── */
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    // Animate community risk bars
+    setTimeout(() => {
+      document.querySelectorAll('.community-risk-fill').forEach(el => {
+        const w = el.style.width;
+        el.style.width = '0%';
+        setTimeout(() => el.style.width = w, 100);
+      });
+    }, 400);
+  </script>
+</body>
+</html>

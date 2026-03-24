@@ -47,78 +47,14 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html,
-body {
-  min-height: 100%;
+html, body {
   height: 100%;
   font-family: 'Sora', sans-serif;
-  background: #1B3528;
+  background: var(--cream);
   color: var(--text);
   font-size: 14px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  overflow-x: hidden;
-}
-
-img,
-canvas,
-svg {
-  display: block;
-  max-width: 100%;
-}
-
-.page-surface {
-  background: var(--cream);
-  min-height: 100vh;
-}
-
-.chart-wrap {
-  position: relative;
-  width: 100%;
-}
-
-.chart-wrap-lg {
-  height: 320px;
-}
-
-.chart-wrap-sm {
-  height: 260px;
-}
-
-.chart-wrap-xs {
-  height: 220px;
-}
-
-.live-weather-loading {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.live-weather-error {
-  color: var(--red);
-}
-
-@media (max-width: 1024px) {
-  .chart-wrap-lg,
-  .chart-wrap-sm,
-  .chart-wrap-xs {
-    height: 240px;
-  }
-}
-
-@media (max-width: 768px) {
-  .chart-wrap-lg,
-  .chart-wrap-sm,
-  .chart-wrap-xs {
-    height: 220px;
-  }
-}
-}
 }
 
 /* ── Layout ── */

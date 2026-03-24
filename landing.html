@@ -6,8 +6,8 @@
   <title>Canadian Farm Copilot — AI Intelligence for Canadian Agriculture</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
-  <style>
- * { box-sizing: border-box; margin: 0; padding: 0; }
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 html,
 body {
@@ -29,15 +29,15 @@ body {
   background-color: #1B3528;
 }
 
-.ln-section {
-  position: relative;
-  z-index: 1;
-}
-
 .ln-nav {
   background: rgba(27,53,40,.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+.ln-section {
+  position: relative;
+  z-index: 1;
 }
 
 .ln-section-dark {
@@ -599,8 +599,10 @@ body {
   };
 
   window.activateDemoModeFromLanding = function() {
-    const r = Profile.load();
-    if (r) localStorage.setItem('preDemo', JSON.stringify(r));
+    const real = Profile.load();
+    if (real) {
+      localStorage.setItem('preDemo', JSON.stringify(real));
+    }
 
     Profile.save({
       province: 'Ontario',
@@ -615,42 +617,14 @@ body {
 
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
-      const t = document.querySelector(a.getAttribute('href'));
-      if (t) {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
         e.preventDefault();
-        t.scrollIntoView({ behavior: 'smooth' });
+        target.scrollIntoView({ behavior: 'smooth' });
       }
     });
   });
 </script>
-
-  /* Waitlist */
-  window.joinWaitlist = function() {
-    const email = document.getElementById('wl-email').value.trim();
-    if (!email || !email.includes('@')) { alert('Please enter a valid email address.'); return; }
-    const list = JSON.parse(localStorage.getItem('waitlist') || '[]');
-    list.push({ email, date: new Date().toISOString() });
-    localStorage.setItem('waitlist', JSON.stringify(list));
-    document.getElementById('wl-success').style.display = 'block';
-    document.getElementById('wl-email').value = '';
-  };
-
-  /* Demo mode from landing */
-  window.activateDemoModeFromLanding = function() {
-    const r = Profile.load();
-    if (r) localStorage.setItem('preDemo', JSON.stringify(r));
-    Profile.save({ province:'Ontario', farmType:'Produce / Vegetables', painPoints:['Labour Shortage','Funding Discovery'], size:'Small (< 100 acres / < 50 head)' });
-    localStorage.setItem('demoMode','1');
-    window.location.href = 'dashboard.html';
-  };
-
-  /* Smooth scroll */
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', e => {
-      const t = document.querySelector(a.getAttribute('href'));
-      if (t) { e.preventDefault(); t.scrollIntoView({ behavior:'smooth' }); }
-    });
-  });
-</script>
 </body>
+</html>
 </html>
