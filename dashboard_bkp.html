@@ -175,34 +175,6 @@
 
     .card-hover-lift { box-shadow:var(--shadow-sm); }
     .card-hover-lift:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
-
-    .stat-note {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-      line-height: 1.4;
-    }
-    .mini-source-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: var(--wheat-dk);
-      color: var(--forest);
-      font-size: 11px;
-      border: 1px solid var(--border);
-      font-family: 'IBM Plex Mono', monospace;
-      letter-spacing: 0.2px;
-    }
-    .dashboard-inline-card {
-      margin-bottom: 18px;
-    }
-    @media (max-width: 900px) {
-      .quick-tools-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
   </style>
 </head>
 <body>
@@ -248,8 +220,8 @@
         <!-- Welcome strip -->
         <div class="welcome-bar anim-fade-up">
           <div class="welcome-text">
-            <h2 id="welcome-h">Your farm intelligence dashboard 🌾</h2>
-            <p id="welcome-sub">Funding, weather, risk, and next actions for your operation</p>
+            <h2 id="welcome-h">Welcome back 🌾</h2>
+            <p id="welcome-sub">Your personalized agricultural intelligence dashboard</p>
           </div>
           <div class="welcome-actions">
             <a href="copilot.html"      class="welcome-btn wb-primary">✦ AI Copilot</a>
@@ -260,88 +232,27 @@
           </div>
         </div>
 
-        <!-- Trusted data sources -->
-        <div class="card dashboard-inline-card anim-fade-up">
-          <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;">
-              Trusted data sources
-            </div>
-            <span class="mini-source-pill">Agriculture Canada</span>
-            <span class="mini-source-pill">Provincial Weather Networks</span>
-            <span class="mini-source-pill">Canadian Disaster Database</span>
-            <span class="mini-source-pill">Government Funding Programs</span>
-          </div>
-        </div>
-
         <!-- Stats -->
         <div class="stat-grid anim-fade-up anim-delay-1">
           <div class="stat-card">
-            <div class="stat-label">Matched Programs</div>
+            <div class="stat-label">Programs Matched</div>
             <div class="stat-value">8</div>
             <div class="stat-change">↑ 2 new this month</div>
-            <div class="stat-note">Based on your current farm profile</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Estimated Funding Pool</div>
+            <div class="stat-label">Est. Funding Available</div>
             <div class="stat-value" style="font-size:22px;">$31M+</div>
-            <div class="stat-change neutral">Combined active pool</div>
-            <div class="stat-note">Across eligible federal and provincial programs</div>
+            <div class="stat-change neutral">Combined pool</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Urgent Deadlines</div>
             <div class="stat-value">2</div>
             <div class="stat-change neg">Within 60 days</div>
-            <div class="stat-note">Priority applications that need action soon</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Profile Match Score</div>
             <div class="stat-value">84%</div>
             <div class="stat-change">Based on your profile</div>
-            <div class="stat-note">Strength of fit across funding, tools, and timing</div>
-          </div>
-        </div>
-
-        <!-- How this dashboard works -->
-        <div class="card dashboard-inline-card anim-fade-up anim-delay-1">
-          <div class="card-header">
-            <div class="card-title">How this dashboard works</div>
-          </div>
-          <div class="card-body">
-            <div class="quick-tools-grid">
-              <div class="qt-card">
-                <div class="qt-icon">1</div>
-                <div class="qt-title">Farm profile</div>
-                <div class="qt-sub">Your province, farm type, size, and current challenges shape all recommendations.</div>
-              </div>
-              <div class="qt-card">
-                <div class="qt-icon">2</div>
-                <div class="qt-title">Data analysis</div>
-                <div class="qt-sub">Farm Copilot checks funding programs, weather, deadlines, and environmental risk signals.</div>
-              </div>
-              <div class="qt-card">
-                <div class="qt-icon">3</div>
-                <div class="qt-title">Next actions</div>
-                <div class="qt-sub">You get matched programs, alerts, seasonal planning guidance, and decision support.</div>
-              </div>
-              <div class="qt-card">
-                <div class="qt-icon">4</div>
-                <div class="qt-title">Take action</div>
-                <div class="qt-sub">Open funding, weather, ROI calculator, planner, or AI Copilot from one place.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Who Farm Copilot is built for -->
-        <div class="card dashboard-inline-card anim-fade-up anim-delay-1">
-          <div class="card-header">
-            <div class="card-title">Who Farm Copilot is built for</div>
-          </div>
-          <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;">
-            <span class="mini-source-pill">Grain farms</span>
-            <span class="mini-source-pill">Dairy operations</span>
-            <span class="mini-source-pill">Vegetable growers</span>
-            <span class="mini-source-pill">Agribusiness consultants</span>
           </div>
         </div>
 
