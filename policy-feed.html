@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Policy Feed — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    .tab-bar { display:flex; gap:4px; padding:0 0 20px; border-bottom:1px solid var(--border); margin-bottom:22px; flex-wrap:wrap; }
+    .pg-tab { padding:9px 18px; border-radius:20px; border:1.5px solid var(--border); background:white; font-family:'Sora',sans-serif; font-size:13px; color:var(--muted); cursor:pointer; transition:all .15s; }
+    .pg-tab.active { background:var(--forest); color:var(--wheat); border-color:var(--forest); }
+    .pg-tab:hover:not(.active) { border-color:var(--sage); color:var(--forest); }
+
+    /* Ticker / live bar */
+    .policy-ticker {
+      background:var(--forest); border-radius:var(--r); padding:11px 18px;
+      display:flex; align-items:center; gap:14px; margin-bottom:22px;
+      overflow:hidden;
+    }
+    .ticker-label {
+      font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px;
+      text-transform:uppercase; color:var(--amber-lt); flex-shrink:0;
+      display:flex; align-items:center; gap:6px;
+    }
+    .ticker-dot { width:6px; height:6px; border-radius:50%; background:var(--amber-lt); animation:pulse 2s infinite; }
+    .ticker-text { font-size:13px; color:rgba(244,236,218,.82); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    /* News card */
+    .news-card {
+      background:white; border:1px solid var(--border);
+      border-radius:var(--r-lg); padding:18px 20px;
+      margin-bottom:14px; box-shadow:var(--shadow-sm);
+      transition:box-shadow .15s; display:flex; gap:16px;
+    }
+    .news-card:hover { box-shadow:var(--shadow); }
+    .news-card.featured { border-left:3px solid var(--amber); }
+    .news-date-col { flex-shrink:0; text-align:center; width:54px; }
+    .news-date-day  { font-family:'DM Serif Display',serif; font-size:22px; color:var(--forest); line-height:1; }
+    .news-date-mon  { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--amber); }
+    .news-body { flex:1; }
+    .news-tags  { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:8px; }
+    .news-tag   { font-family:'IBM Plex Mono',monospace; font-size:9.5px; padding:2px 9px; border-radius:5px; }
+    .nt-fed     { background:rgba(41,128,185,.1); color:#1a5276; }
+    .nt-prov    { background:rgba(27,53,40,.08); color:var(--sage); }
+    .nt-new     { background:rgba(74,200,120,.15); color:#1e8449; }
+    .nt-urgent  { background:rgba(192,57,43,.1); color:#c0392b; }
+    .nt-funding { background:rgba(184,114,14,.1); color:#8a5800; }
+    .news-title { font-family:'DM Serif Display',serif; font-size:16px; color:var(--forest); margin-bottom:6px; line-height:1.3; }
+    .news-desc  { font-size:13px; color:var(--muted); line-height:1.65; margin-bottom:10px; }
+    .news-impact {
+      background:var(--cream); border-radius:var(--r-sm); padding:10px 14px;
+      font-size:12.5px; color:var(--text); line-height:1.55; margin-bottom:10px;
+    }
+    .news-impact-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--amber); margin-bottom:4px; }
+    .news-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .news-source { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--faint); margin-left:auto; }
+
+    /* Alert banners */
+    .alert-banner {
+      border-radius:var(--r-sm); padding:12px 16px; margin-bottom:14px;
+      display:flex; gap:12px; align-items:flex-start;
+      font-size:13px; color:var(--text); line-height:1.6;
+    }
+    .ab-urgent { background:rgba(192,57,43,.07); border:1px solid rgba(192,57,43,.2); }
+    .ab-info   { background:rgba(41,128,185,.06); border:1px solid rgba(41,128,185,.2); }
+    .ab-new    { background:rgba(74,200,120,.07); border:1px solid rgba(74,200,120,.2); }
+    .ab-icon   { font-size:18px; flex-shrink:0; }
+
+    /* Saved items */
+    .saved-item { background:var(--cream); border-radius:var(--r-sm); padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+    .saved-title { font-size:13px; font-weight:500; color:var(--text); }
+    .saved-sub   { font-size:11.5px; color:var(--muted); }
+
+    /* Subscribe form */
+    .subscribe-card { background:var(--forest); border-radius:var(--r-lg); padding:26px 28px; color:var(--wheat); }
+    .sub-title { font-family:'DM Serif Display',serif; font-size:20px; margin-bottom:8px; }
+    .sub-desc  { font-size:13.5px; color:rgba(244,236,218,.65); line-height:1.65; margin-bottom:20px; }
+    .sub-row   { display:flex; gap:10px; flex-wrap:wrap; }
+    .sub-input { flex:1; min-width:200px; padding:11px 16px; background:rgba(255,255,255,.1); border:1.5px solid rgba(255,255,255,.18); border-radius:8px; font-family:'Sora',sans-serif; font-size:13.5px; color:var(--wheat); outline:none; transition:border-color .14s; }
+    .sub-input::placeholder { color:rgba(244,236,218,.35); }
+    .sub-input:focus { border-color:var(--amber-lt); }
+    .sub-btn { padding:11px 22px; background:var(--amber); color:white; border:none; border-radius:8px; font-family:'Sora',sans-serif; font-size:13.5px; font-weight:600; cursor:pointer; transition:background .14s; white-space:nowrap; }
+    .sub-btn:hover { background:var(--amber-lt); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">📡 Policy &amp; Regulation Feed</div>
+          <div class="page-subtitle" id="pf-sub">Live Canadian agriculture policy, program launches, and regulatory changes — filtered for your farm</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <a href="gov-portal.html" class="btn btn-secondary btn-sm">🏛 Gov Portals →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Live ticker -->
+      <div class="policy-ticker anim-fade-up">
+        <div class="ticker-label"><div class="ticker-dot"></div>LATEST</div>
+        <div class="ticker-text" id="ticker-text">AgriStability enrollment deadline approaching — April 30, 2026 · AgriMarketing Diversification Stream open — up to $500K · BC On-Farm Tech program closes April 6 · Local Food Infrastructure Fund: $30M available</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up anim-delay-1">
+        <div class="stat-card">
+          <div class="stat-label">New This Month</div>
+          <div class="stat-value">6</div>
+          <div class="stat-change">Policy updates</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Urgent Items</div>
+          <div class="stat-value" id="stat-urgent">3</div>
+          <div class="stat-change neg">Action required</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Saved Articles</div>
+          <div class="stat-value" id="stat-saved">0</div>
+          <div class="stat-change neutral">In your reading list</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Alerts Active</div>
+          <div class="stat-value" id="stat-alerts">0</div>
+          <div class="stat-change">Topics subscribed</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar anim-fade-up anim-delay-1">
+        <button class="pg-tab active" id="pftab-all"      onclick="showPfTab('all')">📰 All Updates</button>
+        <button class="pg-tab"        id="pftab-urgent"   onclick="showPfTab('urgent')">🚨 Urgent</button>
+        <button class="pg-tab"        id="pftab-funding"  onclick="showPfTab('funding')">💰 Funding</button>
+        <button class="pg-tab"        id="pftab-regs"     onclick="showPfTab('regs')">⚖️ Regulations</button>
+        <button class="pg-tab"        id="pftab-saved"    onclick="showPfTab('saved')">🔖 Saved</button>
+        <button class="pg-tab"        id="pftab-alerts"   onclick="showPfTab('alerts')">🔔 My Alerts</button>
+      </div>
+
+      <!-- ── ALL UPDATES ── -->
+      <div id="pfview-all">
+        <!-- Alert banners -->
+        <div class="alert-banner ab-urgent anim-fade-up"><div class="ab-icon">⏱</div><strong>AgriStability enrollment closes April 30, 2026.</strong>&nbsp;Gather your production margin records, income tax return, and pasture feed cost documentation now. Your provincial portal link: <a href="gov-portal.html" style="color:var(--red);">Gov Portal Navigator →</a></div>
+        <div class="alert-banner ab-new anim-fade-up"><div class="ab-icon">🌱</div><strong>NEW — BC On-Farm Technology Adoption closes April 6, 2026.</strong>&nbsp;Up to $100K for robotics, automation, GPS, and sensors. Apply at BC Ministry of Agriculture portal.</div>
+        <div class="alert-banner ab-info anim-fade-up"><div class="ab-icon">🌐</div><strong>US tariffs on Canadian canola remain at 25%.</strong>&nbsp;AgriMarketing Diversification Stream (Feb 2026, up to $500K) supports expanding into Japan, Mexico, and Philippines markets.</div>
+
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+          <input class="filter-search" id="news-search" placeholder="Search policy updates…" style="flex:1;min-width:200px;" oninput="renderNews()">
+          <select class="filter-select" id="news-cat" onchange="renderNews()">
+            <option value="">All Categories</option>
+            <option>Funding</option><option>Regulations</option>
+            <option>Trade</option><option>Labour</option>
+            <option>Environment</option><option>Technology</option>
+          </select>
+        </div>
+        <div id="news-list"></div>
+      </div>
+
+      <!-- ── URGENT ── -->
+      <div id="pfview-urgent" style="display:none;" class="anim-fade-up">
+        <div id="urgent-list"></div>
+      </div>
+
+      <!-- ── FUNDING ── -->
+      <div id="pfview-funding" style="display:none;" class="anim-fade-up">
+        <div id="funding-list"></div>
+      </div>
+
+      <!-- ── REGULATIONS ── -->
+      <div id="pfview-regs" style="display:none;" class="anim-fade-up">
+        <div id="regs-list"></div>
+      </div>
+
+      <!-- ── SAVED ── -->
+      <div id="pfview-saved" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header"><span class="card-title">🔖 Your Reading List</span><span class="badge badge-amber" id="saved-count">0 items</span></div>
+          <div class="card-body" id="saved-list" style="padding:8px 20px;"></div>
+          <div class="card-footer" style="justify-content:flex-end;"><button class="btn btn-ghost btn-sm" onclick="clearSaved()">Clear all</button></div>
+        </div>
+      </div>
+
+      <!-- ── ALERTS ── -->
+      <div id="pfview-alerts" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🔔 Subscribe to Policy Alerts</span></div>
+            <div class="card-body">
+              <div class="subscribe-card">
+                <div class="sub-title">Get updates before deadlines hit</div>
+                <div class="sub-desc">We'll notify you when new programs launch, deadlines change, or regulations affecting your farm type and province are announced.</div>
+                <div class="sub-row">
+                  <input type="email" class="sub-input" id="alert-email" placeholder="your@email.com">
+                  <button class="sub-btn" onclick="subscribeAlerts()">Subscribe Free</button>
+                </div>
+              </div>
+              <div style="margin-top:20px;">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Alert Topics</div>
+                <div id="alert-topics"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">📅 Upcoming Policy Events</span></div>
+            <div class="card-body" id="policy-events" style="padding:4px 4px;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('policy-feed');
+  document.getElementById('pf-sub').textContent = `Agriculture policy updates filtered for ${profile.farmType} · ${profile.province}`;
+
+  // ── News data ────────────────────────────────────────
+  const NEWS = [
+    { id:'n01', date:'26 Mar', day:'26', mon:'Mar', cat:'Funding', tags:['nt-urgent','nt-funding'], urgent:true, featured:true,
+      title:'AgriStability Enrollment — 35 Days Remaining',
+      desc:'The April 30, 2026 enrollment deadline for AgriStability is 35 days away. This is Canada\'s primary income stabilization program, covering margin losses beyond 30% of reference margin. The 2026 update adds pasture-related feed costs as allowable expenses.',
+      impact:'ACTION: Gather your T2042 tax return, production income/expense records, and AgriInvest account details. Apply through your provincial administration portal. Missing this deadline means no coverage for the entire 2026 crop year.',
+      actions:[['Apply via Province','gov-portal.html'],['AI Help','copilot.html']], source:'AAFC · agriculture.canada.ca' },
+
+    { id:'n02', date:'24 Mar', day:'24', mon:'Mar', cat:'Funding', tags:['nt-new','nt-funding'], urgent:true, featured:false,
+      title:'BC On-Farm Technology Adoption — Closes April 6, 2026',
+      desc:'The BC Ministry of Agriculture\'s On-Farm Technology Adoption Program is accepting final applications until April 6, 2026. Eligible farms can receive up to $100K for precision agriculture equipment, automation, robotics, GPS systems, and farm management software.',
+      impact:'If you farm in BC: this is the most generous per-farm technology grant available in Canada right now. Eligible purchases include GPS auto-steer, robotic milkers, automated transplanters, soil sensors, and crop monitoring systems.',
+      actions:[['Apply Now','https://www2.gov.bc.ca'],['Model ROI','agritech.html']], source:'BC Ministry of Agriculture · Feb 24, 2026' },
+
+    { id:'n03', date:'20 Mar', day:'20', mon:'Mar', cat:'Trade', tags:['nt-urgent'], urgent:true, featured:false,
+      title:'US Tariff on Canadian Canola Remains at 25% — AgriMarketing Response Open',
+      desc:'The US 25% tariff on Canadian canola imports remains in effect as of March 2026 with no resolution timeline announced. Canadian canola exports to the US have declined 18% year-over-year. The AgriMarketing Diversification Stream (Feb 2026) specifically targets this market disruption.',
+      impact:'Canola producers: the Advance Payments Program (APP) offers $500K interest-free to help bridge cash flow without forced selling at currently wide basis levels. AgriMarketing (up to $500K) supports expansion into Japan, Mexico, and Philippines markets.',
+      actions:[['AgriMarketing','funding.html'],['APP Guide','gov-portal.html'],['Grain Basis','grain-tracker.html']], source:'AAFC · March 2026 Tariff Update' },
+
+    { id:'n04', date:'15 Mar', day:'15', mon:'Mar', cat:'Labour', tags:['nt-fed'], urgent:false, featured:false,
+      title:'ESDC Prioritizes Agricultural LMIA Processing — 15-Day Target',
+      desc:'Employment and Social Development Canada announced a priority processing target of 15 business days for agricultural Temporary Foreign Worker LMIAs for the 2026 spring/summer season. Farms requiring TFW workers for planting should apply immediately.',
+      impact:'If you need TFW workers for spring planting, your LMIA application should be submitted by April 1, 2026 to receive workers in time. Ensure housing arrangements are documented before submission.',
+      actions:[['TFW Guide','labour.html'],['Gov Portal','gov-portal.html']], source:'ESDC · March 2026' },
+
+    { id:'n05', date:'10 Mar', day:'10', mon:'Mar', cat:'Funding', tags:['nt-new','nt-funding'], urgent:false, featured:false,
+      title:'$30M Local Food Infrastructure Fund — Applications Open',
+      desc:'The federal government\'s $30M Local Food Infrastructure Fund (LFIF) is accepting applications for food processing, storage, aggregation, and distribution infrastructure. Eligible projects include cold storage, mobile processing units, and community food hubs.',
+      impact:'For vegetable growers, small processors, and food hubs: this program funds infrastructure that bridges the gap between farm gate and retail market access. Maximum grant: $250K per project.',
+      actions:[['Apply','https://agriculture.canada.ca'],['Ask AI','copilot.html']], source:'AAFC · LFIF 2026' },
+
+    { id:'n06', date:'05 Mar', day:'05', mon:'Mar', cat:'Environment', tags:['nt-prov'], urgent:false, featured:false,
+      title:'Ontario RALP — $14.6M for Resilient Agricultural Landscapes',
+      desc:'Ontario\'s Resilient Agricultural Landscape Program (RALP) is funding wetland restoration, riparian buffer planting, and carbon sequestration projects on agricultural land. Projects must be on farmland in Ontario.',
+      impact:'Ontario farmers: this program pays you to restore wetlands, plant trees, and create habitat — activities that also reduce flood risk and improve water quality. Eligible costs: planting materials, equipment hire, and project management.',
+      actions:[['Apply','https://www.ontario.ca/page/agriculture'],['Compliance','compliance.html']], source:'OMAFRA · March 2026' },
+
+    { id:'n07', date:'01 Mar', day:'01', mon:'Mar', cat:'Regulations', tags:['nt-fed'], urgent:false, featured:false,
+      title:'CFIA Updates Livestock Traceability — New Tagging Requirements 2026',
+      desc:'The Canadian Food Inspection Agency has updated livestock traceability requirements effective January 1, 2026. Cattle must be tagged with RFID ear tags within 7 days of birth for beef and dairy operations. Swine require Premises Identification (PID) tags before any movement.',
+      impact:'Check your tagging compliance before any livestock movement. Non-compliant movements can result in fines up to $25,000. Update your herd records in the Canadian Cattle Identification Agency (CCIA) database.',
+      actions:[['Compliance Tracker','compliance.html'],['CFIA Portal','gov-portal.html']], source:'CFIA · January 2026' },
+
+    { id:'n08', date:'20 Feb', day:'20', mon:'Feb', cat:'Funding', tags:['nt-new','nt-funding'], urgent:false, featured:false,
+      title:'AgriMarketing Market Diversification Stream — Launched Feb 2026',
+      desc:'Agriculture Canada officially launched the AgriMarketing Market Diversification Stream in February 2026. Up to $500K per applicant to support Canadian agricultural exporters expanding into non-US markets including Japan, Mexico, Philippines, and Southeast Asia.',
+      impact:'Designed specifically to respond to US tariff pressure on canola, beef, and pork. Eligible activities: international trade shows, in-market testing, promotional activities, and buyer missions.',
+      actions:[['Apply','https://agriculture.canada.ca'],['Grain Basis','grain-tracker.html']], source:'AAFC · February 2026' },
+
+    { id:'n09', date:'10 Feb', day:'10', mon:'Feb', cat:'Technology', tags:['nt-fed'], urgent:false, featured:false,
+      title:'AAFC Releases Digital Agriculture Strategy 2026–2030',
+      desc:'Agriculture Canada released its five-year Digital Agriculture Strategy, prioritizing connectivity for rural farms, digital literacy programs, precision agriculture adoption, and open data platforms for Canadian producers.',
+      impact:'The strategy commits $45M over five years to farm digital adoption and recommends AgriInnovate funding be expanded to include digital technology commercialization.',
+      actions:[['Agritech Guide','agritech.html'],['Training','training.html']], source:'AAFC Digital Strategy · Feb 10, 2026' },
+
+    { id:'n10', date:'05 Feb', day:'05', mon:'Feb', cat:'Labour', tags:['nt-fed'], urgent:false, featured:false,
+      title:'Federal Agricultural Labour Strategy — $95M Over 5 Years',
+      desc:'The federal government announced a $95M investment in the AAFC Agricultural Labour Strategy addressing the projected 123,000-worker shortage by 2030. Funding includes immigration pathways, training programs, and automation adoption support.',
+      impact:'Farms with chronic labour shortages: apply for the automation components of this strategy through CAP provincial streams. New farmer training programs (CAHRC) and newcomer orientation resources are now available free of charge.',
+      actions:[['Labour Exchange','labour.html'],['Training','training.html']], source:'AAFC Labour Strategy · Feb 2026' },
+  ];
+
+  let savedNews   = JSON.parse(localStorage.getItem('savedNews')   || '[]');
+  let alertTopics = JSON.parse(localStorage.getItem('alertTopics') || '[]');
+
+  function renderNewsCard(item) {
+    const isSaved = savedNews.includes(item.id);
+    return `<div class="news-card ${item.featured?'featured':''}">
+      <div class="news-date-col">
+        <div class="news-date-day">${item.day}</div>
+        <div class="news-date-mon">${item.mon}</div>
+      </div>
+      <div class="news-body">
+        <div class="news-tags">
+          ${item.tags.map(t=>`<span class="news-tag ${t}">${t==='nt-urgent'?'⚡ Urgent':t==='nt-new'?'✨ New':t==='nt-funding'?'💰 Funding':t==='nt-fed'?'🇨🇦 Federal':'🍁 Provincial'}</span>`).join('')}
+          <span class="news-tag" style="background:rgba(0,0,0,.05);color:var(--muted);">${item.cat}</span>
+        </div>
+        <div class="news-title">${item.title}</div>
+        <div class="news-desc">${item.desc}</div>
+        <div class="news-impact">
+          <div class="news-impact-label">What this means for your farm</div>
+          ${item.impact}
+        </div>
+        <div class="news-actions">
+          ${item.actions.map(([label,href])=>`<a href="${href}" ${href.startsWith('http')?'target="_blank"':''} class="btn btn-${label==='Apply Now'||label==='Apply'?'primary':'ghost'} btn-sm">${label} →</a>`).join('')}
+          <button class="btn btn-ghost btn-sm" onclick="toggleSave('${item.id}')" id="save-${item.id}">${isSaved?'🔖 Saved':'🔖 Save'}</button>
+          <a href="copilot.html" class="btn btn-ghost btn-sm">✦ Ask AI</a>
+          <span class="news-source">${item.source}</span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderNews() {
+    const search = document.getElementById('news-search')?.value.toLowerCase()||'';
+    const cat    = document.getElementById('news-cat')?.value||'';
+    const list   = NEWS.filter(n =>
+      (!search || n.title.toLowerCase().includes(search) || n.desc.toLowerCase().includes(search)) &&
+      (!cat    || n.cat === cat)
+    );
+    document.getElementById('news-list').innerHTML = list.map(renderNewsCard).join('');
+    updateStats();
+  }
+
+  function updateStats() {
+    document.getElementById('stat-saved').textContent  = savedNews.length;
+    document.getElementById('stat-alerts').textContent = alertTopics.length;
+  }
+
+  window.toggleSave = function(id) {
+    if (savedNews.includes(id)) savedNews = savedNews.filter(x=>x!==id);
+    else savedNews.push(id);
+    localStorage.setItem('savedNews', JSON.stringify(savedNews));
+    const btn = document.getElementById('save-'+id);
+    if (btn) btn.textContent = savedNews.includes(id)?'🔖 Saved':'🔖 Save';
+    updateStats();
+  };
+
+  function clearSaved() { savedNews=[]; localStorage.setItem('savedNews',JSON.stringify(savedNews)); showPfTab('saved'); updateStats(); }
+
+  function renderSaved() {
+    const items = NEWS.filter(n=>savedNews.includes(n.id));
+    document.getElementById('saved-count').textContent = items.length + ' items';
+    document.getElementById('saved-list').innerHTML = items.length
+      ? items.map(n=>`<div class="saved-item"><div><div class="saved-title">${n.title}</div><div class="saved-sub">${n.cat} · ${n.date}</div></div><button class="btn btn-ghost btn-sm" onclick="toggleSave('${n.id}');renderSaved();">Remove</button></div>`).join('')
+      : '<div style="padding:16px 0;font-size:13px;color:var(--muted);">No saved articles yet. Click 🔖 Save on any article.</div>';
+  }
+
+  // ── Alert topics ─────────────────────────────────────
+  const TOPICS = [
+    { id:'funding',    label:'💰 New Funding Programs',   desc:'AgriStability, CAP, AgriMarketing launches' },
+    { id:'deadlines',  label:'⏱ Deadline Reminders',      desc:'Program enrollment and application deadlines' },
+    { id:'regs',       label:'⚖️ Regulatory Changes',    desc:'CFIA, PMRA, OHS policy updates' },
+    { id:'trade',      label:'🌐 Trade & Tariff Updates', desc:'Export market, tariff, and CUSMA changes' },
+    { id:'labour',     label:'👷 Labour & TFW Updates',   desc:'ESDC, LMIA, foreign worker policy' },
+    { id:'tech',       label:'🤖 Technology Programs',    desc:'On-farm tech grants and digital ag news' },
+  ];
+
+  function renderAlertTopics() {
+    document.getElementById('alert-topics').innerHTML = TOPICS.map(t => {
+      const active = alertTopics.includes(t.id);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">${t.label}</div><div style="font-size:11.5px;color:var(--muted);">${t.desc}</div></div>
+        <button onclick="toggleTopic('${t.id}')" id="topic-${t.id}" class="btn ${active?'btn-primary':'btn-ghost'} btn-sm">${active?'✓ On':'Off'}</button>
+      </div>`;
+    }).join('');
+    document.getElementById('stat-alerts').textContent = alertTopics.length;
+  }
+
+  window.toggleTopic = function(id) {
+    if (alertTopics.includes(id)) alertTopics = alertTopics.filter(x=>x!==id);
+    else alertTopics.push(id);
+    localStorage.setItem('alertTopics', JSON.stringify(alertTopics));
+    renderAlertTopics();
+  };
+
+  window.subscribeAlerts = function() {
+    const email = document.getElementById('alert-email').value.trim();
+    if (!email || !email.includes('@')) { alert('Please enter a valid email address.'); return; }
+    localStorage.setItem('alertEmail', email);
+    alert('✓ Subscribed! You\'ll receive policy updates for: ' + (alertTopics.length ? alertTopics.join(', ') : 'all topics') + '. Email: ' + email);
+  };
+
+  // ── Policy events ─────────────────────────────────────
+  const POLICY_EVENTS = [
+    { date:'Mar 28', title:'AgriStability Filing Workshop', host:'AAFC Virtual' },
+    { date:'Apr 6',  title:'BC On-Farm Tech Deadline',      host:'BC Ministry' },
+    { date:'Apr 30', title:'AgriStability Enrollment Closes',host:'AAFC' },
+    { date:'May 1',  title:'Spring Crop Insurance Deadline', host:'Provincial' },
+    { date:'May 15', title:'AgriMarketing Applications',    host:'AAFC Rolling' },
+    { date:'Jun 15', title:'Farm Income Tax Return Due',    host:'CRA' },
+  ];
+
+  document.getElementById('policy-events').innerHTML = POLICY_EVENTS.map(e => `
+    <div style="display:flex;gap:12px;padding:11px 18px;border-bottom:1px solid var(--border);align-items:center;">
+      <div style="background:var(--forest);border-radius:6px;padding:5px 10px;text-align:center;flex-shrink:0;">
+        <div style="font-family:'DM Serif Display',serif;font-size:15px;color:var(--wheat);">${e.date.split(' ')[1]}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:1px;text-transform:uppercase;color:var(--amber-lt);">${e.date.split(' ')[0]}</div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text);">${e.title}</div>
+        <div style="font-size:11.5px;color:var(--muted);">${e.host}</div>
+      </div>
+    </div>`).join('');
+
+  // ── Tab switching ────────────────────────────────────
+  function showPfTab(t) {
+    ['all','urgent','funding','regs','saved','alerts'].forEach(id => {
+      document.getElementById('pfview-'+id).style.display = id===t?'':'none';
+      document.getElementById('pftab-'+id).classList.toggle('active', id===t);
+    });
+    if (t==='urgent')  document.getElementById('urgent-list').innerHTML = NEWS.filter(n=>n.urgent).map(renderNewsCard).join('');
+    if (t==='funding') document.getElementById('funding-list').innerHTML = NEWS.filter(n=>n.cat==='Funding').map(renderNewsCard).join('');
+    if (t==='regs')    document.getElementById('regs-list').innerHTML    = NEWS.filter(n=>n.cat==='Regulations'||n.cat==='Trade').map(renderNewsCard).join('');
+    if (t==='saved')   renderSaved();
+    if (t==='alerts')  renderAlertTopics();
+  }
+
+  renderNews();
+  updateStats();
+</script>
+</body>
+</html>

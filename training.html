@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farm Training Academy — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    /* ── Tab bar ── */
+    .tab-bar { display:flex; gap:4px; padding:0 0 20px; border-bottom:1px solid var(--border); margin-bottom:22px; flex-wrap:wrap; }
+    .pg-tab { padding:9px 18px; border-radius:20px; border:1.5px solid var(--border); background:white; font-family:'Sora',sans-serif; font-size:13px; color:var(--muted); cursor:pointer; transition:all .15s; }
+    .pg-tab.active { background:var(--forest); color:var(--wheat); border-color:var(--forest); }
+    .pg-tab:hover:not(.active) { border-color:var(--sage); color:var(--forest); }
+
+    /* ── Hero banner ── */
+    .train-hero {
+      background: linear-gradient(135deg, var(--forest) 0%, #254d37 60%, #1a3d2c 100%);
+      border-radius: var(--r-lg); padding: 28px 32px;
+      display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+      margin-bottom: 24px; color: var(--wheat);
+      box-shadow: var(--shadow-lg); position: relative; overflow: hidden;
+    }
+    .train-hero::before {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.012) 40px),
+                  repeating-linear-gradient(90deg,transparent,transparent 79px,rgba(255,255,255,.007) 80px);
+    }
+    .th-icon { font-size: 52px; flex-shrink:0; position:relative; z-index:1; }
+    .th-text { flex:1; min-width:200px; position:relative; z-index:1; }
+    .th-text h2 { font-family:'DM Serif Display',serif; font-size:24px; margin-bottom:7px; }
+    .th-text p  { font-size:13.5px; color:rgba(244,236,218,.65); line-height:1.65; }
+    .th-stats { display:flex; gap:20px; position:relative; z-index:1; flex-wrap:wrap; }
+    .th-stat { text-align:center; }
+    .th-stat-val { font-family:'DM Serif Display',serif; font-size:26px; color:var(--wheat); }
+    .th-stat-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(244,236,218,.35); margin-top:2px; }
+
+    /* ── Course card ── */
+    .course-card {
+      background: white; border:1px solid var(--border);
+      border-radius: var(--r-lg); overflow:hidden;
+      box-shadow: var(--shadow-sm); transition: all .18s;
+      display: flex; flex-direction: column;
+    }
+    .course-card:hover { box-shadow:var(--shadow); transform:translateY(-3px); }
+    .cc-img {
+      height: 110px; display:flex; align-items:center; justify-content:center;
+      font-size: 48px; position:relative;
+    }
+    .cc-badge {
+      position:absolute; top:10px; right:10px;
+      font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.5px;
+      padding:3px 9px; border-radius:8px; text-transform:uppercase;
+    }
+    .cb-free { background:rgba(74,200,120,.15); color:#1e8449; }
+    .cb-paid { background:rgba(184,114,14,.15); color:#8a5800; }
+    .cb-cert { background:rgba(41,128,185,.15); color:#1a5276; }
+    .cc-body { padding:16px 18px; flex:1; display:flex; flex-direction:column; gap:6px; }
+    .cc-provider { font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); }
+    .cc-title { font-family:'DM Serif Display',serif; font-size:16px; color:var(--forest); line-height:1.3; }
+    .cc-desc  { font-size:12.5px; color:var(--muted); line-height:1.55; flex:1; }
+    .cc-meta  { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+    .cc-tag   { font-family:'IBM Plex Mono',monospace; font-size:9.5px; padding:2px 8px; border-radius:5px; background:var(--cream); border:1px solid var(--border); color:var(--forest); }
+    .cc-footer { padding:12px 18px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:center; }
+    .cc-progress-wrap { margin-top:8px; height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+    .cc-progress-fill { height:100%; background:linear-gradient(90deg,var(--sage),var(--amber-lt)); border-radius:3px; transition:width .5s; }
+
+    /* ── Progress tracker ── */
+    .progress-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px; }
+    .prog-card {
+      background:var(--forest); border-radius:var(--r-lg); padding:18px 20px;
+      color:var(--wheat); display:flex; align-items:center; gap:14px;
+    }
+    .prog-icon { font-size:28px; flex-shrink:0; }
+    .prog-val  { font-family:'DM Serif Display',serif; font-size:28px; color:var(--wheat); line-height:1; }
+    .prog-lbl  { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(244,236,218,.38); margin-top:3px; }
+
+    /* ── Certificate card ── */
+    .cert-card {
+      background:white; border:1.5px solid var(--border); border-radius:var(--r-lg);
+      padding:16px 18px; display:flex; align-items:center; gap:14px;
+      margin-bottom:10px; box-shadow:var(--shadow-sm);
+    }
+    .cert-icon { font-size:32px; flex-shrink:0; }
+    .cert-name { font-size:13.5px; font-weight:600; color:var(--text); margin-bottom:2px; }
+    .cert-sub  { font-size:11.5px; color:var(--muted); }
+    .cert-status { margin-left:auto; flex-shrink:0; }
+
+    /* ── Course grid responsive ── */
+    .course-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+
+    /* ── Learning path ── */
+    .path-step {
+      display:flex; gap:16px; padding:14px 0;
+      border-bottom:1px solid var(--border);
+    }
+    .path-step:last-child { border-bottom:none; }
+    .path-num {
+      width:32px; height:32px; border-radius:50%;
+      background:var(--forest); color:var(--wheat);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'DM Serif Display',serif; font-size:14px; flex-shrink:0; margin-top:2px;
+    }
+    .path-num.done { background:var(--sage); }
+    .path-body h4 { font-size:14px; font-weight:600; color:var(--text); margin-bottom:3px; }
+    .path-body p  { font-size:12.5px; color:var(--muted); line-height:1.55; }
+    .path-link    { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); margin-top:5px; display:inline-block; }
+
+    @media(max-width:900px) {
+      .course-grid  { grid-template-columns:repeat(2,1fr); }
+      .progress-grid { grid-template-columns:1fr 1fr; }
+    }
+    @media(max-width:540px) {
+      .course-grid  { grid-template-columns:1fr; }
+      .progress-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">🎓 Farm Training Academy</div>
+          <div class="page-subtitle" id="tr-sub">Free and accredited courses for Canadian farmers — from CAHRC, CASA, FCC, and more</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <a href="copilot.html"   class="btn btn-primary btn-sm">✦ Ask AI Copilot</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Hero -->
+      <div class="train-hero anim-fade-up">
+        <div class="th-icon">🎓</div>
+        <div class="th-text">
+          <h2>Learn at your pace — free, accredited, built for Canadian agriculture</h2>
+          <p>Courses from Agriculture Canada, CAHRC, CASA, Farm Credit Canada, and leading agricultural universities. Earn certificates that count toward compliance, funding eligibility, and career development. All available online, free of charge unless noted.</p>
+        </div>
+        <div class="th-stats">
+          <div class="th-stat"><div class="th-stat-val">47</div><div class="th-stat-lbl">Courses</div></div>
+          <div class="th-stat"><div class="th-stat-val">12</div><div class="th-stat-lbl">Certificates</div></div>
+          <div class="th-stat"><div class="th-stat-val">Free</div><div class="th-stat-lbl">Most courses</div></div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up anim-delay-1">
+        <div class="stat-card">
+          <div class="stat-label">Courses Available</div>
+          <div class="stat-value" id="stat-courses">47</div>
+          <div class="stat-change">Federal + provincial</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Your Progress</div>
+          <div class="stat-value" id="stat-progress">0%</div>
+          <div class="stat-change neutral" id="stat-progress-sub">Start a course</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Certificates Earned</div>
+          <div class="stat-value" id="stat-certs">0</div>
+          <div class="stat-change">Shareable credentials</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Hours Completed</div>
+          <div class="stat-value" id="stat-hours">0</div>
+          <div class="stat-change neutral">Professional development</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar anim-fade-up anim-delay-1">
+        <button class="pg-tab active" id="ptab-all"      onclick="showTab('all')">📚 All Courses</button>
+        <button class="pg-tab"        id="ptab-my"       onclick="showTab('my')">👤 My Learning</button>
+        <button class="pg-tab"        id="ptab-paths"    onclick="showTab('paths')">🗺 Learning Paths</button>
+        <button class="pg-tab"        id="ptab-certs"    onclick="showTab('certs')">🏆 Certificates</button>
+        <button class="pg-tab"        id="ptab-calendar" onclick="showTab('calendar')">📅 Upcoming</button>
+      </div>
+
+      <!-- ── ALL COURSES ── -->
+      <div id="view-all">
+        <!-- Filter bar -->
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;" class="anim-fade-up">
+          <input class="filter-search" id="course-search" placeholder="Search courses, topics, providers…" style="flex:1;min-width:200px;" oninput="renderCourses()">
+          <select class="filter-select" id="course-cat" onchange="renderCourses()">
+            <option value="">All Categories</option>
+            <option>Business & Finance</option>
+            <option>Safety</option>
+            <option>Agronomy</option>
+            <option>Livestock</option>
+            <option>Technology</option>
+            <option>Regulations</option>
+            <option>Leadership</option>
+            <option>Sustainability</option>
+          </select>
+          <select class="filter-select" id="course-price" onchange="renderCourses()">
+            <option value="">All Pricing</option>
+            <option value="free">Free Only</option>
+            <option value="cert">With Certificate</option>
+          </select>
+        </div>
+        <div class="course-grid" id="course-grid"></div>
+      </div>
+
+      <!-- ── MY LEARNING ── -->
+      <div id="view-my" style="display:none;">
+        <div class="grid-2 anim-fade-up" style="grid-template-columns:1fr 300px;">
+          <div>
+            <div class="card mb-16">
+              <div class="card-header"><span class="card-title">📖 In Progress</span><span class="badge badge-amber" id="inprog-count">0 courses</span></div>
+              <div class="card-body" id="inprog-list" style="padding:8px 18px;"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">✅ Completed</span><span class="badge badge-sage" id="done-count">0 courses</span></div>
+              <div class="card-body" id="done-list" style="padding:8px 18px;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="card mb-16" style="background:var(--forest);border:none;">
+              <div class="card-body" style="padding:22px;text-align:center;">
+                <div style="font-size:40px;margin-bottom:10px;">🏆</div>
+                <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--wheat);margin-bottom:4px;" id="my-cert-count">0</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:rgba(244,236,218,.35);">Certificates Earned</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">⏱ Learning Streak</span></div>
+              <div class="card-body" style="font-size:13px;color:var(--muted);line-height:1.7;display:flex;flex-direction:column;gap:8px;">
+                <div>📅 Last activity: <span id="last-activity" style="color:var(--text);font-weight:500;">Not started</span></div>
+                <div>⏱ Total hours: <span id="my-hours" style="color:var(--text);font-weight:500;">0 hrs</span></div>
+                <div>🎯 Goal: Complete 1 course this month</div>
+                <a href="copilot.html" class="btn btn-secondary btn-sm" style="margin-top:4px;">Ask AI what to study next →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LEARNING PATHS ── -->
+      <div id="view-paths" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🌱 New Farmer Foundations</span>
+              <span class="badge badge-sage">8 courses</span>
+            </div>
+            <div class="card-body" style="padding:8px 20px;" id="path-new"></div>
+            <div class="card-footer"><a href="#" class="btn btn-primary btn-sm" onclick="startPath('new');return false;">Start This Path →</a></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">💰 Funding & Business</span>
+              <span class="badge badge-amber">6 courses</span>
+            </div>
+            <div class="card-body" style="padding:8px 20px;" id="path-funding"></div>
+            <div class="card-footer"><a href="#" class="btn btn-primary btn-sm" onclick="startPath('funding');return false;">Start This Path →</a></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🛡 Safety Certification</span>
+              <span class="badge badge-red">5 courses</span>
+            </div>
+            <div class="card-body" style="padding:8px 20px;" id="path-safety"></div>
+            <div class="card-footer"><a href="#" class="btn btn-primary btn-sm" onclick="startPath('safety');return false;">Start This Path →</a></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🤖 Agritech & Precision Ag</span>
+              <span class="badge badge-blue">7 courses</span>
+            </div>
+            <div class="card-body" style="padding:8px 20px;" id="path-tech"></div>
+            <div class="card-footer"><a href="#" class="btn btn-primary btn-sm" onclick="startPath('tech');return false;">Start This Path →</a></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CERTIFICATES ── -->
+      <div id="view-certs" style="display:none;">
+        <div class="grid-2 anim-fade-up" style="grid-template-columns:1fr 1fr;">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🏆 Available Certificates</span></div>
+            <div class="card-body" id="cert-list" style="padding:8px 18px;"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">📋 Why Certificates Matter</span></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
+              <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;font-size:13px;color:var(--text);line-height:1.6;">
+                <strong>Funding eligibility:</strong> Several CAP streams require farm business plan training (FCC course qualifies).
+              </div>
+              <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;font-size:13px;color:var(--text);line-height:1.6;">
+                <strong>Compliance:</strong> CASA safety certificates satisfy OHS training requirements under provincial farm safety legislation.
+              </div>
+              <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;font-size:13px;color:var(--text);line-height:1.6;">
+                <strong>Insurance discounts:</strong> Some farm insurers offer premium reductions for farms with certified operators.
+              </div>
+              <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;font-size:13px;color:var(--text);line-height:1.6;">
+                <strong>Succession value:</strong> Documented training increases farm valuation and demonstrates stewardship to lenders and successors.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── UPCOMING CALENDAR ── -->
+      <div id="view-calendar" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">📅 Live Webinars & Workshops — Spring 2026</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">All times Eastern</span>
+          </div>
+          <div class="card-body" id="event-list" style="padding:4px 4px;"></div>
+          <div class="card-footer">
+            <a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI Copilot to recommend events for me →</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('training');
+  document.getElementById('tr-sub').textContent = `Accredited courses for ${profile.farmType} operators · ${profile.province}`;
+
+  // ── Course Data ──────────────────────────────────────
+  const COURSES = [
+    { id:'c01', icon:'💼', bg:'#e8f5ec', provider:'Farm Credit Canada', title:'Foundations in Agricultural Management', desc:'8-module video series covering business planning, financial management, record keeping, and farm strategy. Completely free with completion certificate.', cat:'Business & Finance', duration:'8 hrs', price:'free', cert:true, url:'https://www.fcc-fac.ca/en/learning/courses.html', tags:['Business','Finance','Free','Certificate'] },
+    { id:'c02', icon:'🛡', bg:'#fef3e2', provider:'CASA', title:'Agricultural Machinery Safeguarding', desc:'Identify and control hazards from farm machinery. Covers guarding, lockout/tagout, and safe operating procedures. Certificate issued on completion.', cat:'Safety', duration:'3 hrs', price:'free', cert:true, url:'https://casa-acsa.ca', tags:['Safety','Certificate','OHS'] },
+    { id:'c03', icon:'🌾', bg:'#e8f5ec', provider:'CAHRC', title:'New to Canadian Agriculture', desc:'Orientation for newcomers entering Canadian farming. Covers farm culture, food safety, workplace rights, and employment standards.', cat:'Regulations', duration:'4 hrs', price:'free', cert:false, url:'https://cahrc-ccrha.ca', tags:['Newcomers','Free','Orientation'] },
+    { id:'c04', icon:'🚜', bg:'#eef2ff', provider:'CAHRC', title:'Agricultural Machinery ATV & UTV Safety', desc:'Safe operation of ATVs, UTVs, and side-by-sides on farms. Covers terrain assessment, load limits, and rollover prevention.', cat:'Safety', duration:'2 hrs', price:'free', cert:true, url:'https://casa-acsa.ca', tags:['Safety','ATV','Certificate'] },
+    { id:'c05', icon:'💰', bg:'#fef3e2', provider:'AAFC', title:'AgriStability: How It Works', desc:'Step-by-step walkthrough of Canada\'s margin-based income stabilization program. Covers enrollment, reference margins, and the 2026 pasture feed cost expansion.', cat:'Business & Finance', duration:'2 hrs', price:'free', cert:false, url:'https://agriculture.canada.ca', tags:['AgriStability','Free','Funding'] },
+    { id:'c06', icon:'🌱', bg:'#e8f5ec', provider:'University of Guelph', title:'Sustainable Agriculture & Food Systems', desc:'Introduction to regenerative agriculture, carbon farming, soil health management, and sustainable intensification principles.', cat:'Sustainability', duration:'12 hrs', price:'free', cert:true, url:'https://www.uoguelph.ca', tags:['Sustainability','Certificate','Soil'] },
+    { id:'c07', icon:'🤖', bg:'#eef2ff', provider:'Agri-Tech Ontario', title:'Precision Agriculture Fundamentals', desc:'GPS guidance, variable rate technology, yield mapping, and drone scouting. Includes a case study on ROI from precision input management.', cat:'Technology', duration:'6 hrs', price:'paid', cert:true, url:'https://agri-techontario.ca', tags:['Precision Ag','GPS','Technology'] },
+    { id:'c08', icon:'👩‍🌾', bg:'#f9f0ff', provider:'CAHRC', title:'Women in Agriculture Leadership', desc:'Communication, emotional intelligence, conflict resolution, and inclusive leadership for women in farming and agribusiness. Certificate awarded.', cat:'Leadership', duration:'10 hrs', price:'free', cert:true, url:'https://cahrc-ccrha.ca', tags:['Leadership','Women','Certificate'] },
+    { id:'c09', icon:'🐄', bg:'#fef3e2', provider:'Dairy Farmers of Canada', title:'Proaction: On-Farm Food Safety', desc:'Implementation guide for Canada\'s national on-farm food safety program. Required for all Canadian dairy producers supplying proAction-enrolled processors.', cat:'Livestock', duration:'5 hrs', price:'free', cert:true, url:'https://dairyfarmers.ca', tags:['Dairy','Food Safety','Certificate'] },
+    { id:'c10', icon:'🌡', bg:'#e8f5ec', provider:'CASA', title:'Grain Bin Safety & Confined Spaces', desc:'Recognizing and managing grain engulfment, entrapment, and toxic atmosphere risks in grain storage. Mandatory training in SK and AB.', cat:'Safety', duration:'3 hrs', price:'free', cert:true, url:'https://casa-acsa.ca', tags:['Safety','Grain','Certificate'] },
+    { id:'c11', icon:'📊', bg:'#eef2ff', provider:'Farm Management Canada', title:'Farm Business Analysis & Benchmarking', desc:'Use financial ratios, cost-of-production analysis, and industry benchmarks to improve farm business performance. Includes free benchmark data access.', cat:'Business & Finance', duration:'7 hrs', price:'free', cert:false, url:'https://fmc-gac.com', tags:['Benchmarking','Finance','Free'] },
+    { id:'c12', icon:'🧪', bg:'#e8f5ec', provider:'OMAFRA', title:'Integrated Pest Management (IPM)', desc:'Reduce pesticide use while maintaining crop protection. Covers scouting, economic thresholds, biological controls, and resistance management.', cat:'Agronomy', duration:'8 hrs', price:'free', cert:true, url:'https://www.ontario.ca/page/agriculture', tags:['IPM','Agronomy','Certificate'] },
+  ];
+
+  let savedProgress = JSON.parse(localStorage.getItem('trainingProgress') || '{}');
+
+  function enrollCourse(id) {
+    if (!savedProgress[id]) savedProgress[id] = { pct:0, enrolled: new Date().toISOString() };
+    localStorage.setItem('trainingProgress', JSON.stringify(savedProgress));
+    alert('✓ Enrolled! Track your progress in "My Learning".');
+    updateStats();
+  }
+
+  function markComplete(id) {
+    const hrs = COURSES.find(c=>c.id===id)?.duration?.replace(' hrs','') || '3';
+    savedProgress[id] = { pct:100, enrolled: savedProgress[id]?.enrolled || new Date().toISOString(), completed: new Date().toISOString(), hours: parseFloat(hrs) };
+    localStorage.setItem('trainingProgress', JSON.stringify(savedProgress));
+    updateStats(); renderCourses();
+    if (document.getElementById('view-my').style.display !== 'none') renderMyLearning();
+  }
+
+  function updateStats() {
+    const enrolled  = Object.keys(savedProgress).length;
+    const completed = Object.values(savedProgress).filter(p=>p.pct===100).length;
+    const hours     = Object.values(savedProgress).reduce((s,p)=>s+(p.hours||0),0);
+    const certCount = COURSES.filter(c=>c.cert && savedProgress[c.id]?.pct===100).length;
+    const pct       = enrolled ? Math.round((completed/enrolled)*100) : 0;
+    document.getElementById('stat-courses').textContent       = COURSES.length;
+    document.getElementById('stat-progress').textContent      = pct + '%';
+    document.getElementById('stat-progress-sub').textContent  = enrolled ? enrolled + ' courses started' : 'Start a course';
+    document.getElementById('stat-certs').textContent         = certCount;
+    document.getElementById('stat-hours').textContent         = hours;
+    if(document.getElementById('my-cert-count')) document.getElementById('my-cert-count').textContent = certCount;
+    if(document.getElementById('my-hours')) document.getElementById('my-hours').textContent = hours + ' hrs';
+    if(document.getElementById('inprog-count')) document.getElementById('inprog-count').textContent = (enrolled-completed) + ' courses';
+    if(document.getElementById('done-count')) document.getElementById('done-count').textContent = completed + ' courses';
+  }
+  updateStats();
+
+  // ── Render Courses ────────────────────────────────────
+  function renderCourses() {
+    const search = document.getElementById('course-search').value.toLowerCase();
+    const cat    = document.getElementById('course-cat').value;
+    const price  = document.getElementById('course-price').value;
+    const list   = COURSES.filter(c =>
+      (!search || c.title.toLowerCase().includes(search) || c.desc.toLowerCase().includes(search) || c.provider.toLowerCase().includes(search)) &&
+      (!cat   || c.cat === cat) &&
+      (!price || (price==='free' && c.price==='free') || (price==='cert' && c.cert))
+    );
+    const prog = savedProgress;
+    document.getElementById('course-grid').innerHTML = list.map(c => {
+      const p   = prog[c.id];
+      const pct = p?.pct || 0;
+      const done = pct === 100;
+      return `
+      <div class="course-card">
+        <div class="cc-img" style="background:${c.bg};">
+          <span style="font-size:48px;">${c.icon}</span>
+          <span class="cc-badge ${done?'cb-cert':c.price==='free'?'cb-free':'cb-paid'}">${done?'✓ Done':c.price==='free'?'Free':c.price==='paid'?'Paid':''}</span>
+        </div>
+        <div class="cc-body">
+          <div class="cc-provider">${c.provider}</div>
+          <div class="cc-title">${c.title}</div>
+          <div class="cc-desc">${c.desc}</div>
+          <div class="cc-meta">
+            <span class="cc-tag">⏱ ${c.duration}</span>
+            ${c.cert?'<span class="cc-tag" style="background:rgba(41,128,185,.08);color:#1a5276;">🏆 Certificate</span>':''}
+            <span class="cc-tag">${c.cat}</span>
+          </div>
+          ${pct>0?`<div class="cc-progress-wrap"><div class="cc-progress-fill" style="width:${pct}%;"></div></div>`:''}
+        </div>
+        <div class="cc-footer">
+          ${done
+            ? `<span class="badge badge-sage">✓ Completed</span><a href="${c.url}" target="_blank" class="btn btn-ghost btn-sm" style="margin-left:auto;">Review ↗</a>`
+            : pct>0
+              ? `<button class="btn btn-primary btn-sm" onclick="markComplete('${c.id}')">Mark Complete</button><a href="${c.url}" target="_blank" class="btn btn-ghost btn-sm">Continue ↗</a>`
+              : `<button class="btn btn-secondary btn-sm" onclick="enrollCourse('${c.id}')">Enrol Free</button><a href="${c.url}" target="_blank" class="btn btn-ghost btn-sm">Preview ↗</a>`
+          }
+        </div>
+      </div>`;
+    }).join('');
+  }
+  renderCourses();
+
+  // ── My Learning ──────────────────────────────────────
+  function renderMyLearning() {
+    const inprog = COURSES.filter(c => savedProgress[c.id] && savedProgress[c.id].pct < 100);
+    const done   = COURSES.filter(c => savedProgress[c.id]?.pct === 100);
+    const empty  = '<div style="padding:16px 0;font-size:13px;color:var(--muted);">None yet — browse courses and enrol.</div>';
+    document.getElementById('inprog-list').innerHTML = inprog.length ? inprog.map(c => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:22px;">${c.icon}</span>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">${c.title}</div><div style="font-size:11.5px;color:var(--muted);">${c.provider} · ${c.duration}</div></div>
+        <button class="btn btn-primary btn-sm" onclick="markComplete('${c.id}')">Mark Done</button>
+      </div>`).join('') : empty;
+    document.getElementById('done-list').innerHTML = done.length ? done.map(c => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:22px;">${c.icon}</span>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">${c.title}</div><div style="font-size:11.5px;color:var(--muted);">${c.provider}</div></div>
+        ${c.cert?'<span class="badge badge-sage">🏆 Cert</span>':''}
+      </div>`).join('') : empty;
+    if (done.length) {
+      const last = done[done.length-1];
+      const d = savedProgress[last.id]?.completed;
+      if(d && document.getElementById('last-activity')) document.getElementById('last-activity').textContent = new Date(d).toLocaleDateString('en-CA');
+    }
+  }
+
+  // ── Learning Paths ───────────────────────────────────
+  const PATHS = {
+    new:     [['c03','New to Canadian Agriculture'],['c01','Foundations in Agricultural Management'],['c05','AgriStability: How It Works'],['c02','Machinery Safeguarding'],['c10','Grain Bin Safety'],['c11','Farm Business Analysis'],['c12','Integrated Pest Management'],['c06','Sustainable Agriculture']],
+    funding: [['c01','Foundations in Agricultural Management'],['c05','AgriStability: How It Works'],['c11','Farm Business Analysis'],['c07','Precision Agriculture'],['c06','Sustainable Agriculture']],
+    safety:  [['c02','Machinery Safeguarding'],['c04','ATV & UTV Safety'],['c10','Grain Bin Safety'],['c12','IPM'],['c09','ProAction Food Safety']],
+    tech:    [['c07','Precision Agriculture'],['c11','Farm Business Analysis'],['c06','Sustainable Agriculture'],['c08','Women in Leadership'],['c01','FCC Management'],['c12','IPM']],
+  };
+  const PATH_LABELS = { new:'New Farmer Foundations', funding:'Funding & Business', safety:'Safety Certification', tech:'Agritech & Precision Ag' };
+
+  function renderPaths() {
+    Object.entries(PATHS).forEach(([key, steps]) => {
+      const el = document.getElementById('path-' + key);
+      if (!el) return;
+      el.innerHTML = steps.map(([id, title], i) => {
+        const done = savedProgress[id]?.pct === 100;
+        return `<div class="path-step">
+          <div class="path-num ${done?'done'}">${done?'✓':(i+1)}</div>
+          <div class="path-body">
+            <h4>${title}</h4>
+            <div class="path-link" style="cursor:pointer;" onclick="document.getElementById('ptab-all').click();document.getElementById('course-search').value='${title.split(' ').slice(0,3).join(' ')}';renderCourses();">Open course →</div>
+          </div>
+        </div>`;
+      }).join('');
+    });
+  }
+
+  function startPath(key) {
+    PATHS[key].forEach(([id]) => { if (!savedProgress[id]) savedProgress[id] = { pct:0, enrolled: new Date().toISOString() }; });
+    localStorage.setItem('trainingProgress', JSON.stringify(savedProgress));
+    showTab('my'); renderMyLearning(); updateStats();
+    alert('✓ Learning path started: ' + PATH_LABELS[key]);
+  }
+
+  // ── Certificates list ────────────────────────────────
+  function renderCerts() {
+    const certCourses = COURSES.filter(c => c.cert);
+    document.getElementById('cert-list').innerHTML = certCourses.map(c => {
+      const earned = savedProgress[c.id]?.pct === 100;
+      return `<div class="cert-card">
+        <div class="cert-icon">${earned?'🏆':'⭕'}</div>
+        <div>
+          <div class="cert-name">${c.title}</div>
+          <div class="cert-sub">${c.provider} · ${c.duration}</div>
+        </div>
+        <div class="cert-status">
+          ${earned
+            ? '<span class="badge badge-sage">Earned ✓</span>'
+            : `<button class="btn btn-secondary btn-sm" onclick="enrollCourse('${c.id}');document.getElementById('ptab-all').click();">Start</button>`}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Events calendar ──────────────────────────────────
+  const EVENTS = [
+    { date:'Mar 28', title:'AgriStability Filing Workshop', host:'AAFC · Virtual', type:'Webinar', free:true, url:'https://agriculture.canada.ca' },
+    { date:'Apr 3',  title:'Grain Marketing in a Tariff Environment', host:'FCC · Virtual', type:'Webinar', free:true, url:'https://www.fcc-fac.ca' },
+    { date:'Apr 10', title:'On-Farm Safety for Spring Season', host:'CASA · Virtual', type:'Workshop', free:true, url:'https://casa-acsa.ca' },
+    { date:'Apr 17', title:'Young Farmer Business Planning Bootcamp', host:'CAHRC · 2 days virtual', type:'Workshop', free:false, url:'https://cahrc-ccrha.ca' },
+    { date:'Apr 24', title:'Precision Ag & GPS Technology Demo', host:'Agri-Tech Ontario · In-person', type:'Demo Day', free:false, url:'https://agri-techontario.ca' },
+    { date:'May 1',  title:'Women in Ag Leadership Cohort Starts', host:'CAHRC · 10-week virtual', type:'Course', free:true, url:'https://cahrc-ccrha.ca' },
+    { date:'May 8',  title:'Carbon Farming & Soil Health for Grain Growers', host:'U of Guelph · Virtual', type:'Webinar', free:true, url:'https://www.uoguelph.ca' },
+    { date:'May 15', title:'AgriInvest & AgriStability Advanced Filing', host:'AAFC · Virtual', type:'Webinar', free:true, url:'https://agriculture.canada.ca' },
+  ];
+  document.getElementById('event-list').innerHTML = EVENTS.map(e => `
+    <div style="display:flex;gap:14px;padding:12px 20px;border-bottom:1px solid var(--border);align-items:flex-start;">
+      <div style="background:var(--forest);border-radius:8px;padding:8px 12px;text-align:center;flex-shrink:0;min-width:54px;">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;color:var(--wheat);line-height:1;">${e.date.split(' ')[1]}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--amber-lt);">${e.date.split(' ')[0]}</div>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:2px;">${e.title}</div>
+        <div style="font-size:12px;color:var(--muted);">${e.host}</div>
+        <div style="display:flex;gap:7px;margin-top:6px;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 8px;border-radius:5px;background:var(--cream);border:1px solid var(--border);">${e.type}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 8px;border-radius:5px;${e.free?'background:rgba(74,200,120,.1);color:#1e8449;':'background:rgba(184,114,14,.1);color:#8a5800;'}">${e.free?'Free':'Paid'}</span>
+        </div>
+      </div>
+      <a href="${e.url}" target="_blank" class="btn btn-ghost btn-sm" style="flex-shrink:0;">Register →</a>
+    </div>
+  `).join('');
+
+  // ── Tab switching ────────────────────────────────────
+  function showTab(t) {
+    ['all','my','paths','certs','calendar'].forEach(id => {
+      document.getElementById('view-'+id).style.display = id===t?'':'none';
+      document.getElementById('ptab-'+id).classList.toggle('active', id===t);
+    });
+    if (t==='my')     { renderMyLearning(); updateStats(); }
+    if (t==='paths')  renderPaths();
+    if (t==='certs')  renderCerts();
+  }
+</script>
+</body>
+</html>

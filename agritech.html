@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agritech Adoption Guide — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .tab-bar { display:flex; gap:4px; padding:0 0 20px; border-bottom:1px solid var(--border); margin-bottom:22px; flex-wrap:wrap; }
+    .pg-tab { padding:9px 18px; border-radius:20px; border:1.5px solid var(--border); background:white; font-family:'Sora',sans-serif; font-size:13px; color:var(--muted); cursor:pointer; transition:all .15s; }
+    .pg-tab.active { background:var(--forest); color:var(--wheat); border-color:var(--forest); }
+    .pg-tab:hover:not(.active) { border-color:var(--sage); color:var(--forest); }
+
+    /* Hero */
+    .tech-hero {
+      background:linear-gradient(135deg, #1a2e45 0%, var(--forest) 100%);
+      border-radius:var(--r-lg); padding:24px 30px; color:var(--wheat);
+      display:flex; gap:20px; align-items:center; flex-wrap:wrap;
+      margin-bottom:24px; box-shadow:var(--shadow-lg);
+    }
+    .tech-hero h2 { font-family:'DM Serif Display',serif; font-size:22px; margin-bottom:7px; }
+    .tech-hero p  { font-size:13px; color:rgba(244,236,218,.62); line-height:1.65; }
+    .tech-hero-icon { font-size:48px; flex-shrink:0; }
+
+    /* Tech card */
+    .tech-card {
+      background:white; border:1px solid var(--border);
+      border-radius:var(--r-lg); overflow:hidden;
+      box-shadow:var(--shadow-sm); transition:all .18s;
+      display:flex; flex-direction:column;
+    }
+    .tech-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
+    .tc-header { padding:18px 20px 14px; border-bottom:1px solid var(--border); }
+    .tc-icon-row { display:flex; align-items:flex-start; gap:12px; margin-bottom:10px; }
+    .tc-icon { font-size:32px; flex-shrink:0; }
+    .tc-name { font-family:'DM Serif Display',serif; font-size:17px; color:var(--forest); margin-bottom:3px; }
+    .tc-cat  { font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); }
+    .tc-desc { font-size:13px; color:var(--muted); line-height:1.6; }
+    .tc-body { padding:14px 20px; flex:1; }
+    .tc-roi-bar { display:flex; align-items:center; gap:10px; margin:10px 0; }
+    .tc-roi-label { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); width:80px; flex-shrink:0; }
+    .tc-roi-track { flex:1; height:7px; background:var(--border); border-radius:4px; overflow:hidden; }
+    .tc-roi-fill  { height:100%; border-radius:4px; }
+    .tc-roi-val   { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--forest); font-weight:600; width:44px; text-align:right; }
+    .tc-funding   { background:rgba(184,114,14,.07); border:1px solid rgba(184,114,14,.2); border-radius:8px; padding:10px 12px; margin-top:10px; font-size:12.5px; color:var(--text); line-height:1.55; }
+    .tc-footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; gap:8px; }
+
+    /* Decision tree */
+    .dt-question { background:var(--cream); border-radius:var(--r-lg); padding:22px 24px; margin-bottom:16px; }
+    .dt-q-label { font-family:'DM Serif Display',serif; font-size:18px; color:var(--forest); margin-bottom:16px; }
+    .dt-options  { display:flex; flex-direction:column; gap:10px; }
+    .dt-option {
+      background:white; border:1.5px solid var(--border); border-radius:10px;
+      padding:13px 16px; cursor:pointer; transition:all .15s;
+      display:flex; align-items:center; gap:12px; font-size:13.5px; color:var(--text);
+    }
+    .dt-option:hover { border-color:var(--sage); background:var(--sage-pale); transform:translateX(4px); }
+    .dt-option-icon { font-size:22px; flex-shrink:0; }
+    .dt-option-arrow { margin-left:auto; color:var(--muted); }
+
+    /* Comparison table */
+    .comp-table { width:100%; border-collapse:collapse; }
+    .comp-table th { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); padding:10px 14px; text-align:left; border-bottom:1.5px solid var(--border); background:var(--cream); }
+    .comp-table td { padding:11px 14px; font-size:13px; border-bottom:1px solid var(--border); }
+    .comp-table tr:hover td { background:rgba(0,0,0,.02); }
+    .comp-table tr:last-child td { border-bottom:none; }
+    .ct-good { color:var(--green); font-weight:600; }
+    .ct-ok   { color:#8a5800; }
+    .ct-bad  { color:var(--red); }
+
+    .tech-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+    @media(max-width:900px) { .tech-grid { grid-template-columns:1fr; } }
+    @media(max-width:600px) { .tech-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">🤖 Agritech Adoption Guide</div>
+          <div class="page-subtitle" id="at-sub">Step-by-step technology decision guide with ROI estimates and funding matches</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="dashboard.html"   class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <a href="calculator.html"  class="btn btn-secondary btn-sm">ROI Calculator →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Hero -->
+      <div class="tech-hero anim-fade-up">
+        <div class="tech-hero-icon">🤖</div>
+        <div>
+          <h2>Technology that pays for itself — with government help</h2>
+          <p>Canada's 2026 agricultural technology programs include up to $100K per farm through BC's On-Farm Technology Adoption program, plus CAP streams in every province. Precision agriculture is forecast to improve land efficiency by 23% by 2027. This guide helps you choose the right technology and find the funding to pay for it.</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up anim-delay-1">
+        <div class="stat-card">
+          <div class="stat-label">BC On-Farm Tech Grant</div>
+          <div class="stat-value">$100K</div>
+          <div class="stat-change">Per farm — apply Apr 6 close</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Precision Ag Efficiency Gain</div>
+          <div class="stat-value">23%</div>
+          <div class="stat-change">Land efficiency by 2027</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Technologies Reviewed</div>
+          <div class="stat-value">12</div>
+          <div class="stat-change neutral">With funding matches</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">NRC-IRAP Funding</div>
+          <div class="stat-value">$500K</div>
+          <div class="stat-change">For tech innovators</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar anim-fade-up anim-delay-1">
+        <button class="pg-tab active" id="attab-guide"    onclick="showAtTab('guide')">🧭 Which Tech for Me?</button>
+        <button class="pg-tab"        id="attab-library"  onclick="showAtTab('library')">📚 Technology Library</button>
+        <button class="pg-tab"        id="attab-roi"      onclick="showAtTab('roi')">💰 ROI Estimator</button>
+        <button class="pg-tab"        id="attab-funding"  onclick="showAtTab('funding')">🏛 Funding Matches</button>
+      </div>
+
+      <!-- ── DECISION GUIDE ── -->
+      <div id="atview-guide">
+        <div id="dt-container" class="anim-fade-up"></div>
+      </div>
+
+      <!-- ── TECH LIBRARY ── -->
+      <div id="atview-library" style="display:none;">
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;" class="anim-fade-up">
+          <select class="filter-select" id="tech-cat" onchange="renderTechLibrary()">
+            <option value="">All Categories</option>
+            <option>Precision Ag</option><option>Automation</option>
+            <option>Livestock Tech</option><option>Farm Software</option>
+            <option>Sensors & Monitoring</option>
+          </select>
+          <select class="filter-select" id="tech-size" onchange="renderTechLibrary()">
+            <option value="">All Farm Sizes</option>
+            <option value="small">Small (&lt;200 acres)</option>
+            <option value="med">Medium (200–500 acres)</option>
+            <option value="large">Large (500+ acres)</option>
+          </select>
+        </div>
+        <div class="tech-grid" id="tech-grid"></div>
+      </div>
+
+      <!-- ── ROI ESTIMATOR ── -->
+      <div id="atview-roi" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header"><span class="card-title">💰 Technology ROI Estimator</span></div>
+            <div class="card-body">
+              <div class="tab-desc" style="background:var(--sage-pale);border:1px solid rgba(74,122,90,.2);border-radius:var(--r-sm);padding:11px 16px;font-size:12.5px;color:var(--sage);margin-bottom:20px;line-height:1.5;">
+                Estimate the financial return from a technology investment. For detailed modelling, use the <a href="calculator.html" style="color:var(--forest);">ROI Calculator →</a>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Technology Type</label>
+                <select class="form-input" id="roi-tech" onchange="calcTechROI()">
+                  <option value="gps">GPS / Auto-Steer System</option>
+                  <option value="vra">Variable Rate Application (VRA)</option>
+                  <option value="drone">Drone Scouting</option>
+                  <option value="robot">Robotic Milker (per unit)</option>
+                  <option value="sensors">Soil / Crop Sensors</option>
+                  <option value="software">Farm Management Software</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Farm Size (acres or livestock units)</label>
+                <input class="form-input form-mono" id="roi-size" type="number" value="400" oninput="calcTechROI()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Expected Grant / Funding (%)</label>
+                <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
+                  <input type="range" id="roi-grant" min="0" max="60" value="25" oninput="calcTechROI();document.getElementById('roi-grant-val').textContent=this.value+'%'" style="flex:1;accent-color:var(--forest);">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--forest);font-weight:600;min-width:40px;" id="roi-grant-val">25%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="roi-result-card" style="display:flex;flex-direction:column;gap:14px;"></div>
+        </div>
+        <div class="card mt-16" style="margin-top:16px;">
+          <div class="card-header"><span class="card-title">📈 Break-Even Chart</span></div>
+          <div class="card-body" style="padding:14px 20px;max-width:600px;">
+            <canvas id="breakeven-chart" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FUNDING MATCHES ── -->
+      <div id="atview-funding" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">🏛 Funding Programs for Farm Technology — 2026</span>
+          </div>
+          <div class="card-body" style="padding:0;overflow-x:auto;">
+            <table class="comp-table">
+              <thead>
+                <tr>
+                  <th>Program</th>
+                  <th>Amount</th>
+                  <th>Province</th>
+                  <th>Best for</th>
+                  <th>Deadline</th>
+                  <th style="text-align:center;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="funding-table"></tbody>
+            </table>
+          </div>
+          <div class="card-footer">
+            <a href="funding.html" class="btn btn-secondary btn-sm">Full Funding Navigator →</a>
+            <a href="copilot.html" class="btn btn-ghost btn-sm" style="margin-left:8px;">Ask AI about eligibility →</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('agritech');
+  document.getElementById('at-sub').textContent = `Technology adoption guide for ${profile.farmType} · ${profile.province}`;
+
+  function showAtTab(t) {
+    ['guide','library','roi','funding'].forEach(id => {
+      document.getElementById('atview-'+id).style.display = id===t?'':'none';
+      document.getElementById('attab-'+id).classList.toggle('active', id===t);
+    });
+    if(t==='library') renderTechLibrary();
+    if(t==='roi')     { calcTechROI(); }
+    if(t==='funding') renderFundingTable();
+  }
+
+  // ── Decision tree ────────────────────────────────────
+  const TREE = {
+    root: { q:'What is your biggest operational challenge?', opts:[
+      { icon:'💧', label:'Input costs — fertilizer, fuel, chemicals are too high', next:'precision' },
+      { icon:'👷', label:'Labour — can\'t find or afford enough workers', next:'automation' },
+      { icon:'🐄', label:'Livestock management — health, productivity, records', next:'livestock' },
+      { icon:'📊', label:'Business — better records, decisions, and data', next:'software' },
+      { icon:'🌱', label:'Crop yield — not hitting my yield potential', next:'yield' },
+    ]},
+    precision: { q:'How many acres do you farm?', opts:[
+      { icon:'🚜', label:'Under 200 acres', next:'precision_small' },
+      { icon:'🚜', label:'200–500 acres', next:'precision_med' },
+      { icon:'🚜', label:'500+ acres', next:'precision_large' },
+    ]},
+    precision_small: { result:true, title:'Soil Sensors + Farm Software', icon:'🌱', desc:'At under 200 acres, your best ROI comes from soil moisture sensors, EC mapping (1-time), and a field management app (Agrian, FarmLogs). Total investment: $4K–$15K. BC On-Farm Tech or CAP may cover 25–40%.', funding:'BC On-Farm Technology Adoption (up to $100K) · CAP Technology Streams', url:'https://www2.gov.bc.ca/gov/content/industry/agriculture-seafood' },
+    precision_med:   { result:true, title:'GPS Auto-Steer + VRA', icon:'🛰', desc:'400 acres is the sweet spot for auto-steer. A GNSS auto-steer system ($15K–$30K) pays back in 2–4 seasons through fuel savings, reduced overlap, and reduced operator fatigue. Add VRA controller for fertilizer optimization.', funding:'Canadian Agricultural Partnership · NRC-IRAP Advisory', url:'https://agriculture.canada.ca' },
+    precision_large: { result:true, title:'Full Precision Ag Suite', icon:'🌐', desc:'500+ acres — invest in integrated precision ag: RTK GPS, VRA, yield mapping, and drone scouting as a system. Expect 15–22% input savings and 6–9% yield improvement over 3 seasons. NRC-IRAP can fund up to $500K for technology systems.', funding:'NRC-IRAP Agriculture Stream · CAP · BC On-Farm Tech', url:'https://nrc.canada.ca/en/irap' },
+    automation: { q:'What type of farm operation?', opts:[
+      { icon:'🐄', label:'Dairy farm', next:'auto_dairy' },
+      { icon:'🌾', label:'Grain / crop farm', next:'auto_grain' },
+      { icon:'🌱', label:'Vegetables / greenhouse', next:'auto_veg' },
+    ]},
+    auto_dairy:  { result:true, title:'Robotic Milking System', icon:'🤖', desc:'Automated milking robots ($180K–$250K per unit) pay back in 4–6 years through labour savings and improved milk production. Provincial CAP programs often cover 25–35%. BC On-Farm Tech covers up to $100K. Most robots result in 10–15% more milk per cow.', funding:'BC On-Farm Technology Adoption · CAP Technology', url:'https://agriculture.canada.ca' },
+    auto_grain:  { result:true, title:'Precision Seeding + Automation', icon:'🌾', desc:'For grain farms, automation ROI comes from GPS auto-steer (eliminating overlap), automated section control on planters ($8K–$20K add-on), and grain cart automation. Payback: 2–4 seasons on 400+ acres.', funding:'Canadian Agricultural Partnership · AFSC Technology', url:'https://agriculture.canada.ca' },
+    auto_veg:    { result:true, title:'Automated Transplanting & Harvesting', icon:'🌱', desc:'Vegetable automation has the fastest labour ROI in Canadian agriculture. Transplanting robots ($30K–$80K) replace 4–8 seasonal workers. BC On-Farm Tech explicitly prioritizes this. Apply before April 6, 2026.', funding:'BC On-Farm Technology Adoption (up to $100K)', url:'https://www2.gov.bc.ca' },
+    livestock:   { result:true, title:'Smart Livestock Monitoring', icon:'📡', desc:'Ear tag sensors ($30–$80/head) track health, estrus, and location — detecting illness 2–3 days earlier than visual inspection. Reduces treatment costs 18–25%. Allflex, Datamars, and SCR systems integrate with herd management software.', funding:'AgriInnovate · CAP Technology Streams', url:'https://agriculture.canada.ca' },
+    software:    { result:true, title:'Farm Management Software', icon:'💻', desc:'Start with a Canadian-focused FMS: Granular, Trimble Ag Software, or Agvance. Integration with accounting (QuickBooks, Ag accountants) and government portals saves 3–5 hrs/week of administration. Many have free tiers. FCC offers integration training.', funding:'FCC Training Programs (free) · CAP Digital Adoption', url:'https://www.fcc-fac.ca' },
+    yield:       { result:true, title:'Soil Health + Variety Selection', icon:'🌿', desc:'Before technology, audit your soil. Soil testing ($15–$30/sample) + professional agronomist review often unlocks 10–20% yield improvement without any equipment purchase. Once baseline is set, variable rate seeding ($10K–$25K controller) is the highest-ROI next step.', funding:'AgriInnovate · OMAFRA OSCIA Cost-Share', url:'https://www.oscia.on.ca' },
+  };
+
+  function renderDT(id, breadcrumb=[]) {
+    const node = TREE[id];
+    if (!node) return;
+    const el = document.getElementById('dt-container');
+
+    if (node.result) {
+      el.innerHTML = `
+        <div style="max-width:680px;">
+          ${breadcrumb.length?`<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:14px;">${breadcrumb.join(' → ')}</div>`:''}
+          <div style="background:var(--forest);border-radius:var(--r-lg);padding:26px 28px;color:var(--wheat);margin-bottom:16px;">
+            <div style="font-size:36px;margin-bottom:12px;">${node.icon}</div>
+            <div style="font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:10px;">Recommended: ${node.title}</div>
+            <div style="font-size:13.5px;color:rgba(244,236,218,.75);line-height:1.7;">${node.desc}</div>
+          </div>
+          <div style="background:rgba(184,114,14,.08);border:1px solid rgba(184,114,14,.2);border-radius:var(--r-sm);padding:14px 18px;margin-bottom:16px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">Relevant Funding</div>
+            <div style="font-size:13px;color:var(--text);">${node.funding}</div>
+            <a href="${node.url}" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);margin-top:6px;display:inline-block;">Apply now ↗</a>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-ghost btn-sm" onclick="renderDT('root',[])">← Start Over</button>
+            <a href="calculator.html" class="btn btn-secondary btn-sm">Model ROI →</a>
+            <a href="funding.html" class="btn btn-secondary btn-sm">View All Funding →</a>
+            <a href="copilot.html" class="btn btn-primary btn-sm">✦ Ask AI for help</a>
+          </div>
+        </div>`;
+    } else {
+      el.innerHTML = `
+        <div style="max-width:580px;">
+          ${breadcrumb.length?`<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:14px;cursor:pointer;" onclick="renderDT('root',[])">&larr; Restart</div>`:''}
+          <div class="dt-question">
+            <div class="dt-q-label">${node.q}</div>
+            <div class="dt-options">
+              ${node.opts.map(o=>`
+                <div class="dt-option" onclick="renderDT('${o.next}',[...${JSON.stringify(breadcrumb)},'${o.label.split(' ').slice(0,3).join(' ')}…'])">
+                  <span class="dt-option-icon">${o.icon}</span>
+                  <span>${o.label}</span>
+                  <span class="dt-option-arrow">›</span>
+                </div>`).join('')}
+            </div>
+          </div>
+        </div>`;
+    }
+  }
+  renderDT('root', []);
+
+  // ── Tech Library ─────────────────────────────────────
+  const TECH_ITEMS = [
+    { icon:'🛰', name:'GPS / RTK Auto-Steer', cat:'Precision Ag', size:'med', cost:'$12K–$30K', payback:'2–3 yrs', roi:'high', desc:'Eliminate operator fatigue and field overlap. 2–5% fuel savings, 3–8% input savings on 300+ acres.', funding:'CAP Technology', green:true },
+    { icon:'🌡', name:'Variable Rate Application (VRA)', cat:'Precision Ag', size:'large', cost:'$8K–$22K', payback:'2–4 yrs', roi:'high', desc:'Apply fertilizer, seed, and chemicals at prescription rates. Average input savings: 12–18%.', funding:'BC On-Farm Tech · CAP', green:true },
+    { icon:'🚁', name:'Drone Scouting', cat:'Precision Ag', size:'small', cost:'$3K–$15K', payback:'1–3 yrs', roi:'med', desc:'Scout crops faster, detect disease and pests early. Maps 400 acres in 2 hours. Saves 3–5 scouting trips per season.', funding:'CAP Technology', green:false },
+    { icon:'🤖', name:'Robotic Milking System', cat:'Automation', size:'large', cost:'$180K–$260K', payback:'4–6 yrs', roi:'high', desc:'Replace 1.5 FTE per robot. 10–15% milk production increase. Labour savings $60K–$90K/yr.', funding:'BC On-Farm Tech · CAP · AgriInnovate', green:true },
+    { icon:'🌱', name:'Automated Transplanter', cat:'Automation', size:'med', cost:'$30K–$80K', payback:'2–3 yrs', roi:'high', desc:'Replace 4–8 seasonal workers for vegetable transplanting. BC prioritizes this under On-Farm Tech.', funding:'BC On-Farm Technology (up to $100K)', green:true },
+    { icon:'📡', name:'Livestock Health Sensors', cat:'Livestock Tech', size:'med', cost:'$30–$80/head', payback:'1–2 yrs', roi:'high', desc:'Ear tag sensors detect illness 2–3 days early, track estrus. Reduces treatment costs 18–25%.', funding:'AgriInnovate · CAP', green:false },
+    { icon:'💻', name:'Farm Management Software', cat:'Farm Software', size:'small', cost:'$0–$3K/yr', payback:'Immediate', roi:'med', desc:'Granular, Trimble, FarmLogs — field records, compliance, and financial tracking. Many have free tiers.', funding:'FCC Training (free)', green:false },
+    { icon:'🌡', name:'Soil Moisture Sensors', cat:'Sensors & Monitoring', size:'small', cost:'$2K–$8K', payback:'1–3 yrs', roi:'med', desc:'Optimize irrigation timing and reduce water use 20–30%. Most useful in BC, AB, SK.', funding:'CAP Technology', green:true },
+    { icon:'📊', name:'Yield Mapping System', cat:'Precision Ag', size:'large', cost:'$5K–$18K', payback:'2–4 yrs', roi:'med', desc:'Map yield variability across fields to optimize future inputs. Pairs with VRA for maximum effect.', funding:'CAP · AgriInnovate', green:false },
+  ];
+
+  function renderTechLibrary() {
+    const cat  = document.getElementById('tech-cat').value;
+    const size = document.getElementById('tech-size').value;
+    const list = TECH_ITEMS.filter(t =>
+      (!cat  || t.cat === cat) &&
+      (!size || t.size === size || (size==='med' && t.size!=='small') || true)
+    ).filter(t => !cat && !size || (!cat || t.cat===cat) && (!size || t.size===size));
+    const toShow = (cat||size) ? TECH_ITEMS.filter(t=>(!cat||t.cat===cat)&&(!size||t.size===size)) : TECH_ITEMS;
+
+    document.getElementById('tech-grid').innerHTML = toShow.map(t => {
+      const roiColor = t.roi==='high'?'#27ae60':t.roi==='med'?'#d49a3a':'#c0392b';
+      return `<div class="tech-card">
+        <div class="tc-header">
+          <div class="tc-icon-row">
+            <div class="tc-icon">${t.icon}</div>
+            <div><div class="tc-name">${t.name}</div><div class="tc-cat">${t.cat}</div></div>
+          </div>
+          <div class="tc-desc">${t.desc}</div>
+        </div>
+        <div class="tc-body">
+          <div class="tc-roi-bar"><span class="tc-roi-label">Invest</span><div class="tc-roi-track"><div class="tc-roi-fill" style="width:65%;background:#5dade2;"></div></div><span class="tc-roi-val">${t.cost}</span></div>
+          <div class="tc-roi-bar"><span class="tc-roi-label">Payback</span><div class="tc-roi-track"><div class="tc-roi-fill" style="width:${t.payback==='Immediate'?'100%':t.payback.includes('1')?'80%':t.payback.includes('2')?'60%':'40%'};background:${roiColor};"></div></div><span class="tc-roi-val">${t.payback}</span></div>
+          <div class="tc-funding">🏛 <strong>Funding:</strong> ${t.funding}</div>
+          ${t.green?'<div style="margin-top:8px;"><span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;padding:2px 7px;border-radius:5px;background:rgba(74,200,120,.1);color:#1e8449;">♻️ Carbon benefit</span></div>':''}
+        </div>
+        <div class="tc-footer">
+          <button class="btn btn-secondary btn-sm" onclick="showAtTab(\'roi\');document.getElementById(\'roi-tech\').value='${t.name.toLowerCase().includes('gps')||t.name.toLowerCase().includes('steer')?'gps':t.name.toLowerCase().includes('vra')?'vra':t.name.toLowerCase().includes('drone')?'drone':t.name.toLowerCase().includes('milk')?'robot':'sensors'}';calcTechROI();">Model ROI</button>
+          <a href="funding.html" class="btn btn-ghost btn-sm">Funding →</a>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── ROI Estimator ────────────────────────────────────
+  const ROI_DATA = {
+    gps:      { name:'GPS Auto-Steer', cost:22000, annualSaving:8500, label:'Input + fuel savings' },
+    vra:      { name:'Variable Rate Application', cost:16000, annualSaving:11200, label:'Fertilizer savings (12% reduction on 400 ac)' },
+    drone:    { name:'Drone Scouting', cost:8000,  annualSaving:5200, label:'Scouting labour + early detection value' },
+    robot:    { name:'Robotic Milker', cost:220000, annualSaving:68000, label:'Labour savings + milk production gain' },
+    sensors:  { name:'Soil / Crop Sensors', cost:6000, annualSaving:3800, label:'Irrigation + input optimization' },
+    software: { name:'Farm Management Software', cost:1800, annualSaving:4200, label:'Admin time + compliance efficiency' },
+  };
+  let beChart;
+
+  function calcTechROI() {
+    const tech   = document.getElementById('roi-tech').value;
+    const size   = parseFloat(document.getElementById('roi-size').value)||400;
+    const grant  = parseFloat(document.getElementById('roi-grant').value)/100;
+    const d      = ROI_DATA[tech];
+    const cost   = Math.round(d.cost * (size/400));
+    const net    = Math.round(cost * (1 - grant));
+    const saving = Math.round(d.annualSaving * (size/400));
+    const payback= (net/saving).toFixed(1);
+    const r5     = Math.round(saving*5 - net);
+
+    document.getElementById('roi-result-card').innerHTML = `
+      <div style="background:var(--forest);border-radius:var(--r-lg);padding:22px 24px;color:var(--wheat);">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(244,236,218,.35);margin-bottom:12px;">ROI Estimate — ${d.name}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+            <span style="font-size:13px;color:rgba(244,236,218,.65);">Total technology cost</span>
+            <span style="font-family:'DM Serif Display',serif;font-size:18px;">$${cost.toLocaleString()}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+            <span style="font-size:13px;color:rgba(244,236,218,.65);">After ${Math.round(grant*100)}% grant</span>
+            <span style="font-family:'DM Serif Display',serif;font-size:18px;color:#4ac878;">$${net.toLocaleString()}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+            <span style="font-size:13px;color:rgba(244,236,218,.65);">${d.label}</span>
+            <span style="font-family:'DM Serif Display',serif;font-size:18px;">$${saving.toLocaleString()}/yr</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+            <span style="font-size:13px;color:rgba(244,236,218,.65);">Break-even point</span>
+            <span style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--amber-lt);">${payback} yrs</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;">
+            <span style="font-size:13px;color:rgba(244,236,218,.65);">5-year net return</span>
+            <span style="font-family:'DM Serif Display',serif;font-size:22px;color:${r5>0?'#4ac878':'#ff9999'};">${r5>0?'+':'-'}$${Math.abs(r5).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" style="font-size:13px;color:var(--muted);line-height:1.7;">
+          <strong style="color:var(--forest);">Next step:</strong> Apply for your province's technology grant before the season starts. BC deadline: April 6, 2026.
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="funding.html" class="btn btn-primary btn-sm">Find Funding →</a>
+            <a href="calculator.html" class="btn btn-ghost btn-sm">Full ROI Model →</a>
+          </div>
+        </div>
+      </div>`;
+
+    // Break-even chart
+    const years  = [0,1,2,3,4,5,6,7];
+    const cumCost = years.map(y => y===0 ? net : net);
+    const cumSave = years.map(y => saving*y);
+    if (beChart) beChart.destroy();
+    beChart = new Chart(document.getElementById('breakeven-chart'), {
+      type:'line',
+      data:{
+        labels: years.map(y=>'Yr '+y),
+        datasets:[
+          { label:'Cumulative Savings', data:cumSave, borderColor:'#27ae60', backgroundColor:'rgba(39,174,96,.1)', fill:true, borderWidth:2, tension:0.3 },
+          { label:'Net Investment', data:years.map(()=>net), borderColor:'#c0392b', borderDash:[6,3], borderWidth:2, pointRadius:0, fill:false },
+        ]
+      },
+      options:{
+        responsive:true,
+        plugins:{ legend:{ labels:{ font:{ family:'Sora',size:12 } } }, tooltip:{ mode:'index',intersect:false } },
+        scales:{
+          y:{ ticks:{ callback:v=>'$'+Math.round(v/1000)+'K', font:{family:'IBM Plex Mono',size:10} }, grid:{color:'rgba(0,0,0,.06)'} },
+          x:{ ticks:{ font:{family:'IBM Plex Mono',size:10} }, grid:{display:false} },
+        }
+      }
+    });
+  }
+
+  // ── Funding Table ────────────────────────────────────
+  const TECH_FUNDING = [
+    { name:'BC On-Farm Technology Adoption', amount:'Up to $100K', prov:'BC', best:'Robotics, automation, GPS, sensors', deadline:'April 6, 2026', url:'https://www2.gov.bc.ca', urgency:'red' },
+    { name:'Canadian Agricultural Partnership (CAP)', amount:'25–50% cost-share', prov:'All provinces', best:'Any eligible technology adoption', deadline:'Varies by province', url:'https://agriculture.canada.ca', urgency:'amber' },
+    { name:'AgriInnovate', amount:'Up to $10M', prov:'Federal', best:'Innovative technology commercialization', deadline:'Rolling', url:'https://agriculture.canada.ca', urgency:'green' },
+    { name:'NRC-IRAP Agriculture Stream', amount:'$50K–$500K', prov:'Federal', best:'Technology development or integration', deadline:'Rolling (3–6 mo lead)', url:'https://nrc.canada.ca/en/irap', urgency:'green' },
+    { name:'AgriMarketing Diversification', amount:'Up to $500K', prov:'Federal', best:'Technology for export market access', deadline:'Rolling', url:'https://agriculture.canada.ca', urgency:'amber' },
+    { name:'OSCIA Cost-Share (ON)', amount:'Up to $75K', prov:'Ontario', best:'Environmental farm technology', deadline:'November 2026', url:'https://www.oscia.on.ca', urgency:'green' },
+    { name:'AFSC Technology Grant (AB)', amount:'Up to $40K', prov:'Alberta', best:'Precision ag, automation', deadline:'March 31, 2027', url:'https://www.afsc.ca', urgency:'green' },
+  ];
+
+  function renderFundingTable() {
+    document.getElementById('funding-table').innerHTML = TECH_FUNDING.map(p => `
+      <tr>
+        <td style="font-weight:500;color:var(--text);">${p.name}</td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--forest);font-weight:600;">${p.amount}</td>
+        <td style="font-size:12.5px;color:var(--muted);">${p.prov}</td>
+        <td style="font-size:12.5px;color:var(--muted);">${p.best}</td>
+        <td><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 8px;border-radius:6px;background:rgba(${p.urgency==='red'?'192,57,43':p.urgency==='amber'?'184,114,14':'74,200,120'},.1);color:${p.urgency==='red'?'#c0392b':p.urgency==='amber'?'#8a5800':'#1e8449'};">${p.deadline}</span></td>
+        <td style="text-align:center;"><a href="${p.url}" target="_blank" class="btn btn-ghost btn-sm">Apply →</a></td>
+      </tr>`).join('');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: #1B3528;
+      min-height: 100%;
+    }
+
+    body {
+      background: var(--forest);
+      color: var(--wheat);
+      font-family: 'Sora', sans-serif;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* ── NAV ────────────────────────────────────────────────── */
+    .ln-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      padding: 14px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(27,53,40,.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+
+    .ln-nav-logo {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--amber-lt);
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; z-index: 201;
+    }
+
+    .ln-nav-logo-dot {
+      width: 7px; height: 7px;
+      background: var(--amber-lt);
+      border-radius: 50%;
+      animation: pulse 2.4s infinite;
+      flex-shrink: 0;
+    }
+
+    .ln-nav-links { display: flex; align-items: center; gap: 24px; }
+
+    .ln-nav-link {
+      font-size: 13px; color: rgba(244,236,218,.6);
+      text-decoration: none; transition: color .14s; white-space: nowrap;
+    }
+    .ln-nav-link:hover  { color: var(--wheat); }
+    .ln-nav-link.active { color: var(--wheat); font-weight: 500; }
+
+    .ln-nav-cta {
+      padding: 9px 20px;
+      background: var(--amber); color: white;
+      border-radius: 8px; font-size: 13px; font-weight: 500;
+      text-decoration: none; transition: background .14s; white-space: nowrap;
+    }
+    .ln-nav-cta:hover { background: var(--amber-lt); }
+
+    /* Hamburger */
+    .nav-burger {
+      display: none;
+      flex-direction: column; justify-content: center;
+      gap: 5px; width: 44px; height: 44px;
+      background: none; border: none; cursor: pointer;
+      padding: 6px; border-radius: 8px; z-index: 201; flex-shrink: 0;
+    }
+    .nav-burger span {
+      display: block; width: 22px; height: 2px;
+      background: rgba(244,236,218,.8);
+      border-radius: 2px; transition: all .22s ease;
+    }
+    .nav-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-burger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .nav-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Drawer */
+    .nav-drawer {
+      display: none; position: fixed;
+      top: 0; left: 0; right: 0;
+      background: rgba(20,40,28,.98);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 76px 20px 24px; z-index: 199;
+      flex-direction: column; gap: 2px;
+    }
+    .nav-drawer.open { display: flex; animation: drawerIn .18s ease; }
+
+    @keyframes drawerIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .nav-drawer a {
+      display: block; padding: 14px 16px; font-size: 15px;
+      color: rgba(244,236,218,.75); text-decoration: none;
+      border-radius: 8px; transition: background .14s, color .14s;
+    }
+    .nav-drawer a:hover { background: rgba(255,255,255,.06); color: var(--wheat); }
+    .nav-drawer .nav-drawer-cta {
+      margin-top: 10px !important; background: var(--amber) !important;
+      color: white !important; text-align: center;
+      font-weight: 600 !important; border-radius: 10px !important;
+    }
+    .nav-drawer .nav-drawer-cta:hover { background: var(--amber-lt) !important; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.35; }
+    }
+
+    /* ── FOOTER ──────────────────────────────────────────────── */
+    .ln-footer {
+      padding: 40px 48px;
+      border-top: 1px solid rgba(255,255,255,.07);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 20px; flex-wrap: wrap;
+    }
+    .ln-footer-logo {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(244,236,218,.3);
+    }
+    .ln-footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+    .ln-footer-link {
+      font-size: 12.5px; color: rgba(244,236,218,.3);
+      text-decoration: none; transition: color .14s; padding: 4px 0;
+    }
+    .ln-footer-link:hover { color: rgba(244,236,218,.7); }
+    .ln-footer-copy {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; color: rgba(244,236,218,.2); letter-spacing: .5px;
+    }
+
+    /* ── AUTH SPLIT LAYOUT ───────────────────────────────────── */
+    .auth-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding-top: 52px; /* nav height */
+    }
+
+    /* ── LEFT — hero panel ───────────────────────────────────── */
+    .auth-hero {
+      background: var(--forest);
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      padding: 56px 56px 48px;
+      position: relative; overflow: hidden;
+      background-image:
+        radial-gradient(ellipse at 0% 100%, rgba(74,122,90,.35) 0%, transparent 55%),
+        radial-gradient(ellipse at 100% 0%,  rgba(184,114,14,.15) 0%, transparent 50%),
+        repeating-linear-gradient(0deg,  transparent, transparent 39px, rgba(255,255,255,.013) 39px, rgba(255,255,255,.013) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(255,255,255,.008) 79px, rgba(255,255,255,.008) 80px);
+    }
+
+    .hero-logo {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--amber-lt);
+      display: flex; align-items: center; gap: 9px;
+      text-decoration: none;
+    }
+    .hero-logo-dot {
+      width: 7px; height: 7px;
+      background: var(--amber-lt); border-radius: 50%;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    .hero-eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
+      color: rgba(184,220,160,.65);
+      margin-bottom: 18px;
+    }
+
+    .hero-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 42px; color: var(--wheat);
+      line-height: 1.15; letter-spacing: -.8px;
+      margin-bottom: 20px;
+    }
+    .hero-title em { font-style: italic; color: var(--amber-lt); }
+
+    .hero-desc {
+      font-size: 14.5px; color: rgba(244,236,218,.65);
+      line-height: 1.7; margin-bottom: 36px; max-width: 380px;
+    }
+
+    .hero-features { display: flex; flex-direction: column; gap: 10px; }
+
+    .hero-feat {
+      display: flex; align-items: center; gap: 11px;
+      font-size: 13px; color: rgba(244,236,218,.7);
+    }
+
+    .hero-feat-icon {
+      width: 26px; height: 26px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+
+    .hero-foot {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: .5px;
+      color: rgba(244,236,218,.2);
+      margin-top: 40px;
+    }
+
+    /* ── RIGHT — form panel ──────────────────────────────────── */
+    .auth-panel {
+      background: var(--wheat, #F4ECDA);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 56px 48px;
+      position: relative;
+    }
+
+    .auth-card {
+      width: 100%; max-width: 420px;
+    }
+
+    /* Tab switcher */
+    .auth-tabs {
+      display: flex;
+      background: rgba(27,53,40,.08);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 32px;
+    }
+
+    .auth-tab {
+      flex: 1; padding: 10px;
+      text-align: center;
+      font-family: 'Sora', sans-serif;
+      font-size: 13.5px; font-weight: 600;
+      color: rgba(27,53,40,.45);
+      cursor: pointer;
+      border-radius: 9px;
+      transition: all .18s;
+      user-select: none;
+      border: none; background: none;
+    }
+    .auth-tab.active {
+      background: white;
+      color: #1B3528;
+      box-shadow: 0 2px 8px rgba(27,53,40,.12);
+    }
+
+    /* Form heading */
+    .auth-heading {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px; color: #1B3528;
+      margin-bottom: 6px; letter-spacing: -.4px;
+    }
+
+    .auth-sub {
+      font-size: 13.5px; color: rgba(27,53,40,.5);
+      margin-bottom: 28px; line-height: 1.5;
+    }
+
+    /* Fields */
+    .auth-form { display: flex; flex-direction: column; gap: 16px; }
+
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .field-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: rgba(27,53,40,.5);
+    }
+
+    .field-input {
+      padding: 13px 16px;
+      background: white;
+      border: 1.5px solid rgba(27,53,40,.14);
+      border-radius: 10px;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px; color: #1B3528;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      width: 100%;
+      -webkit-appearance: none;
+    }
+    .field-input::placeholder { color: rgba(27,53,40,.3); }
+    .field-input:focus {
+      border-color: #1B3528;
+      box-shadow: 0 0 0 3px rgba(27,53,40,.08);
+    }
+    .field-input.error {
+      border-color: #c0392b;
+      box-shadow: 0 0 0 3px rgba(192,57,43,.1);
+    }
+
+    /* Password wrapper */
+    .field-pw { position: relative; }
+    .field-pw .field-input { padding-right: 44px; }
+    .pw-toggle {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: rgba(27,53,40,.35); cursor: pointer;
+      font-size: 15px; padding: 4px;
+      transition: color .14s;
+    }
+    .pw-toggle:hover { color: rgba(27,53,40,.7); }
+
+    /* Name row */
+    .field-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+
+    /* Province select */
+    .field-select {
+      padding: 13px 16px;
+      background: white;
+      border: 1.5px solid rgba(27,53,40,.14);
+      border-radius: 10px;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px; color: #1B3528;
+      outline: none; width: 100%; cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231B3528' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+    .field-select:focus {
+      border-color: #1B3528;
+      box-shadow: 0 0 0 3px rgba(27,53,40,.08);
+    }
+
+    /* Error text */
+    .field-error {
+      font-size: 11.5px; color: #c0392b;
+      display: none; margin-top: 2px;
+    }
+    .field-error.show { display: block; }
+
+    /* Forgot password */
+    .auth-forgot {
+      text-align: right; margin-top: -8px;
+    }
+    .auth-forgot a {
+      font-size: 12px; color: rgba(27,53,40,.45);
+      text-decoration: none; transition: color .14s;
+    }
+    .auth-forgot a:hover { color: #1B3528; }
+
+    /* Submit */
+    .auth-submit {
+      width: 100%; padding: 14px;
+      background: #1B3528; color: var(--wheat, #F4ECDA);
+      border: none; border-radius: 10px;
+      font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+      min-height: 48px; margin-top: 4px;
+      position: relative; overflow: hidden;
+    }
+    .auth-submit:hover {
+      background: #254d37;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(27,53,40,.22);
+    }
+    .auth-submit:active { transform: translateY(0); }
+    .auth-submit.loading { pointer-events: none; }
+    .auth-submit .btn-spinner {
+      display: none; width: 18px; height: 18px;
+      border: 2px solid rgba(244,236,218,.3);
+      border-top-color: var(--wheat, #F4ECDA);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .auth-submit.loading .btn-text    { opacity: 0; }
+    .auth-submit.loading .btn-spinner { display: block; }
+
+    @keyframes spin {
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* Divider */
+    .auth-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0;
+    }
+    .auth-divider::before,
+    .auth-divider::after {
+      content: ''; flex: 1;
+      height: 1px; background: rgba(27,53,40,.12);
+    }
+    .auth-divider span {
+      font-size: 11px; color: rgba(27,53,40,.35);
+      font-family: 'IBM Plex Mono', monospace;
+      letter-spacing: 1px; text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* OAuth buttons */
+    .oauth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .oauth-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px 14px;
+      background: white;
+      border: 1.5px solid rgba(27,53,40,.12);
+      border-radius: 10px;
+      font-family: 'Sora', sans-serif; font-size: 13px;
+      color: #1B3528; cursor: pointer;
+      transition: all .15s; text-decoration: none;
+      min-height: 44px;
+    }
+    .oauth-btn:hover {
+      border-color: rgba(27,53,40,.28);
+      box-shadow: 0 2px 8px rgba(27,53,40,.1);
+    }
+    .oauth-icon { font-size: 16px; line-height: 1; }
+
+    /* Switch link */
+    .auth-switch {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 13px; color: rgba(27,53,40,.5);
+    }
+    .auth-switch a {
+      color: #1B3528; font-weight: 600; text-decoration: none;
+      transition: opacity .14s;
+    }
+    .auth-switch a:hover { opacity: .7; }
+
+    /* Terms */
+    .auth-terms {
+      margin-top: 16px;
+      font-size: 11px; color: rgba(27,53,40,.35);
+      text-align: center; line-height: 1.6;
+      font-family: 'IBM Plex Mono', monospace;
+      letter-spacing: .2px;
+    }
+    .auth-terms a { color: rgba(27,53,40,.5); text-decoration: underline; }
+
+    /* Success state */
+    .auth-success {
+      display: none;
+      text-align: center; padding: 32px 20px;
+    }
+    .auth-success-icon {
+      font-size: 48px; margin-bottom: 16px;
+    }
+    .auth-success h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px; color: #1B3528; margin-bottom: 8px;
+    }
+    .auth-success p {
+      font-size: 13.5px; color: rgba(27,53,40,.55);
+      line-height: 1.6; margin-bottom: 24px;
+    }
+    .auth-success-btn {
+      display: inline-block; padding: 13px 28px;
+      background: #1B3528; color: var(--wheat, #F4ECDA);
+      border-radius: 10px; font-weight: 600; font-size: 14px;
+      text-decoration: none; transition: background .15s;
+    }
+    .auth-success-btn:hover { background: #254d37; }
+
+    /* Alert banner */
+    .auth-alert {
+      display: none; align-items: flex-start; gap: 10px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px; line-height: 1.5;
+      margin-bottom: 4px;
+    }
+    .auth-alert.error   { background: rgba(192,57,43,.08); border: 1px solid rgba(192,57,43,.2); color: #a93226; }
+    .auth-alert.success { background: rgba(74,200,120,.1); border: 1px solid rgba(74,200,120,.25); color: #27ae60; }
+    .auth-alert.show    { display: flex; animation: fadeIn .18s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE — tablet ≤ 900px ─────────────────────────── */
+    @media (max-width: 900px) {
+      .ln-nav       { padding: 12px 20px; }
+      .ln-nav-links { display: none; }
+      .nav-burger   { display: flex; }
+
+      .auth-shell {
+        grid-template-columns: 1fr;
+        padding-top: 52px;
+      }
+
+      .auth-hero   { display: none; }
+
+      .auth-panel  { padding: 40px 24px 48px; min-height: calc(100vh - 52px); }
+    }
+
+    /* ── RESPONSIVE — mobile ≤ 480px ─────────────────────────── */
+    @media (max-width: 480px) {
+      .auth-panel  { padding: 32px 16px 40px; }
+      .auth-card   { max-width: 100%; }
+
+      .field-row { grid-template-columns: 1fr; gap: 16px; }
+      .oauth-grid { grid-template-columns: 1fr; }
+
+      .auth-heading { font-size: 22px; }
+
+      .ln-footer { flex-direction: column; align-items: flex-start; padding: 24px 16px; gap: 12px; }
+      .ln-footer-links { gap: 12px; }
+      .ln-footer-link  { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAV ────────────────────────────────────────────────── -->
+  <nav class="ln-nav">
+    <a href="landing.html" class="ln-nav-logo">
+      <div class="ln-nav-logo-dot"></div>
+      Farm Copilot
+    </a>
+    <div class="ln-nav-links">
+      <a href="landing.html#features" class="ln-nav-link">Features</a>
+      <a href="landing.html#programs" class="ln-nav-link">Programs</a>
+      <a href="pricing.html"          class="ln-nav-link">Pricing</a>
+      <a href="dashboard.html"        class="ln-nav-link" id="nav-dashboard" style="display:none;">Dashboard</a>
+      <a href="auth.html"             class="ln-nav-link active">Sign In</a>
+      <a href="index.html"            class="ln-nav-cta">Start Free Setup →</a>
+    </div>
+    <button class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Mobile drawer -->
+  <div class="nav-drawer" id="nav-drawer" role="dialog" aria-label="Navigation">
+    <a href="landing.html#features">Features</a>
+    <a href="landing.html#programs">Programs</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="dashboard.html" id="drawer-dashboard" style="display:none;">Dashboard</a>
+    <a href="auth.html" class="active">Sign In</a>
+    <a href="index.html" class="nav-drawer-cta">Start Free Setup →</a>
+  </div>
+
+  <!-- ── MAIN ────────────────────────────────────────────────── -->
+  <div class="auth-shell">
+
+    <!-- Left — hero ──────────────────────────────────────────── -->
+    <div class="auth-hero">
+      <a href="landing.html" class="hero-logo">
+        <div class="hero-logo-dot"></div>
+        Farm Copilot
+      </a>
+
+      <div class="hero-main">
+        <div class="hero-eyebrow">Canadian Agriculture Intelligence</div>
+        <h1 class="hero-title">
+          Smarter decisions<br>for <em>every season.</em>
+        </h1>
+        <p class="hero-desc">
+          Access the full power of Farm Copilot — funding programs, AI-driven planning,
+          live weather, and ROI tools built for Canadian producers.
+        </p>
+        <div class="hero-features">
+          <div class="hero-feat">
+            <div class="hero-feat-icon">🌾</div>
+            AI Copilot grounded in Canadian ag programs
+          </div>
+          <div class="hero-feat">
+            <div class="hero-feat-icon">💰</div>
+            8 federal &amp; provincial funding programs
+          </div>
+          <div class="hero-feat">
+            <div class="hero-feat-icon">🌤</div>
+            Live weather + crop calendar by province
+          </div>
+          <div class="hero-feat">
+            <div class="hero-feat-icon">📊</div>
+            ROI calculator &amp; operations planner
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-foot">
+        Canadian Farm Copilot · v2.0 · 2026 · Powered by Claude
+      </div>
+    </div>
+
+    <!-- Right — auth form ──────────────────────────────────────── -->
+    <div class="auth-panel">
+      <div class="auth-card">
+
+        <!-- Tab switcher -->
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab active" id="tab-signin" role="tab" onclick="showTab('signin')">Sign In</button>
+          <button class="auth-tab"        id="tab-signup" role="tab" onclick="showTab('signup')">Create Account</button>
+        </div>
+
+        <!-- Alert banner -->
+        <div class="auth-alert" id="auth-alert" role="alert"></div>
+
+        <!-- ── SIGN IN ───────────────────────────────────────── -->
+        <div id="view-signin">
+          <div class="auth-heading">Welcome back</div>
+          <p class="auth-sub">Sign in to your Farm Copilot account.</p>
+
+          <div class="auth-form" id="form-signin">
+            <div class="field-group">
+              <label class="field-label" for="si-email">Email address</label>
+              <input class="field-input" type="email" id="si-email"
+                     placeholder="you@example.com" autocomplete="email">
+              <div class="field-error" id="si-email-err">Please enter a valid email address.</div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="si-pass">Password</label>
+              <div class="field-pw">
+                <input class="field-input" type="password" id="si-pass"
+                       placeholder="••••••••" autocomplete="current-password">
+                <button class="pw-toggle" type="button" onclick="togglePw('si-pass', this)" aria-label="Show password">👁</button>
+              </div>
+              <div class="field-error" id="si-pass-err">Password is required.</div>
+            </div>
+
+            <div class="auth-forgot">
+              <a href="#" onclick="showForgot(event)">Forgot password?</a>
+            </div>
+
+            <button class="auth-submit" id="btn-signin" onclick="handleSignIn()">
+              <span class="btn-text">Sign In →</span>
+              <div class="btn-spinner"></div>
+            </button>
+          </div>
+
+          <div class="auth-divider"><span>or continue with</span></div>
+
+          <div class="oauth-grid">
+            <button class="oauth-btn" onclick="handleOAuth('Google')">
+              <span class="oauth-icon">
+                <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
+                  <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+                  <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                  <path d="M3.964 10.706A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/>
+                  <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.962L3.964 7.294C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                </svg>
+              </span>
+              Google
+            </button>
+            <button class="oauth-btn" onclick="handleOAuth('Apple')">
+              <span class="oauth-icon">
+                <svg width="15" height="18" viewBox="0 0 15 18" fill="currentColor">
+                  <path d="M14.28 13.5c-.31.71-.68 1.37-1.1 1.98-.58.83-1.06 1.41-1.43 1.73-.57.52-1.18.79-1.83.8-.47 0-1.03-.13-1.68-.4-.65-.27-1.25-.4-1.79-.4-.57 0-1.18.13-1.84.4-.66.27-1.2.41-1.6.42-.62.03-1.25-.25-1.88-.83-.4-.35-.9-.95-1.5-1.8C.55 14.5.07 13.4.01 12.23c-.07-1.27.26-2.37.97-3.28.72-.92 1.66-1.38 2.83-1.38.47 0 1.08.15 1.84.45.75.3 1.24.45 1.45.45.16 0 .7-.18 1.6-.53.86-.33 1.58-.47 2.17-.42 1.6.13 2.81.76 3.6 1.91-.56.34-.97.73-1.24 1.19-.28.49-.41 1.03-.4 1.63.01.6.18 1.17.5 1.69.29.45.65.8 1.07 1.04-.14.4-.3.79-.5 1.16zM10.2 1.08c0 .47-.17.91-.5 1.33-.41.48-.89.75-1.42.71-.01-.06-.01-.11-.01-.16 0-.45.19-.93.54-1.33.17-.2.39-.37.65-.5.27-.14.52-.21.75-.21.01.05.01.1.01.16z"/>
+                </svg>
+              </span>
+              Apple
+            </button>
+          </div>
+
+          <div class="auth-switch">
+            Don't have an account? <a href="#" onclick="showTab('signup'); return false;">Create one free →</a>
+          </div>
+        </div>
+
+        <!-- ── SIGN UP ─────────────────────────────────────────── -->
+        <div id="view-signup" style="display:none;">
+          <div class="auth-heading">Create your account</div>
+          <p class="auth-sub">Free forever. No credit card needed.</p>
+
+          <div class="auth-form" id="form-signup">
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label" for="su-first">First name</label>
+                <input class="field-input" type="text" id="su-first"
+                       placeholder="Jane" autocomplete="given-name">
+                <div class="field-error" id="su-first-err">First name is required.</div>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="su-last">Last name</label>
+                <input class="field-input" type="text" id="su-last"
+                       placeholder="Smith" autocomplete="family-name">
+                <div class="field-error" id="su-last-err">Last name is required.</div>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="su-email">Email address</label>
+              <input class="field-input" type="email" id="su-email"
+                     placeholder="you@example.com" autocomplete="email">
+              <div class="field-error" id="su-email-err">Please enter a valid email address.</div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="su-province">Province</label>
+              <select class="field-select" id="su-province">
+                <option value="">Select your province…</option>
+                <option>Alberta</option>
+                <option>British Columbia</option>
+                <option>Manitoba</option>
+                <option>New Brunswick</option>
+                <option>Newfoundland &amp; Labrador</option>
+                <option>Nova Scotia</option>
+                <option>Ontario</option>
+                <option>Prince Edward Island</option>
+                <option>Quebec</option>
+                <option>Saskatchewan</option>
+              </select>
+              <div class="field-error" id="su-province-err">Please select your province.</div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="su-pass">Password</label>
+              <div class="field-pw">
+                <input class="field-input" type="password" id="su-pass"
+                       placeholder="Min. 8 characters" autocomplete="new-password">
+                <button class="pw-toggle" type="button" onclick="togglePw('su-pass', this)" aria-label="Show password">👁</button>
+              </div>
+              <div class="field-error" id="su-pass-err">Password must be at least 8 characters.</div>
+            </div>
+
+            <button class="auth-submit" id="btn-signup" onclick="handleSignUp()">
+              <span class="btn-text">Create Free Account →</span>
+              <div class="btn-spinner"></div>
+            </button>
+          </div>
+
+          <div class="auth-terms">
+            By creating an account you agree to our
+            <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+          </div>
+
+          <div class="auth-divider"><span>or sign up with</span></div>
+
+          <div class="oauth-grid">
+            <button class="oauth-btn" onclick="handleOAuth('Google')">
+              <span class="oauth-icon">
+                <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
+                  <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+                  <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                  <path d="M3.964 10.706A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/>
+                  <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.962L3.964 7.294C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                </svg>
+              </span>
+              Google
+            </button>
+            <button class="oauth-btn" onclick="handleOAuth('Apple')">
+              <span class="oauth-icon">
+                <svg width="15" height="18" viewBox="0 0 15 18" fill="currentColor">
+                  <path d="M14.28 13.5c-.31.71-.68 1.37-1.1 1.98-.58.83-1.06 1.41-1.43 1.73-.57.52-1.18.79-1.83.8-.47 0-1.03-.13-1.68-.4-.65-.27-1.25-.4-1.79-.4-.57 0-1.18.13-1.84.4-.66.27-1.2.41-1.6.42-.62.03-1.25-.25-1.88-.83-.4-.35-.9-.95-1.5-1.8C.55 14.5.07 13.4.01 12.23c-.07-1.27.26-2.37.97-3.28.72-.92 1.66-1.38 2.83-1.38.47 0 1.08.15 1.84.45.75.3 1.24.45 1.45.45.16 0 .7-.18 1.6-.53.86-.33 1.58-.47 2.17-.42 1.6.13 2.81.76 3.6 1.91-.56.34-.97.73-1.24 1.19-.28.49-.41 1.03-.4 1.63.01.6.18 1.17.5 1.69.29.45.65.8 1.07 1.04-.14.4-.3.79-.5 1.16zM10.2 1.08c0 .47-.17.91-.5 1.33-.41.48-.89.75-1.42.71-.01-.06-.01-.11-.01-.16 0-.45.19-.93.54-1.33.17-.2.39-.37.65-.5.27-.14.52-.21.75-.21.01.05.01.1.01.16z"/>
+                </svg>
+              </span>
+              Apple
+            </button>
+          </div>
+
+          <div class="auth-switch">
+            Already have an account? <a href="#" onclick="showTab('signin'); return false;">Sign in →</a>
+          </div>
+        </div>
+
+        <!-- ── FORGOT PASSWORD ──────────────────────────────────── -->
+        <div id="view-forgot" style="display:none;">
+          <div class="auth-heading">Reset password</div>
+          <p class="auth-sub">Enter your email and we'll send a reset link.</p>
+
+          <div class="auth-form">
+            <div class="field-group">
+              <label class="field-label" for="fp-email">Email address</label>
+              <input class="field-input" type="email" id="fp-email"
+                     placeholder="you@example.com" autocomplete="email">
+              <div class="field-error" id="fp-email-err">Please enter a valid email address.</div>
+            </div>
+
+            <button class="auth-submit" onclick="handleForgot()">
+              <span class="btn-text">Send Reset Link →</span>
+              <div class="btn-spinner"></div>
+            </button>
+          </div>
+
+          <div class="auth-switch">
+            <a href="#" onclick="showTab('signin'); return false;">← Back to sign in</a>
+          </div>
+        </div>
+
+        <!-- ── SUCCESS STATE ──────────────────────────────────────── -->
+        <div class="auth-success" id="view-success">
+          <div class="auth-success-icon">🌾</div>
+          <h3>You're in!</h3>
+          <p>Welcome to Canadian Farm Copilot.<br>Let's set up your farm profile.</p>
+          <a href="index.html" class="auth-success-btn">Go to Setup →</a>
+        </div>
+
+      </div><!-- /.auth-card -->
+    </div><!-- /.auth-panel -->
+  </div><!-- /.auth-shell -->
+
+  <!-- ── FOOTER ──────────────────────────────────────────────── -->
+  <footer class="ln-footer">
+    <div class="ln-footer-logo">Canadian Farm Copilot · v2.0 · 2026</div>
+    <div class="ln-footer-links">
+      <a href="landing.html"   class="ln-footer-link">Home</a>
+      <a href="index.html"     class="ln-footer-link">Setup</a>
+      <a href="pricing.html"   class="ln-footer-link">Pricing</a>
+      <a href="dashboard.html" class="ln-footer-link">Dashboard</a>
+      <a href="support.html"   class="ln-footer-link">Support</a>
+    </div>
+    <div class="ln-footer-copy">Covering 2025–2026 Canadian federal &amp; provincial programs · Open-Meteo weather · Powered by Claude</div>
+  </footer>
+
+  <script>
+    // ── Dashboard link ───────────────────────────────────────
+    if (localStorage.getItem('farmProfile')) {
+      ['nav-dashboard', 'drawer-dashboard'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = '';
+      });
+    }
+
+    // ── Hamburger ────────────────────────────────────────────
+    const burger = document.getElementById('nav-burger');
+    const drawer = document.getElementById('nav-drawer');
+
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      burger.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
+
+    burger.addEventListener('click', () => {
+      const isOpen = drawer.classList.toggle('open');
+      burger.classList.toggle('open', isOpen);
+      burger.setAttribute('aria-expanded', String(isOpen));
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+
+    drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', closeDrawer));
+
+    document.addEventListener('click', e => {
+      if (drawer.classList.contains('open') &&
+          !drawer.contains(e.target) &&
+          !burger.contains(e.target)) closeDrawer();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeDrawer();
+    });
+
+    // ── Tab switcher ─────────────────────────────────────────
+    function showTab(tab) {
+      document.getElementById('view-signin').style.display  = tab === 'signin'  ? '' : 'none';
+      document.getElementById('view-signup').style.display  = tab === 'signup'  ? '' : 'none';
+      document.getElementById('view-forgot').style.display  = tab === 'forgot'  ? '' : 'none';
+      document.getElementById('view-success').style.display = 'none';
+
+      document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+      document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+
+      clearAlert();
+    }
+
+    function showForgot(e) {
+      e.preventDefault();
+      ['signin', 'signup', 'success'].forEach(v =>
+        document.getElementById('view-' + v).style.display = 'none');
+      document.getElementById('view-forgot').style.display = '';
+      clearAlert();
+    }
+
+    // ── Alert banner ─────────────────────────────────────────
+    function showAlert(msg, type = 'error') {
+      const el = document.getElementById('auth-alert');
+      el.textContent = msg;
+      el.className = `auth-alert ${type} show`;
+    }
+
+    function clearAlert() {
+      const el = document.getElementById('auth-alert');
+      el.className = 'auth-alert';
+      el.textContent = '';
+    }
+
+    // ── Validation helpers ───────────────────────────────────
+    function validate(id, errId, test) {
+      const el = document.getElementById(id);
+      const err = document.getElementById(errId);
+      const ok = test(el.value.trim());
+      el.classList.toggle('error', !ok);
+      err.classList.toggle('show', !ok);
+      return ok;
+    }
+
+    const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+    // ── Show/hide password ───────────────────────────────────
+    function togglePw(inputId, btn) {
+      const inp = document.getElementById(inputId);
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.textContent = show ? '🙈' : '👁';
+    }
+
+    // ── Loading state ────────────────────────────────────────
+    function setLoading(btnId, on) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.classList.toggle('loading', on);
+      btn.disabled = on;
+    }
+
+    // ── Sign In ──────────────────────────────────────────────
+    function handleSignIn() {
+      clearAlert();
+      const okEmail = validate('si-email', 'si-email-err', isEmail);
+      const okPass  = validate('si-pass',  'si-pass-err',  v => v.length > 0);
+      if (!okEmail || !okPass) return;
+
+      setLoading('btn-signin', true);
+
+      // Simulate auth (replace with real API call)
+      setTimeout(() => {
+        setLoading('btn-signin', false);
+        const email = document.getElementById('si-email').value.trim();
+        const pass  = document.getElementById('si-pass').value;
+
+        // Demo: accept any valid credentials
+        if (pass.length >= 6) {
+          localStorage.setItem('authUser', JSON.stringify({ email, signedIn: true }));
+          showSuccess();
+        } else {
+          showAlert('Incorrect email or password. Please try again.');
+        }
+      }, 1100);
+    }
+
+    // ── Sign Up ──────────────────────────────────────────────
+    function handleSignUp() {
+      clearAlert();
+      const okFirst    = validate('su-first',    'su-first-err',    v => v.length > 0);
+      const okLast     = validate('su-last',     'su-last-err',     v => v.length > 0);
+      const okEmail    = validate('su-email',    'su-email-err',    isEmail);
+      const okProvince = validate('su-province', 'su-province-err', v => v.length > 0);
+      const okPass     = validate('su-pass',     'su-pass-err',     v => v.length >= 8);
+
+      if (!okFirst || !okLast || !okEmail || !okProvince || !okPass) return;
+
+      setLoading('btn-signup', true);
+
+      // Simulate registration
+      setTimeout(() => {
+        setLoading('btn-signup', false);
+        const userData = {
+          email:    document.getElementById('su-email').value.trim(),
+          firstName: document.getElementById('su-first').value.trim(),
+          lastName:  document.getElementById('su-last').value.trim(),
+          province:  document.getElementById('su-province').value,
+          signedIn:  true,
+        };
+        localStorage.setItem('authUser', JSON.stringify(userData));
+        showSuccess();
+      }, 1200);
+    }
+
+    // ── Forgot password ──────────────────────────────────────
+    function handleForgot() {
+      clearAlert();
+      const ok = validate('fp-email', 'fp-email-err', isEmail);
+      if (!ok) return;
+
+      const btn = document.querySelector('#view-forgot .auth-submit');
+      btn.classList.add('loading'); btn.disabled = true;
+
+      setTimeout(() => {
+        btn.classList.remove('loading'); btn.disabled = false;
+        showAlert('Reset link sent! Check your inbox.', 'success');
+      }, 900);
+    }
+
+    // ── OAuth (demo) ─────────────────────────────────────────
+    function handleOAuth(provider) {
+      showAlert(`${provider} sign-in coming soon. Use email for now.`, 'success');
+    }
+
+    // ── Success state ────────────────────────────────────────
+    function showSuccess() {
+      ['signin', 'signup', 'forgot'].forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (el) el.style.display = 'none';
+      });
+      document.getElementById('view-success').style.display = 'block';
+    }
+
+    // ── Enter key submits ────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      if (document.getElementById('view-signin').style.display !== 'none') handleSignIn();
+      else if (document.getElementById('view-signup').style.display !== 'none') handleSignUp();
+    });
+
+    // ── Check URL param ?tab=signup ──────────────────────────
+    const urlTab = new URLSearchParams(location.search).get('tab');
+    if (urlTab === 'signup') showTab('signup');
+  </script>
+  <script src="js/nav-patch.js"></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Climate Resilience Planner — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css"><link rel="manifest" href="manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .tab-bar{display:flex;gap:4px;padding:0 0 20px;border-bottom:1px solid var(--border);margin-bottom:22px;flex-wrap:wrap;}
+    .pg-tab{padding:9px 18px;border-radius:20px;border:1.5px solid var(--border);background:white;font-family:'Sora',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;}
+    .pg-tab.active{background:var(--forest);color:var(--wheat);border-color:var(--forest);}
+    .pg-tab:hover:not(.active){border-color:var(--sage);color:var(--forest);}
+    .risk-banner{border-radius:var(--r-lg);padding:20px 24px;margin-bottom:14px;display:flex;gap:14px;align-items:flex-start;}
+    .rb-high{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.22);}
+    .rb-med{background:rgba(184,114,14,.06);border:1px solid rgba(184,114,14,.2);}
+    .rb-low{background:rgba(74,200,120,.06);border:1px solid rgba(74,200,120,.2);}
+    .rb-icon{font-size:28px;flex-shrink:0;}
+    .rb-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;}
+    .rb-desc{font-size:12.5px;color:var(--muted);line-height:1.6;}
+    .rb-action{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);margin-top:5px;display:inline-block;}
+    .trend-card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;box-shadow:var(--shadow-sm);margin-bottom:14px;}
+    .tc-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+    .tc-val{font-family:'DM Serif Display',serif;font-size:28px;color:var(--forest);letter-spacing:-.5px;}
+    .tc-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+    .variety-card{background:var(--cream);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:10px;border:1px solid var(--border);}
+    .vc-name{font-size:13.5px;font-weight:600;color:var(--forest);margin-bottom:3px;}
+    .vc-reason{font-size:12.5px;color:var(--muted);line-height:1.55;}
+    .vc-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;border-radius:5px;background:rgba(74,200,120,.1);color:#1e8449;margin-top:6px;display:inline-block;}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><div class="page-title">🌡 Climate Resilience Planner</div><div class="page-subtitle" id="cr-sub">10-year climate trends, risk assessment, and resilience funding for your province</div></div>
+        <div style="display:flex;gap:8px;"><a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a><a href="weather.html" class="btn btn-secondary btn-sm">Live Weather →</a></div>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="planner-stats anim-fade-up">
+        <div class="stat-card"><div class="stat-label">Temperature Rise (10yr)</div><div class="stat-value" id="stat-temp">+1.8°C</div><div class="stat-change neg">Above 1981–2010 baseline</div></div>
+        <div class="stat-card"><div class="stat-label">Precipitation Change</div><div class="stat-value" id="stat-precip">−8%</div><div class="stat-change neg">Annual average decline</div></div>
+        <div class="stat-card"><div class="stat-label">RALP Funding</div><div class="stat-value">$14.6M</div><div class="stat-change">Ontario resilience program</div></div>
+        <div class="stat-card"><div class="stat-label">Productivity Potential</div><div class="stat-value">$30B</div><div class="stat-change">If 2% growth restored</div></div>
+      </div>
+      <div class="tab-bar anim-fade-up anim-delay-1">
+        <button class="pg-tab active" id="crtab-risks"    onclick="showCrTab('risks')">⚠️ Risk Assessment</button>
+        <button class="pg-tab"        id="crtab-trends"   onclick="showCrTab('trends')">📈 Climate Trends</button>
+        <button class="pg-tab"        id="crtab-varieties" onclick="showCrTab('varieties')">🌱 Resilient Varieties</button>
+        <button class="pg-tab"        id="crtab-funding"  onclick="showCrTab('funding')">💰 Resilience Funding</button>
+      </div>
+
+      <!-- RISKS -->
+      <div id="crview-risks">
+        <div id="risk-province-select" style="margin-bottom:18px;" class="anim-fade-up">
+          <select class="filter-select" id="cr-prov" onchange="renderRisks()" style="min-width:220px;">
+            <option value="">Select Province</option>
+            <option value="AB">Alberta</option><option value="BC">British Columbia</option>
+            <option value="MB">Manitoba</option><option value="ON">Ontario</option>
+            <option value="QC">Quebec</option><option value="SK">Saskatchewan</option>
+          </select>
+        </div>
+        <div id="risk-list" class="anim-fade-up anim-delay-1"></div>
+      </div>
+
+      <!-- TRENDS -->
+      <div id="crview-trends" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card"><div class="card-header"><span class="card-title">🌡 Temperature Trend (2015–2026)</span></div><div class="card-body" style="padding:14px 18px;"><canvas id="temp-chart" height="200"></canvas></div></div>
+          <div class="card"><div class="card-header"><span class="card-title">💧 Precipitation Trend</span></div><div class="card-body" style="padding:14px 18px;"><canvas id="precip-chart" height="200"></canvas></div></div>
+        </div>
+        <div class="card mt-16" style="margin-top:16px;">
+          <div class="card-header"><span class="card-title">📊 Key Climate Facts — Canadian Agriculture 2026</span></div>
+          <div class="card-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+            <div class="trend-card"><div class="tc-label">Prairie Drought Frequency</div><div class="tc-val">+40%</div><div class="tc-sub">More frequent drought events vs. 1980s</div></div>
+            <div class="trend-card"><div class="tc-label">Frost-Free Season Gain</div><div class="tc-val">+12 days</div><div class="tc-sub">Prairie provinces since 1960 — new crops now viable</div></div>
+            <div class="trend-card"><div class="tc-label">Extreme Heat Events</div><div class="tc-val">3× more</div><div class="tc-sub">Days above 35°C vs. 1950s baseline</div></div>
+            <div class="trend-card"><div class="tc-label">BC Wildfire Smoke Days</div><div class="tc-val">+180%</div><div class="tc-sub">Annual average smoke days since 2015</div></div>
+            <div class="trend-card"><div class="tc-label">Winter Precipitation</div><div class="tc-val">+18%</div><div class="tc-sub">More rain, less snow — spring flood risk up</div></div>
+            <div class="trend-card"><div class="tc-label">Growing Degree Days</div><div class="tc-val">+220</div><div class="tc-sub">Annual GDD gain — Prairie Belt since 2000</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VARIETIES -->
+      <div id="crview-varieties" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🌱 Drought-Tolerant Variety Recommendations</span></div>
+            <div class="card-body" style="padding:8px 20px;" id="variety-list"></div>
+            <div class="card-footer"><a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI for variety advice →</a></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">🔄 Climate Adaptation Practices</span></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+              <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;">
+                <div style="font-size:13.5px;font-weight:600;color:var(--forest);margin-bottom:5px;">No-Till / Reduced Tillage</div>
+                <div style="font-size:12.5px;color:var(--muted);line-height:1.6;">Improves soil water retention by 15–25%. Reduces fuel costs and soil erosion. Builds organic matter over time. Carbon credit eligible.</div>
+              </div>
+              <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;">
+                <div style="font-size:13.5px;font-weight:600;color:var(--forest);margin-bottom:5px;">Cover Cropping</div>
+                <div style="font-size:12.5px;color:var(--muted);line-height:1.6;">Winter rye, oats, or legume mixes protect soil between cash crops. Fixes nitrogen, suppresses weeds, improves soil biology.</div>
+              </div>
+              <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;">
+                <div style="font-size:13.5px;font-weight:600;color:var(--forest);margin-bottom:5px;">Wetland Restoration</div>
+                <div style="font-size:12.5px;color:var(--muted);line-height:1.6;">Restoring marginal land to wetlands improves flood resilience and attracts RALP funding ($14.6M Ontario pool). Carbon sequestration benefit.</div>
+              </div>
+              <a href="copilot.html" class="btn btn-secondary btn-sm">Model adaptation ROI with AI →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FUNDING -->
+      <div id="crview-funding" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header"><span class="card-title">💰 Climate Resilience Funding Programs — 2026</span></div>
+          <div class="card-body" style="padding:0;overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;min-width:600px;">
+              <thead><tr style="background:var(--cream);">
+                <th style="padding:11px 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1.5px solid var(--border);">Program</th>
+                <th style="padding:11px 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1.5px solid var(--border);">Amount</th>
+                <th style="padding:11px 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1.5px solid var(--border);">What it Funds</th>
+                <th style="padding:11px 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:center;border-bottom:1.5px solid var(--border);">Apply</th>
+              </tr></thead>
+              <tbody>
+                <tr><td style="padding:12px 16px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border);">RALP — Ontario</td><td style="padding:12px 16px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--forest);font-weight:600;border-bottom:1px solid var(--border);">$14.6M</td><td style="padding:12px 16px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--border);">Wetland restoration, riparian buffers, carbon sequestration on ON farmland</td><td style="padding:12px 16px;text-align:center;border-bottom:1px solid var(--border);"><a href="https://www.ontario.ca/page/agriculture" target="_blank" class="btn btn-ghost btn-sm">Apply →</a></td></tr>
+                <tr><td style="padding:12px 16px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border);">CAP — Environmental Farm Plan</td><td style="padding:12px 16px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--forest);font-weight:600;border-bottom:1px solid var(--border);">Cost-share</td><td style="padding:12px 16px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--border);">Irrigation improvements, soil health, wetland enhancement, tree planting</td><td style="padding:12px 16px;text-align:center;border-bottom:1px solid var(--border);"><a href="https://agriculture.canada.ca" target="_blank" class="btn btn-ghost btn-sm">Apply →</a></td></tr>
+                <tr><td style="padding:12px 16px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border);">AgriInnovate — Climate Tech</td><td style="padding:12px 16px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--forest);font-weight:600;border-bottom:1px solid var(--border);">Up to $10M</td><td style="padding:12px 16px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--border);">Climate-resilient ag technology commercialization and adoption</td><td style="padding:12px 16px;text-align:center;border-bottom:1px solid var(--border);"><a href="https://agriculture.canada.ca" target="_blank" class="btn btn-ghost btn-sm">Apply →</a></td></tr>
+                <tr><td style="padding:12px 16px;font-weight:500;color:var(--text);">ECCC Wetland Conservation Fund</td><td style="padding:12px 16px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--forest);font-weight:600;">Cost-share</td><td style="padding:12px 16px;font-size:13px;color:var(--muted);">Wetland restoration and conservation on agricultural and private land</td><td style="padding:12px 16px;text-align:center;"><a href="https://www.canada.ca/en/environment-climate-change.html" target="_blank" class="btn btn-ghost btn-sm">Apply →</a></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer"><a href="funding.html" class="btn btn-secondary btn-sm">Full Funding Navigator →</a><a href="copilot.html" class="btn btn-ghost btn-sm" style="margin-left:8px;">Ask AI Copilot →</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/data.js"></script>
+<script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('climate');
+  document.getElementById('cr-sub').textContent = `Climate risks and resilience planning · ${profile.province}`;
+
+  // Auto-set province
+  const provMap={'Alberta':'AB','British Columbia':'BC','Manitoba':'MB','Ontario':'ON','Quebec':'QC','Saskatchewan':'SK'};
+  const sel=document.getElementById('cr-prov');
+  if(sel&&provMap[profile.province]){sel.value=provMap[profile.province];renderRisks();}
+
+  function showCrTab(t){['risks','trends','varieties','funding'].forEach(id=>{document.getElementById('crview-'+id).style.display=id===t?'':'none';document.getElementById('crtab-'+id).classList.toggle('active',id===t);});if(t==='trends')initCharts();if(t==='varieties')renderVarieties();}
+
+  const RISKS={
+    AB:[{level:'high',icon:'🔥',title:'Wildfire Smoke — Crop Damage & Labour Risk',desc:'Alberta recorded 2.4M ha burned in 2024. Smoke reduces photosynthesis by 8–18% during critical crop development. Field workers require respiratory protection.',link:'farm-safety.html'},
+        {level:'high',icon:'🌵',title:'Drought — Soil Moisture Deficit',desc:'Southern Alberta projected to face 2.2× more frequent drought events by 2040. Implement soil moisture monitoring and drought-tolerant varieties.',link:'soil-health.html'},
+        {level:'med',icon:'🌪',title:'Extreme Wind Events — Equipment & Crop Loss',desc:'Wind erosion increasing on summer fallow fields. Shelter belts and minimum tillage reduce risk significantly.',link:'compliance.html'}],
+    BC:[{level:'high',icon:'🔥',title:'Wildfire — Evacuation & Livestock Risk',desc:'BC Interior farms face highest wildfire risk in Canada. Develop livestock evacuation plans and firebreak perimeter around buildings.',link:'farm-safety.html'},
+        {level:'med',icon:'🌊',title:'Flooding — Fraser Valley & Okanagan',desc:'BC\'s most productive farmland faces increasing flood risk. RALP-equivalent BC programs fund riparian buffer restoration.',link:'funding.html'},
+        {level:'low',icon:'❄️',title:'Frost Shift — Earlier Springs',desc:'Last spring frost moving 5–10 days earlier in most BC regions — creating opportunity for early-season vegetables.',link:'weather.html'}],
+    MB:[{level:'high',icon:'🌊',title:'Red River Flooding — Spring Flood Risk',desc:'2026 snowpack is 125% of normal across the Red River basin. Prepare dikes and review crop insurance flood coverage now.',link:'crop-insurance.html'},
+        {level:'med',icon:'🌵',title:'Summer Drought — Southern Manitoba',desc:'La Niña pattern is shifting southwestern MB toward drier summers. Soil moisture monitoring and irrigation planning essential.',link:'soil-health.html'},
+        {level:'low',icon:'🌡',title:'Warming Trend — New Crop Opportunities',desc:'Manitoba growing season extending — soybeans and corn now viable further north than in previous decades.',link:'weather.html'}],
+    ON:[{level:'high',icon:'🌩',title:'Extreme Weather Events — Storm Frequency Up',desc:'GTA and Golden Horseshoe averaging 3× more severe weather events since 2010. Crop damage, equipment risk, and worker safety concerns increasing.',link:'farm-safety.html'},
+        {level:'med',icon:'🌡',title:'Heat Stress — Livestock & Labour',desc:'Days above 32°C increasing in Southern Ontario. Implement heat abatement protocols for dairy and poultry — productivity losses up to 15% without intervention.',link:'farm-safety.html'},
+        {level:'low',icon:'🌊',title:'Wetland Restoration Opportunity — RALP',desc:'Ontario\'s $14.6M RALP fund pays farmers to restore wetlands on marginal farmland — improving flood resilience and earning carbon credits.',link:'funding.html'}],
+    QC:[{level:'med',icon:'🌡',title:'Warming Summers — Heat & Humidity',desc:'Quebec\'s extended warm season is enabling new crops (e.g. soybeans moving north) but increasing disease pressure in fruit and vegetables.',link:'weather.html'},
+        {level:'med',icon:'🌊',title:'Spring Flood — Ottawa River & St. Lawrence',desc:'Flood risk increasing in Montérégie and Laurentians regions. FADQ insurance covers flood-related losses on eligible cropland.',link:'crop-insurance.html'}],
+    SK:[{level:'high',icon:'🌵',title:'Drought — Soil Moisture & Yield Risk',desc:'Saskatchewan\'s three most severe droughts have occurred since 2000. Implement soil moisture monitoring, drought-tolerant varieties, and crop insurance.',link:'crop-insurance.html'},
+        {level:'med',icon:'🔥',title:'Grassland Fire — Livestock Range Risk',desc:'Dry conditions and lightning storms create increasing grassland fire risk. Develop evacuation plans for cattle operations.',link:'farm-safety.html'},
+        {level:'low',icon:'🌡',title:'Growing Season Extending — Opportunity',desc:'Saskatchewan frost-free season has extended by 12 days since 1990. New crop varieties and earlier planting dates possible.',link:'weather.html'}]
+  };
+
+  function renderRisks(){
+    const code=document.getElementById('cr-prov').value||provMap[profile.province]||'ON';
+    const risks=RISKS[code]||RISKS.ON;
+    document.getElementById('risk-list').innerHTML=risks.map(r=>`
+      <div class="risk-banner rb-${r.level}">
+        <div class="rb-icon">${r.icon}</div>
+        <div>
+          <div class="rb-title">${r.level==='high'?'🔴 HIGH RISK':r.level==='med'?'🟡 MEDIUM RISK':'🟢 LOW RISK'} — ${r.title}</div>
+          <div class="rb-desc">${r.desc}</div>
+          <a href="${r.link}" class="rb-action">Take action →</a>
+        </div>
+      </div>`).join('');
+  }
+
+  const VARIETIES={
+    canola:['InVigor L140P — drought-tolerant, high-yield pod shatter resistance','CS2000 — strong standability in dry Prairie conditions','DK 71-45 — shorter season for earlier harvest in drier years'],
+    wheat:['AAC Brandon — excellent drought tolerance, FHB resistance','Carberry — consistent yield under moisture stress','AAC Redberry — early maturing, suitable for drier north SK'],
+    corn:['P9921Q — drought tolerant, strong root system for Ontario','Pioneer 39D95Q — yield stability under heat stress','DKC49-92 — shorter GDD requirement for cooler BC Interior'],
+  };
+
+  function renderVarieties(){
+    document.getElementById('variety-list').innerHTML=Object.entries(VARIETIES).map(([crop,vars])=>`
+      <div style="margin-bottom:16px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">${crop}</div>
+        ${vars.map(v=>`<div class="variety-card"><div class="vc-name">${v.split(' — ')[0]}</div><div class="vc-reason">${v.split(' — ')[1]||''}</div><span class="vc-tag">Climate-resilient</span></div>`).join('')}
+      </div>`).join('');
+  }
+
+  let tempChart,precipChart;
+  function initCharts(){
+    const years=['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'];
+    const tempData=[0.8,1.0,0.9,1.2,1.1,1.4,1.3,1.6,1.7,1.8,1.9,2.0];
+    const precipData=[98,102,94,88,91,97,85,82,89,92,88,90];
+    if(tempChart)tempChart.destroy();
+    if(precipChart)precipChart.destroy();
+    const opts={responsive:true,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{y:{grid:{color:'rgba(0,0,0,.06)'},ticks:{font:{family:'IBM Plex Mono',size:10}}},x:{grid:{display:false},ticks:{font:{family:'IBM Plex Mono',size:10}}}}};
+    tempChart=new Chart(document.getElementById('temp-chart'),{type:'line',data:{labels:years,datasets:[{label:'Temp Anomaly °C',data:tempData,borderColor:'#c0392b',backgroundColor:'rgba(192,57,43,.08)',fill:true,borderWidth:2,tension:0.3}]},options:{...opts,scales:{...opts.scales,y:{...opts.scales.y,ticks:{...opts.scales.y.ticks,callback:v=>'+'+v+'°C'}}}}});
+    precipChart=new Chart(document.getElementById('precip-chart'),{type:'bar',data:{labels:years,datasets:[{label:'Precip % of Normal',data:precipData,backgroundColor:precipData.map(v=>v<90?'rgba(192,57,43,.6)':v<100?'rgba(184,114,14,.6)':'rgba(74,200,120,.6)'),borderRadius:4}]},options:{...opts,scales:{...opts.scales,y:{...opts.scales.y,ticks:{...opts.scales.y.ticks,callback:v=>v+'%'}}}}});
+  }
+</script>
+</body>
+</html>

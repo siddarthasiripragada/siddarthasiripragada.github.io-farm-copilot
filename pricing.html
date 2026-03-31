@@ -7,14 +7,9 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
   <style>
-    /* ── RESET & BASE ──────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      background: #1B3528;
-      min-height: 100%;
-    }
-
+    html, body { background: #1B3528; min-height: 100%; }
     body {
       background: var(--forest);
       color: var(--wheat);
@@ -23,656 +18,569 @@
       -webkit-text-size-adjust: 100%;
     }
 
-    /* ── NAV ───────────────────────────────────────────────── */
+    /* ── NAV ─────────────────────────────────────────── */
     .ln-nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 200;
       padding: 14px 48px;
       display: flex; align-items: center; justify-content: space-between;
-      background: rgba(27,53,40,.92);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: rgba(27,53,40,.94);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(255,255,255,.07);
     }
-
     .ln-nav-logo {
       font-family: 'IBM Plex Mono', monospace;
       font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
-      color: var(--amber-lt);
-      display: flex; align-items: center; gap: 8px;
+      color: var(--amber-lt); display: flex; align-items: center; gap: 8px;
       text-decoration: none;
-      z-index: 201;
     }
-
     .ln-nav-logo-dot {
-      width: 7px; height: 7px;
-      background: var(--amber-lt);
-      border-radius: 50%;
-      animation: pulse 2.4s infinite;
-      flex-shrink: 0;
+      width: 7px; height: 7px; background: var(--amber-lt);
+      border-radius: 50%; animation: pulse 2.4s infinite; flex-shrink: 0;
     }
-
     .ln-nav-links { display: flex; align-items: center; gap: 24px; }
-
-    .ln-nav-link {
-      font-size: 13px; color: rgba(244,236,218,.6);
-      text-decoration: none; transition: color .14s;
-      white-space: nowrap;
-    }
+    .ln-nav-link { font-size: 13px; color: rgba(244,236,218,.6); text-decoration: none; transition: color .14s; white-space: nowrap; }
     .ln-nav-link:hover  { color: var(--wheat); }
     .ln-nav-link.active { color: var(--wheat); font-weight: 500; }
-
     .ln-nav-cta {
-      padding: 9px 20px;
-      background: var(--amber); color: white;
+      padding: 9px 20px; background: var(--amber); color: white;
       border-radius: 8px; font-size: 13px; font-weight: 500;
-      text-decoration: none; transition: background .14s;
-      white-space: nowrap;
+      text-decoration: none; transition: background .14s; white-space: nowrap;
     }
     .ln-nav-cta:hover { background: var(--amber-lt); }
 
-    /* Hamburger — hidden on desktop */
+    /* Burger */
     .nav-burger {
-      display: none;
-      flex-direction: column; justify-content: center;
-      gap: 5px;
-      width: 44px; height: 44px;
-      background: none; border: none;
-      cursor: pointer;
-      padding: 6px;
-      border-radius: 8px;
-      z-index: 201;
-      flex-shrink: 0;
+      display: none; flex-direction: column; justify-content: center;
+      gap: 5px; width: 44px; height: 44px; background: none; border: none;
+      cursor: pointer; padding: 6px; border-radius: 8px; z-index: 201;
     }
     .nav-burger span {
-      display: block;
-      width: 22px; height: 2px;
-      background: rgba(244,236,218,.8);
-      border-radius: 2px;
-      transition: all .22s ease;
+      display: block; width: 22px; height: 2px;
+      background: rgba(244,236,218,.8); border-radius: 2px; transition: all .22s;
     }
     .nav-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
     .nav-burger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
     .nav-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-    /* Mobile drawer */
+    /* Drawer */
     .nav-drawer {
-      display: none;
-      position: fixed;
+      display: none; position: fixed;
       top: 0; left: 0; right: 0;
       background: rgba(20,40,28,.98);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(255,255,255,.08);
-      padding: 76px 20px 24px;
-      z-index: 199;
-      flex-direction: column;
-      gap: 2px;
+      padding: 76px 20px 24px; z-index: 199;
+      flex-direction: column; gap: 2px;
     }
-    .nav-drawer.open {
-      display: flex;
-      animation: drawerIn .18s ease;
-    }
-
-    @keyframes drawerIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
+    .nav-drawer.open { display: flex; animation: drawerIn .18s ease; }
     .nav-drawer a {
-      display: block;
-      padding: 14px 16px;
-      font-size: 15px;
-      color: rgba(244,236,218,.75);
-      text-decoration: none;
-      border-radius: 8px;
-      transition: background .14s, color .14s;
+      display: block; padding: 14px 16px; font-size: 15px;
+      color: rgba(244,236,218,.75); text-decoration: none;
+      border-radius: 8px; transition: background .14s, color .14s;
     }
-    .nav-drawer a:hover  { background: rgba(255,255,255,.06); color: var(--wheat); }
-    .nav-drawer a.active { color: var(--wheat); font-weight: 500; }
-
-    .nav-drawer-cta {
-      margin-top: 10px !important;
-      background: var(--amber) !important;
-      color: white !important;
-      text-align: center;
-      font-weight: 600 !important;
-      border-radius: 10px !important;
-    }
-    .nav-drawer-cta:hover { background: var(--amber-lt) !important; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.35; }
+    .nav-drawer a:hover { background: rgba(255,255,255,.06); color: var(--wheat); }
+    .nav-drawer .nav-drawer-cta {
+      margin-top: 10px !important; background: var(--amber) !important;
+      color: white !important; text-align: center;
+      font-weight: 600 !important; border-radius: 10px !important;
     }
 
-    /* ── FOOTER ─────────────────────────────────────────────── */
+    @keyframes drawerIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+    /* ── FOOTER ─────────────────────────────────────── */
     .ln-footer {
       padding: 40px 48px;
       border-top: 1px solid rgba(255,255,255,.07);
       display: flex; align-items: center; justify-content: space-between;
       gap: 20px; flex-wrap: wrap;
     }
-    .ln-footer-logo {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-      color: rgba(244,236,218,.3);
-    }
+    .ln-footer-logo { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(244,236,218,.3); }
     .ln-footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
-    .ln-footer-link {
-      font-size: 12.5px; color: rgba(244,236,218,.3);
-      text-decoration: none; transition: color .14s;
-      padding: 4px 0; /* touch target padding */
-    }
+    .ln-footer-link { font-size: 12.5px; color: rgba(244,236,218,.3); text-decoration: none; transition: color .14s; padding: 4px 0; }
     .ln-footer-link:hover { color: rgba(244,236,218,.7); }
-    .ln-footer-copy {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px; color: rgba(244,236,218,.2); letter-spacing: .5px;
-    }
+    .ln-footer-copy { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(244,236,218,.2); letter-spacing: .5px; }
 
-    /* ── PAGE SHELL ─────────────────────────────────────────── */
+    /* ── PAGE ───────────────────────────────────────── */
     .pr-wrap {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 116px 32px 64px;
-      position: relative;
-      z-index: 1;
+      max-width: 1120px; margin: 0 auto;
+      padding: 104px 32px 64px;
+      position: relative; z-index: 1;
     }
-
     .pr-wrap::before {
-      content: '';
-      position: fixed; inset: 0;
-      pointer-events: none;
+      content: ''; position: fixed; inset: 0; pointer-events: none;
       background:
-        radial-gradient(circle at top right,  rgba(212,154,58,.08),  transparent 30%),
+        radial-gradient(circle at top right,  rgba(212,154,58,.07),  transparent 30%),
         radial-gradient(circle at bottom left, rgba(255,255,255,.04), transparent 28%);
       z-index: -1;
     }
 
-    /* ── HERO ───────────────────────────────────────────────── */
-    .pr-hero { text-align: center; margin-bottom: 56px; }
-
+    /* ── HERO — compact ─────────────────────────────── */
+    .pr-hero { text-align: center; margin-bottom: 40px; }
     .pr-eyebrow {
       font-family: 'IBM Plex Mono', monospace;
       font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
-      color: var(--amber-lt); margin-bottom: 14px;
+      color: var(--amber-lt); margin-bottom: 12px;
     }
-
     .pr-title {
       font-family: 'DM Serif Display', serif;
-      font-size: 46px; color: var(--wheat);
-      letter-spacing: -1px; line-height: 1.1;
-      margin-bottom: 16px;
+      font-size: 40px; color: var(--wheat);
+      letter-spacing: -1px; line-height: 1.1; margin-bottom: 12px;
     }
     .pr-title em { font-style: italic; color: var(--amber-lt); }
+    .pr-desc { font-size: 14px; color: rgba(244,236,218,.5); max-width: 480px; margin: 0 auto; line-height: 1.7; }
 
-    .pr-desc {
-      font-size: 15px; color: rgba(244,236,218,.55);
-      max-width: 520px; margin: 0 auto; line-height: 1.75;
-    }
-
+    /* Billing toggle */
     .pr-toggle {
-      display: flex; align-items: center; justify-content: center;
-      gap: 12px; margin-top: 28px; flex-wrap: wrap;
+      display: inline-flex; align-items: center;
+      background: rgba(255,255,255,.07); border-radius: 24px;
+      padding: 4px; margin-top: 20px; gap: 2px;
     }
-
     .pr-toggle-btn {
-      padding: 9px 22px; border-radius: 20px;
+      padding: 8px 20px; border-radius: 20px;
       font-family: 'Sora', sans-serif; font-size: 13px;
       cursor: pointer; transition: all .15s; border: none;
-      min-height: 44px;
+      background: none; color: rgba(244,236,218,.55); min-height: 40px;
     }
-    .pr-toggle-btn.active   { background: var(--amber); color: white; }
-    .pr-toggle-btn.inactive { background: rgba(255,255,255,.07); color: rgba(244,236,218,.6); }
-
-    .pr-save {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px; color: #4ac878; letter-spacing: .5px;
-      background: rgba(74,200,120,.12);
-      padding: 4px 10px; border-radius: 12px;
+    .pr-toggle-btn.active { background: var(--amber); color: white; }
+    .pr-save-pill {
+      font-family: 'IBM Plex Mono', monospace; font-size: 9.5px;
+      color: #4ac878; background: rgba(74,200,120,.12);
+      padding: 3px 9px; border-radius: 10px; margin-left: 10px;
     }
 
-    /* ── PRICING CARDS ──────────────────────────────────────── */
+    /* ── PRICING CARDS ───────────────────────────────── */
     .pr-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 22px; margin-bottom: 64px;
+      gap: 20px; margin-bottom: 48px;
+      align-items: start;
     }
 
     .pr-card {
       background: rgba(255,255,255,.04);
       border: 1.5px solid rgba(255,255,255,.09);
-      border-radius: 18px; padding: 32px 28px;
+      border-radius: 18px; padding: 28px 24px;
       display: flex; flex-direction: column;
-      transition: all .2s; position: relative;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      box-shadow: 0 18px 44px rgba(0,0,0,.15);
+      transition: transform .2s, border-color .2s;
+      position: relative;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 14px 36px rgba(0,0,0,.14);
     }
-    .pr-card:hover {
-      border-color: rgba(255,255,255,.18);
-      transform: translateY(-3px);
-    }
+    .pr-card:hover { border-color: rgba(255,255,255,.2); transform: translateY(-2px); }
     .pr-card.featured {
-      background: rgba(184,114,14,.1);
+      background: rgba(184,114,14,.11);
       border-color: var(--amber);
-      box-shadow: 0 22px 48px rgba(184,114,14,.16);
+      box-shadow: 0 18px 44px rgba(184,114,14,.18);
     }
-
     .pr-featured-badge {
-      position: absolute;
-      top: -12px; left: 50%;
+      position: absolute; top: -11px; left: 50%;
       transform: translateX(-50%);
       background: var(--amber); color: white;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 9.5px; letter-spacing: 1px;
-      padding: 4px 14px; border-radius: 12px;
-      white-space: nowrap; text-transform: uppercase;
+      font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px;
+      padding: 3px 12px; border-radius: 10px; white-space: nowrap; text-transform: uppercase;
     }
 
-    .pr-tier {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-      color: rgba(244,236,218,.4); margin-bottom: 8px;
-    }
+    /* Card header */
+    .pr-card-head { margin-bottom: 22px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .pr-tier { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(244,236,218,.4); margin-bottom: 10px; }
     .pr-tier.ft { color: var(--amber-lt); }
+    .pr-price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+    .pr-price { font-family: 'DM Serif Display', serif; font-size: 44px; color: var(--wheat); letter-spacing: -2px; line-height: 1; }
+    .pr-per  { font-size: 13px; color: rgba(244,236,218,.4); }
+    .pr-billed { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4ac878; margin-bottom: 12px; min-height: 14px; }
+    .pr-tagline { font-size: 13px; color: rgba(244,236,218,.55); line-height: 1.5; }
 
-    .pr-price {
-      font-family: 'DM Serif Display', serif;
-      font-size: 48px; color: var(--wheat);
-      letter-spacing: -2px; line-height: 1; margin-bottom: 4px;
+    /* Key benefits — always visible (3 items) */
+    .pr-benefits { list-style: none; padding: 0; margin-bottom: 16px; }
+    .pr-benefits li {
+      font-size: 13px; color: rgba(244,236,218,.75);
+      padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.4;
     }
-    .pr-per    { font-size: 13px; color: rgba(244,236,218,.4); margin-bottom: 6px; }
-    .pr-annual { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4ac878; margin-bottom: 20px; }
-
-    .pr-tagline {
-      font-size: 13.5px; color: rgba(244,236,218,.6);
-      line-height: 1.5; margin-bottom: 24px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      padding-bottom: 20px;
-    }
-
-    .pr-features {
-      flex: 1; list-style: none;
-      margin-bottom: 28px; padding-left: 0;
-    }
-    .pr-features li {
-      font-size: 13px; color: rgba(244,236,218,.7);
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,.05);
-      display: flex; align-items: flex-start; gap: 9px;
-      line-height: 1.45;
-    }
-    .pr-features li:last-child { border-bottom: none; }
-
+    .pr-benefits li:last-child { border-bottom: none; }
     .pr-check   { flex-shrink: 0; font-size: 11px; margin-top: 2px; }
     .pr-check.y { color: #4ac878; }
-    .pr-check.n { color: rgba(255,255,255,.2); }
+    .pr-check.n { color: rgba(255,255,255,.18); }
 
+    /* Expand features toggle */
+    .pr-expand-btn {
+      background: none; border: none; cursor: pointer;
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+      letter-spacing: .5px; color: rgba(244,236,218,.35);
+      padding: 8px 0; text-align: left;
+      transition: color .14s; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .pr-expand-btn:hover { color: rgba(244,236,218,.7); }
+    .pr-expand-icon { font-size: 9px; transition: transform .2s; }
+    .pr-expand-btn.open .pr-expand-icon { transform: rotate(180deg); }
+
+    .pr-more-features {
+      display: none; list-style: none; padding: 0;
+      border-top: 1px solid rgba(255,255,255,.06);
+      padding-top: 10px; margin-bottom: 14px;
+    }
+    .pr-more-features.open { display: block; animation: fadeIn .18s ease; }
+    .pr-more-features li {
+      font-size: 12.5px; color: rgba(244,236,218,.6);
+      padding: 5px 0; display: flex; align-items: flex-start; gap: 8px;
+      line-height: 1.4; border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    .pr-more-features li:last-child { border-bottom: none; }
+
+    /* CTA button */
     .pr-cta {
-      display: block; width: 100%; padding: 14px;
+      display: block; width: 100%; padding: 13px;
       text-align: center; border-radius: 10px;
       font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600;
       text-decoration: none; cursor: pointer; border: none;
-      transition: all .15s; box-sizing: border-box;
-      min-height: 48px;
+      transition: all .15s; min-height: 48px; margin-top: auto;
     }
-    .pr-cta.c-free {
-      background: rgba(255,255,255,.07);
-      color: rgba(244,236,218,.75);
-      border: 1.5px solid rgba(255,255,255,.12);
-    }
+    .pr-cta.c-free { background: rgba(255,255,255,.07); color: rgba(244,236,218,.75); border: 1.5px solid rgba(255,255,255,.12); }
     .pr-cta.c-free:hover { background: rgba(255,255,255,.14); }
-    .pr-cta.c-pro { background: var(--amber); color: white; }
-    .pr-cta.c-pro:hover {
-      background: var(--amber-lt);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(184,114,14,.35);
-    }
-    .pr-cta.c-adv {
-      background: rgba(255,255,255,.07);
-      color: rgba(244,236,218,.75);
-      border: 1.5px solid rgba(255,255,255,.12);
-    }
+    .pr-cta.c-pro  { background: var(--amber); color: white; }
+    .pr-cta.c-pro:hover { background: var(--amber-lt); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(184,114,14,.35); }
+    .pr-cta.c-adv  { background: rgba(255,255,255,.07); color: rgba(244,236,218,.75); border: 1.5px solid rgba(255,255,255,.12); }
     .pr-cta.c-adv:hover { background: rgba(255,255,255,.14); }
 
-    /* ── COMPARISON TABLE ───────────────────────────────────── */
-    .pr-compare { margin-bottom: 64px; }
-
-    .pr-compare-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 24px; color: var(--wheat);
-      margin-bottom: 8px; text-align: center;
+    /* ── NEW COMMUNITY FEATURES BANNER ─────────────── */
+    .community-banner {
+      background: linear-gradient(135deg, rgba(74,122,90,.2) 0%, rgba(27,53,40,.4) 100%);
+      border: 1px solid rgba(74,200,120,.18);
+      border-radius: 18px; padding: 28px 32px;
+      margin-bottom: 48px;
     }
-
-    .pr-table-hint {
-      display: none;
-      text-align: center;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px; letter-spacing: 1px;
-      color: rgba(244,236,218,.3);
-      margin-bottom: 12px;
-    }
-
-    .pr-table-wrap {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      border-radius: 18px;
+    .cb-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .cb-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--wheat); }
+    .cb-badge { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #4ac878; background: rgba(74,200,120,.12); border: 1px solid rgba(74,200,120,.2); padding: 4px 10px; border-radius: 10px; }
+    .cb-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .cb-item {
+      background: rgba(255,255,255,.05); border-radius: 12px; padding: 16px 14px;
       border: 1px solid rgba(255,255,255,.08);
+    }
+    .cb-icon  { font-size: 22px; margin-bottom: 8px; }
+    .cb-label { font-family: 'DM Serif Display', serif; font-size: 14px; color: var(--wheat); margin-bottom: 4px; }
+    .cb-desc  { font-size: 11.5px; color: rgba(244,236,218,.5); line-height: 1.5; }
+    .cb-tag   { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; padding: 2px 7px; border-radius: 5px; margin-top: 8px; background: rgba(184,114,14,.18); color: var(--amber-lt); }
+
+    /* ── COMPARISON TABLE ────────────────────────────── */
+    .pr-compare { margin-bottom: 56px; }
+    .pr-compare-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--wheat); text-align: center; margin-bottom: 8px; }
+    .pr-table-hint { display: none; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; color: rgba(244,236,218,.28); margin-bottom: 12px; }
+    .pr-table-wrap {
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      border-radius: 16px; border: 1px solid rgba(255,255,255,.08);
       background: rgba(255,255,255,.03);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,.14) transparent;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.14) transparent;
     }
     .pr-table-wrap::-webkit-scrollbar { height: 4px; }
-    .pr-table-wrap::-webkit-scrollbar-track { background: transparent; }
     .pr-table-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 4px; }
-
-    .pr-table { width: 100%; border-collapse: collapse; min-width: 640px; }
-
+    .pr-table { width: 100%; border-collapse: collapse; min-width: 620px; }
     .pr-table th {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-      color: rgba(244,236,218,.45);
-      padding: 12px 16px; text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.08);
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: rgba(244,236,218,.45); padding: 12px 16px; text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,.08); background: rgba(0,0,0,.08);
     }
     .pr-table th:not(:first-child) { text-align: center; }
-
-    .pr-table td {
-      padding: 11px 16px; font-size: 13px;
-      color: rgba(244,236,218,.7);
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      line-height: 1.4;
-    }
+    .pr-table td { padding: 10px 16px; font-size: 13px; color: rgba(244,236,218,.7); border-bottom: 1px solid rgba(255,255,255,.06); line-height: 1.4; }
     .pr-table td:not(:first-child) { text-align: center; }
     .pr-table tr:hover td { background: rgba(255,255,255,.03); }
-    .pr-table .section-row td {
-      background: rgba(255,255,255,.03);
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px; letter-spacing: 1px;
-      color: var(--amber-lt); text-transform: uppercase;
-      padding: 14px 16px 7px; font-weight: 600;
-    }
-
-    .tc-y   { color: #4ac878; font-size: 16px; }
-    .tc-n   { color: rgba(255,255,255,.18); font-size: 14px; }
+    .pr-table .section-row td { background: rgba(255,255,255,.03); font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; color: var(--amber-lt); text-transform: uppercase; padding: 12px 16px 6px; font-weight: 600; }
+    .tc-y   { color: #4ac878; font-size: 15px; }
+    .tc-n   { color: rgba(255,255,255,.18); font-size: 13px; }
     .tc-val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(244,236,218,.65); }
     .tc-pro { background: rgba(184,114,14,.06); }
 
-    /* ── FAQ ────────────────────────────────────────────────── */
-    .pr-faq { margin-bottom: 64px; }
-
-    .pr-faq-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 26px; color: var(--wheat);
-      text-align: center; margin-bottom: 28px;
-    }
-
-    .pf-item {
-      border: 1px solid rgba(255,255,255,.09);
-      border-radius: 10px; margin-bottom: 10px;
-      overflow: hidden; background: rgba(255,255,255,.03);
-    }
-    .pf-q {
-      padding: 16px 18px; cursor: pointer; font-size: 13.5px;
-      color: rgba(244,236,218,.8);
-      display: flex; justify-content: space-between; align-items: center;
-      gap: 12px; transition: background .14s; user-select: none;
-      min-height: 52px;
-    }
+    /* ── FAQ ─────────────────────────────────────────── */
+    .pr-faq { margin-bottom: 56px; }
+    .pr-faq-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--wheat); text-align: center; margin-bottom: 24px; }
+    .pf-item { border: 1px solid rgba(255,255,255,.09); border-radius: 10px; margin-bottom: 8px; overflow: hidden; background: rgba(255,255,255,.03); }
+    .pf-q { padding: 15px 18px; cursor: pointer; font-size: 13.5px; color: rgba(244,236,218,.8); display: flex; justify-content: space-between; align-items: center; gap: 12px; transition: background .14s; user-select: none; min-height: 52px; }
     .pf-q:hover { background: rgba(255,255,255,.04); }
-    .pf-chevron {
-      font-size: 11px; color: rgba(244,236,218,.3);
-      transition: transform .2s; flex-shrink: 0;
-    }
+    .pf-chevron { font-size: 11px; color: rgba(244,236,218,.3); transition: transform .2s; flex-shrink: 0; }
     .pf-item.open .pf-chevron { transform: rotate(180deg); }
-    .pf-a {
-      display: none;
-      padding: 12px 18px 16px; font-size: 13px;
-      color: rgba(244,236,218,.5); line-height: 1.7;
-      border-top: 1px solid rgba(255,255,255,.06);
-      background: rgba(0,0,0,.15);
-    }
+    .pf-a { display: none; padding: 12px 18px 16px; font-size: 13px; color: rgba(244,236,218,.5); line-height: 1.7; border-top: 1px solid rgba(255,255,255,.06); background: rgba(0,0,0,.14); }
     .pf-item.open .pf-a { display: block; animation: fadeIn .18s ease; }
 
-    /* ── CTA STRIP ──────────────────────────────────────────── */
+    /* ── CTA STRIP ────────────────────────────────────── */
     .pr-cta-strip {
-      text-align: center; padding: 52px 40px;
-      background: rgba(184,114,14,.1);
-      border: 1px solid rgba(184,114,14,.2);
-      border-radius: 20px; margin-bottom: 60px;
-      box-shadow: 0 18px 40px rgba(0,0,0,.12);
+      text-align: center; padding: 48px 36px;
+      background: rgba(184,114,14,.1); border: 1px solid rgba(184,114,14,.2);
+      border-radius: 20px; margin-bottom: 56px;
     }
-    .pr-cta-strip h2 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 32px; color: var(--wheat); margin-bottom: 12px;
-    }
-    .pr-cta-strip p {
-      font-size: 14px; color: rgba(244,236,218,.55);
-      margin-bottom: 28px; line-height: 1.65;
-    }
+    .pr-cta-strip h2 { font-family: 'DM Serif Display', serif; font-size: 30px; color: var(--wheat); margin-bottom: 10px; }
+    .pr-cta-strip p  { font-size: 14px; color: rgba(244,236,218,.52); margin-bottom: 24px; line-height: 1.65; }
     .pr-cta-strip-link {
-      display: inline-block; padding: 15px 36px;
-      background: var(--amber); color: white;
-      border-radius: 10px;
+      display: inline-block; padding: 14px 32px;
+      background: var(--amber); color: white; border-radius: 10px;
       font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600;
-      text-decoration: none;
-      transition: background .15s, transform .15s, box-shadow .15s;
+      text-decoration: none; transition: background .15s, transform .15s;
     }
-    .pr-cta-strip-link:hover {
-      background: var(--amber-lt); transform: translateY(-1px);
-      box-shadow: 0 12px 28px rgba(184,114,14,.24);
-    }
+    .pr-cta-strip-link:hover { background: var(--amber-lt); transform: translateY(-1px); }
 
-    /* ── ANIMATIONS ─────────────────────────────────────────── */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-2px); }
-      to   { opacity: 1; transform: translateY(0); }
+    /* ── Wellness notice ─────────────────────────────── */
+    .wellness-bar {
+      background: rgba(74,200,120,.07);
+      border: 1px solid rgba(74,200,120,.15);
+      border-radius: 10px; padding: 13px 18px;
+      display: flex; align-items: center; gap: 12px; margin-bottom: 32px;
+      font-size: 13px; color: rgba(244,236,218,.65); flex-wrap: wrap;
     }
+    .wellness-bar strong { color: rgba(244,236,218,.9); }
+    .wellness-bar a { color: #4ac878; text-decoration: underline; }
 
-    /* ══ RESPONSIVE — TABLET ≤ 960px ═══════════════════════ */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ══ TABLET ≤ 960px ═════════════════════════════ */
     @media (max-width: 960px) {
-      .ln-nav       { padding: 12px 20px; }
+      .ln-nav { padding: 12px 20px; }
       .ln-nav-links { display: none; }
-      .nav-burger   { display: flex; }
+      .nav-burger { display: flex; }
 
-      .pr-wrap {
-        padding: 96px 20px 48px;
-      }
+      .pr-wrap { padding: 88px 20px 48px; }
 
       .pr-grid {
         grid-template-columns: 1fr;
-        gap: 28px;
-        margin-bottom: 48px;
-        max-width: 480px;
-        margin-left: auto;
-        margin-right: auto;
+        max-width: 420px; margin: 0 auto 40px;
+        gap: 24px;
       }
-
-      /* Featured card floats to top on mobile */
       .pr-card.featured { order: -1; }
-
-      .pr-title { font-size: 36px; }
-      .pr-desc  { font-size: 14px; }
-
+      .pr-title { font-size: 34px; }
       .pr-table-hint { display: block; }
-
-      .pr-cta-strip { padding: 36px 24px; }
-      .pr-cta-strip h2 { font-size: 26px; }
-      .pr-cta-strip p  { margin-bottom: 20px; }
-      .pr-cta-strip-link {
-        display: block; width: 100%; text-align: center;
-        box-sizing: border-box;
-      }
-
-      .ln-footer {
-        flex-direction: column; align-items: flex-start;
-        padding: 30px 20px; gap: 14px;
-      }
+      .cb-grid { grid-template-columns: repeat(2, 1fr); }
+      .pr-cta-strip { padding: 32px 20px; }
+      .pr-cta-strip h2 { font-size: 24px; }
+      .pr-cta-strip-link { display: block; width: 100%; }
+      .ln-footer { flex-direction: column; align-items: flex-start; padding: 28px 20px; gap: 12px; }
     }
 
-    /* ══ RESPONSIVE — MOBILE ≤ 480px ═══════════════════════ */
+    /* ══ MOBILE ≤ 480px ══════════════════════════════ */
     @media (max-width: 480px) {
-      .pr-wrap { padding: 86px 16px 40px; }
-
-      .pr-hero       { margin-bottom: 40px; }
-      .pr-eyebrow    { font-size: 9px; letter-spacing: 2px; }
-      .pr-title      { font-size: 28px; letter-spacing: -.4px; }
-      .pr-desc       { font-size: 13.5px; }
-
-      .pr-toggle     { gap: 8px; margin-top: 22px; }
-      .pr-toggle-btn { padding: 9px 16px; font-size: 12.5px; }
-
-      .pr-grid { max-width: 100%; gap: 24px; }
-      .pr-card { padding: 24px 18px; border-radius: 14px; }
-      .pr-price { font-size: 42px; }
-      .pr-tagline    { font-size: 13px; }
-      .pr-features li { font-size: 12.5px; padding: 9px 0; }
-
-      .pr-compare-title { font-size: 20px; }
-      .pr-faq-title     { font-size: 22px; margin-bottom: 20px; }
-
+      .pr-wrap { padding: 82px 14px 40px; }
+      .pr-title { font-size: 28px; letter-spacing: -.4px; }
+      .pr-hero { margin-bottom: 28px; }
+      .pr-card { padding: 22px 18px; border-radius: 14px; }
+      .pr-price { font-size: 38px; }
+      .cb-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .cb-item { padding: 12px 10px; }
       .pf-q { font-size: 13px; padding: 14px 14px; }
-      .pf-a { font-size: 12.5px; padding: 10px 14px 14px; }
-
-      .pr-cta-strip { padding: 28px 18px; border-radius: 14px; }
-      .pr-cta-strip h2 { font-size: 22px; }
-      .pr-cta-strip p  { font-size: 13px; margin-bottom: 16px; }
-
-      .ln-footer       { padding: 24px 16px; gap: 12px; }
+      .ln-footer { padding: 20px 14px; }
       .ln-footer-links { gap: 12px; }
-      .ln-footer-link  { font-size: 12px; }
-      .ln-footer-copy  { font-size: 9px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ── NAV ────────────────────────────────────────────────── -->
+  <!-- NAV -->
   <nav class="ln-nav">
     <a href="landing.html" class="ln-nav-logo">
-      <div class="ln-nav-logo-dot"></div>
-      Farm Copilot
+      <div class="ln-nav-logo-dot"></div>Farm Copilot
     </a>
-
-    <!-- Desktop links -->
     <div class="ln-nav-links">
       <a href="landing.html#features" class="ln-nav-link">Features</a>
       <a href="landing.html#programs" class="ln-nav-link">Programs</a>
-      <a href="landing.html#pricing"  class="ln-nav-link">Pricing</a>
-      <a href="pricing.html"          class="ln-nav-link active">Plans</a>
+      <a href="pricing.html"          class="ln-nav-link active">Pricing</a>
       <a href="dashboard.html"        class="ln-nav-link" id="nav-dashboard" style="display:none;">Dashboard</a>
-      <a href="index.html"            class="ln-nav-cta">Start Free Setup →</a>
+      <a href="auth.html"             class="ln-nav-link">Sign In</a>
+      <a href="index.html"            class="ln-nav-cta">Start Free →</a>
     </div>
-
-    <!-- Mobile burger -->
-    <button class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false">
+    <button class="nav-burger" id="nav-burger" aria-label="Menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
   </nav>
 
   <!-- Mobile drawer -->
-  <div class="nav-drawer" id="nav-drawer" role="dialog" aria-label="Navigation">
+  <div class="nav-drawer" id="nav-drawer">
     <a href="landing.html#features">Features</a>
     <a href="landing.html#programs">Programs</a>
-    <a href="landing.html#pricing">Pricing</a>
-    <a href="pricing.html" class="active">Plans</a>
+    <a href="pricing.html" class="active">Pricing</a>
     <a href="dashboard.html" id="drawer-dashboard" style="display:none;">Dashboard</a>
-    <a href="index.html" class="nav-drawer-cta">Start Free Setup →</a>
+    <a href="auth.html">Sign In</a>
+    <a href="index.html" class="nav-drawer-cta">Start Free →</a>
   </div>
 
-  <!-- ── MAIN ────────────────────────────────────────────────── -->
   <div class="pr-wrap">
+
+    <!-- Wellness notice -->
+    <div class="wellness-bar">
+      <span>🌿</span>
+      <span><strong>Farmer Wellness:</strong> Over 50% of Canadian farmers experience anxiety. If you're struggling, the <a href="tel:18666327601">National Farmer Crisis Line</a> is free, 24/7 — <strong>1-866-FARMS01</strong>. You're not alone.</span>
+    </div>
 
     <!-- Hero -->
     <div class="pr-hero">
       <div class="pr-eyebrow">Simple, transparent pricing</div>
       <h1 class="pr-title">Start free.<br><em>Scale as you grow.</em></h1>
-      <p class="pr-desc">No credit card required for the free plan. Pro and Advisor plans include a 14-day free trial.</p>
-      <div class="pr-toggle">
-        <button class="pr-toggle-btn active"   id="tog-monthly" onclick="setBilling('monthly')">Monthly</button>
-        <button class="pr-toggle-btn inactive" id="tog-annual"  onclick="setBilling('annual')">Annual</button>
-        <span class="pr-save">Save 25% annually</span>
+      <p class="pr-desc">No credit card required. Pro and Advisor plans include a 14-day free trial.</p>
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:20px;flex-wrap:wrap;">
+        <div class="pr-toggle">
+          <button class="pr-toggle-btn active"   id="tog-monthly" onclick="setBilling('monthly')">Monthly</button>
+          <button class="pr-toggle-btn inactive" id="tog-annual"  onclick="setBilling('annual')">Annual</button>
+        </div>
+        <span class="pr-save-pill">Save 25% annually</span>
       </div>
     </div>
 
-    <!-- Pricing cards -->
+    <!-- PRICING CARDS -->
     <div class="pr-grid">
 
-      <!-- Free -->
+      <!-- FREE -->
       <div class="pr-card">
-        <div class="pr-tier">Free</div>
-        <div class="pr-price">$0</div>
-        <div class="pr-per">forever</div>
-        <div class="pr-annual" style="color:rgba(244,236,218,.3);">No credit card needed</div>
-        <div class="pr-tagline">Everything you need to explore and get started. Perfect for individual farmers discovering what's available.</div>
-        <ul class="pr-features">
+        <div class="pr-card-head">
+          <div class="pr-tier">Free</div>
+          <div class="pr-price-row">
+            <div class="pr-price">$0</div>
+            <div class="pr-per">/ forever</div>
+          </div>
+          <div class="pr-billed" style="color:rgba(244,236,218,.28);">No credit card needed</div>
+          <div class="pr-tagline">Explore funding, weather, and AI — free forever for individual farmers.</div>
+        </div>
+        <ul class="pr-benefits">
           <li><span class="pr-check y">✓</span>AI Copilot — 10 questions/month</li>
-          <li><span class="pr-check y">✓</span>Funding Navigator (all 8 programs)</li>
+          <li><span class="pr-check y">✓</span>All 8 funding programs + match scores</li>
           <li><span class="pr-check y">✓</span>Live weather + 7-day forecast</li>
           <li><span class="pr-check y">✓</span>Crop calendar by province</li>
+          <li><span class="pr-check y">✓</span>Farmer Wellness Hub access</li>
+        </ul>
+        <button class="pr-expand-btn" onclick="toggleExpand(this)">
+          <span class="pr-expand-icon">▾</span> Show all 11 features
+        </button>
+        <ul class="pr-more-features">
           <li><span class="pr-check y">✓</span>Basic ROI calculator (2 tabs)</li>
           <li><span class="pr-check y">✓</span>Operations planner (basic)</li>
           <li><span class="pr-check y">✓</span>Deadline notifications</li>
-          <li><span class="pr-check n">–</span>Funding deadline email alerts</li>
+          <li><span class="pr-check n">–</span>Funding email alerts</li>
           <li><span class="pr-check n">–</span>PDF export</li>
           <li><span class="pr-check n">–</span>Advisor calls</li>
-          <li><span class="pr-check n">–</span>Commodity price feed</li>
         </ul>
         <a href="index.html" class="pr-cta c-free">Get Started Free</a>
       </div>
 
-      <!-- Farm Pro (featured) -->
+      <!-- FARM PRO (featured) -->
       <div class="pr-card featured">
         <div class="pr-featured-badge">Most Popular</div>
-        <div class="pr-tier ft">Farm Pro</div>
-        <div class="pr-price" id="pro-price">$39</div>
-        <div class="pr-per"   id="pro-per">/ month CAD</div>
-        <div class="pr-annual" id="pro-annual">Billed monthly · Cancel anytime</div>
-        <div class="pr-tagline">Unlimited AI, human advisors, and export tools for the serious farm operator.</div>
-        <ul class="pr-features">
+        <div class="pr-card-head">
+          <div class="pr-tier ft">Farm Pro</div>
+          <div class="pr-price-row">
+            <div class="pr-price" id="pro-price">$39</div>
+            <div class="pr-per" id="pro-per">/ month CAD</div>
+          </div>
+          <div class="pr-billed" id="pro-billed">Billed monthly · Cancel anytime</div>
+          <div class="pr-tagline">Unlimited AI, human advisors, and export tools for the serious farm operator.</div>
+        </div>
+        <ul class="pr-benefits">
           <li><span class="pr-check y">✓</span>Unlimited AI Copilot queries</li>
-          <li><span class="pr-check y">✓</span>Everything in Free</li>
+          <li><span class="pr-check y">✓</span>All 4 ROI calculator tabs + saved scenarios</li>
           <li><span class="pr-check y">✓</span>Funding deadline email alerts</li>
-          <li><span class="pr-check y">✓</span>All 4 ROI calculator tabs</li>
+          <li><span class="pr-check y">✓</span>1 × 30-min advisor call/month</li>
+          <li><span class="pr-check y">✓</span>Labour Exchange + Community Hub access</li>
+        </ul>
+        <button class="pr-expand-btn" onclick="toggleExpand(this)">
+          <span class="pr-expand-icon">▾</span> Show all 11 features
+        </button>
+        <ul class="pr-more-features">
           <li><span class="pr-check y">✓</span>PDF export (calc + profile)</li>
           <li><span class="pr-check y">✓</span>Commodity price feed</li>
           <li><span class="pr-check y">✓</span>Priority email support (24hr)</li>
-          <li><span class="pr-check y">✓</span>1 × 30-min advisor call/month</li>
-          <li><span class="pr-check y">✓</span>Saved scenarios in calculator</li>
           <li><span class="pr-check y">✓</span>Operations planner full access</li>
+          <li><span class="pr-check y">✓</span>Carbon &amp; succession tracker</li>
           <li><span class="pr-check n">–</span>Multi-farm management</li>
         </ul>
         <button class="pr-cta c-pro" onclick="startProTrial()">Start 14-Day Free Trial →</button>
       </div>
 
-      <!-- Advisor Pro -->
+      <!-- ADVISOR PRO -->
       <div class="pr-card">
-        <div class="pr-tier">Advisor Pro</div>
-        <div class="pr-price" id="adv-price">$199</div>
-        <div class="pr-per"   id="adv-per">/ month CAD</div>
-        <div class="pr-annual" id="adv-annual">Billed monthly · Cancel anytime</div>
-        <div class="pr-tagline">For agricultural advisors, consultants, and co-ops managing multiple farm clients.</div>
-        <ul class="pr-features">
-          <li><span class="pr-check y">✓</span>Everything in Farm Pro</li>
+        <div class="pr-card-head">
+          <div class="pr-tier">Advisor Pro</div>
+          <div class="pr-price-row">
+            <div class="pr-price" id="adv-price">$199</div>
+            <div class="pr-per" id="adv-per">/ month CAD</div>
+          </div>
+          <div class="pr-billed" id="adv-billed">Billed monthly · Cancel anytime</div>
+          <div class="pr-tagline">For ag consultants and co-ops managing multiple farm clients across Canada.</div>
+        </div>
+        <ul class="pr-benefits">
           <li><span class="pr-check y">✓</span>Manage up to 25 client farms</li>
-          <li><span class="pr-check y">✓</span>Client report generation</li>
           <li><span class="pr-check y">✓</span>Unlimited advisor calls</li>
+          <li><span class="pr-check y">✓</span>Client report generation + bulk CSV/PDF</li>
           <li><span class="pr-check y">✓</span>White-label branding option</li>
           <li><span class="pr-check y">✓</span>Dedicated account manager</li>
-          <li><span class="pr-check y">✓</span>Priority phone support</li>
+        </ul>
+        <button class="pr-expand-btn" onclick="toggleExpand(this)">
+          <span class="pr-expand-icon">▾</span> Show all 11 features
+        </button>
+        <ul class="pr-more-features">
           <li><span class="pr-check y">✓</span>Custom program database</li>
-          <li><span class="pr-check y">✓</span>Bulk export (CSV/PDF)</li>
+          <li><span class="pr-check y">✓</span>Priority phone support</li>
           <li><span class="pr-check y">✓</span>SLA — 99.5% uptime guarantee</li>
           <li><span class="pr-check y">✓</span>Custom onboarding</li>
+          <li><span class="pr-check y">✓</span>Everything in Farm Pro</li>
         </ul>
         <a href="support.html" class="pr-cta c-adv">Contact Sales →</a>
       </div>
     </div>
 
-    <!-- Comparison table -->
+    <!-- COMING SOON — Community Features -->
+    <div class="community-banner">
+      <div class="cb-header">
+        <div class="cb-title">🌱 Coming Soon — Built for the Community</div>
+        <div class="cb-badge">Roadmap 2026–27</div>
+      </div>
+      <div class="cb-grid">
+        <div class="cb-item">
+          <div class="cb-icon">🧠</div>
+          <div class="cb-label">Farmer Wellness Hub</div>
+          <div class="cb-desc">Stress check-ins, mental health resources, connection to ag-literate counsellors</div>
+          <div class="cb-tag">Gov backed · Jan 2026</div>
+        </div>
+        <div class="cb-item">
+          <div class="cb-icon">👷</div>
+          <div class="cb-label">Labour Exchange</div>
+          <div class="cb-desc">TFW program guide, seasonal job board, and local farm worker matching</div>
+          <div class="cb-tag">AAFC Labour Strategy</div>
+        </div>
+        <div class="cb-item">
+          <div class="cb-icon">🤝</div>
+          <div class="cb-label">Young Farmer Matcher</div>
+          <div class="cb-desc">Connect retiring farmers with next-gen entrants for land access and succession</div>
+          <div class="cb-tag">FCC &amp; AAFC priority</div>
+        </div>
+        <div class="cb-item">
+          <div class="cb-icon">🚜</div>
+          <div class="cb-label">Equipment Share Board</div>
+          <div class="cb-desc">Community gear rental to reduce capital costs — especially for new farmers</div>
+          <div class="cb-tag">Free tier</div>
+        </div>
+        <div class="cb-item">
+          <div class="cb-icon">📊</div>
+          <div class="cb-label">Peer Benchmark Tool</div>
+          <div class="cb-desc">Compare your margin, costs, and operations against similar farms in your province</div>
+          <div class="cb-tag">Farm Management Canada</div>
+        </div>
+        <div class="cb-item">
+          <div class="cb-icon">🌾</div>
+          <div class="cb-label">Grain Basis Tracker</div>
+          <div class="cb-desc">Local elevator bids vs. CME futures by province — critical for cash flow planning</div>
+          <div class="cb-tag">Pro feature</div>
+        </div>
+        <div class="cb-item">
+          <div class="cb-icon">🛡</div>
+          <div class="cb-label">Crop Insurance Calculator</div>
+          <div class="cb-desc">AgriInsurance premium estimator by province with enrollment deadline alerts</div>
+          <div class="cb-tag">AgriInsurance</div>
+        </div>
+        <div class="cb-item">
+          <div class="cb-icon">📋</div>
+          <div class="cb-label">Compliance Tracker</div>
+          <div class="cb-desc">Pesticide licensing, nutrient management plan, and regulatory deadline reminders</div>
+          <div class="cb-tag">OMAFRA · BCMAL</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPARISON TABLE -->
     <div class="pr-compare">
       <div class="pr-compare-title">Full feature comparison</div>
       <div class="pr-table-hint">← Swipe to see all columns →</div>
@@ -680,17 +588,15 @@
         <table class="pr-table">
           <thead>
             <tr>
-              <th style="width:40%">Feature</th>
-              <th>Free</th>
-              <th class="tc-pro">Farm Pro</th>
-              <th>Advisor Pro</th>
+              <th style="width:42%">Feature</th>
+              <th>Free</th><th class="tc-pro">Farm Pro</th><th>Advisor Pro</th>
             </tr>
           </thead>
           <tbody>
             <tr class="section-row"><td colspan="4">AI Copilot</td></tr>
             <tr><td>AI queries</td><td><span class="tc-val">10/month</span></td><td class="tc-pro"><span class="tc-val">Unlimited</span></td><td><span class="tc-val">Unlimited</span></td></tr>
             <tr><td>Farm profile context</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-            <tr><td>Conversation history</td><td><span class="tc-val">Session only</span></td><td class="tc-pro"><span class="tc-val">30 days</span></td><td><span class="tc-val">Unlimited</span></td></tr>
+            <tr><td>Conversation history</td><td><span class="tc-val">Session</span></td><td class="tc-pro"><span class="tc-val">30 days</span></td><td><span class="tc-val">Unlimited</span></td></tr>
 
             <tr class="section-row"><td colspan="4">Funding Navigator</td></tr>
             <tr><td>View all 8 programs</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
@@ -698,25 +604,31 @@
             <tr><td>Deadline email alerts</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
             <tr><td>Custom program database</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-n">–</span></td><td><span class="tc-y">✓</span></td></tr>
 
-            <tr class="section-row"><td colspan="4">ROI Calculator</td></tr>
+            <tr class="section-row"><td colspan="4">ROI &amp; Calculator</td></tr>
             <tr><td>Labour savings tab</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
             <tr><td>All 4 calculator tabs</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
             <tr><td>PDF export</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-            <tr><td>Saved scenarios</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-val">5 saved</span></td><td><span class="tc-val">Unlimited</span></td></tr>
+            <tr><td>Saved scenarios</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-val">5</span></td><td><span class="tc-val">Unlimited</span></td></tr>
 
             <tr class="section-row"><td colspan="4">Weather &amp; Crops</td></tr>
-            <tr><td>Live weather + 7-day forecast</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
-            <tr><td>Crop calendar by province</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Live weather + 7-day</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Crop calendar</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
             <tr><td>Commodity price feed</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+
+            <tr class="section-row"><td colspan="4">Community &amp; Wellness</td></tr>
+            <tr><td>Farmer Wellness Hub</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Labour Exchange Board</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Equipment Share Board</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Young Farmer Matcher</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
 
             <tr class="section-row"><td colspan="4">Support &amp; Advisors</td></tr>
             <tr><td>AI support chat</td><td><span class="tc-y">✓</span></td><td class="tc-pro"><span class="tc-y">✓</span></td><td><span class="tc-y">✓</span></td></tr>
             <tr><td>1-on-1 advisor calls</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-val">1/month</span></td><td><span class="tc-val">Unlimited</span></td></tr>
-            <tr><td>Response time</td><td><span class="tc-val">48hr email</span></td><td class="tc-pro"><span class="tc-val">24hr priority</span></td><td><span class="tc-val">Phone + Dedicated</span></td></tr>
+            <tr><td>Response time</td><td><span class="tc-val">48hr</span></td><td class="tc-pro"><span class="tc-val">24hr priority</span></td><td><span class="tc-val">Phone + Dedicated</span></td></tr>
 
             <tr class="section-row"><td colspan="4">Multi-farm &amp; Enterprise</td></tr>
             <tr><td>Farm profiles</td><td><span class="tc-val">1</span></td><td class="tc-pro"><span class="tc-val">1</span></td><td><span class="tc-val">Up to 25</span></td></tr>
-            <tr><td>Client report generation</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-n">–</span></td><td><span class="tc-y">✓</span></td></tr>
+            <tr><td>Client reports</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-n">–</span></td><td><span class="tc-y">✓</span></td></tr>
             <tr><td>White-label option</td><td><span class="tc-n">–</span></td><td class="tc-pro"><span class="tc-n">–</span></td><td><span class="tc-y">✓</span></td></tr>
           </tbody>
         </table>
@@ -729,16 +641,16 @@
       <div id="pr-faq-list"></div>
     </div>
 
-    <!-- CTA strip -->
+    <!-- CTA -->
     <div class="pr-cta-strip">
-      <h2>Ready to transform your farm decisions?</h2>
-      <p>Join farmers across Canada using Farm Copilot to find funding, plan operations, and make smarter investments.</p>
+      <h2>Ready to make smarter farm decisions?</h2>
+      <p>Join farmers across Canada — free forever, no credit card required.</p>
       <a href="index.html" class="pr-cta-strip-link">Start Free — No Credit Card Required →</a>
     </div>
 
-  </div><!-- /.pr-wrap -->
+  </div>
 
-  <!-- ── FOOTER ──────────────────────────────────────────────── -->
+  <!-- FOOTER -->
   <footer class="ln-footer">
     <div class="ln-footer-logo">Canadian Farm Copilot · v2.0 · 2026</div>
     <div class="ln-footer-links">
@@ -748,55 +660,49 @@
       <a href="dashboard.html" class="ln-footer-link">Dashboard</a>
       <a href="support.html"   class="ln-footer-link">Support</a>
     </div>
-    <div class="ln-footer-copy">Covering 2025–2026 Canadian federal &amp; provincial programs · Open-Meteo weather · Powered by Claude</div>
+    <div class="ln-footer-copy">Covering 2025–2026 Canadian federal &amp; provincial programs · Powered by Claude</div>
   </footer>
 
   <script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
   <script>
-    // ── Dashboard link visibility ────────────────────────────
+    // Dashboard visibility
     if (localStorage.getItem('farmProfile')) {
-      ['nav-dashboard', 'drawer-dashboard'].forEach(id => {
+      ['nav-dashboard','drawer-dashboard'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = '';
       });
     }
 
-    // ── Hamburger / drawer ───────────────────────────────────
+    // Burger
     const burger = document.getElementById('nav-burger');
     const drawer = document.getElementById('nav-drawer');
-
     function closeDrawer() {
-      drawer.classList.remove('open');
-      burger.classList.remove('open');
-      burger.setAttribute('aria-expanded', 'false');
-      document.body.style.overflow = '';
+      drawer.classList.remove('open'); burger.classList.remove('open');
+      burger.setAttribute('aria-expanded','false'); document.body.style.overflow = '';
+    }
+    burger.addEventListener('click', () => {
+      const open = drawer.classList.toggle('open');
+      burger.classList.toggle('open', open);
+      burger.setAttribute('aria-expanded', String(open));
+      document.body.style.overflow = open ? 'hidden' : '';
+    });
+    drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', closeDrawer));
+    document.addEventListener('click', e => {
+      if (drawer.classList.contains('open') && !drawer.contains(e.target) && !burger.contains(e.target)) closeDrawer();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+    // Expand/collapse feature lists
+    function toggleExpand(btn) {
+      const list = btn.nextElementSibling;
+      const isOpen = list.classList.toggle('open');
+      btn.classList.toggle('open', isOpen);
+      const count = list.querySelectorAll('li').length;
+      btn.innerHTML = `<span class="pr-expand-icon">▾</span> ${isOpen ? 'Hide' : 'Show all ' + (count + 5) + ' features'}`;
     }
 
-    burger.addEventListener('click', () => {
-      const isOpen = drawer.classList.toggle('open');
-      burger.classList.toggle('open', isOpen);
-      burger.setAttribute('aria-expanded', String(isOpen));
-      document.body.style.overflow = isOpen ? 'hidden' : '';
-    });
-
-    // Close when a link is tapped
-    drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', closeDrawer));
-
-    // Close on outside tap
-    document.addEventListener('click', e => {
-      if (drawer.classList.contains('open') &&
-          !drawer.contains(e.target) &&
-          !burger.contains(e.target)) {
-        closeDrawer();
-      }
-    });
-
-    // Close on Escape
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer();
-    });
-
-    // ── Billing toggle ───────────────────────────────────────
+    // Billing toggle
     window.setBilling = function(b) {
       document.getElementById('tog-monthly').className = 'pr-toggle-btn ' + (b === 'monthly' ? 'active' : 'inactive');
       document.getElementById('tog-annual').className  = 'pr-toggle-btn ' + (b === 'annual'  ? 'active' : 'inactive');
@@ -804,59 +710,43 @@
       document.getElementById('adv-price').textContent  = b === 'annual' ? '$149' : '$199';
       document.getElementById('pro-per').textContent    = b === 'annual' ? '/ month CAD (billed annually)' : '/ month CAD';
       document.getElementById('adv-per').textContent    = b === 'annual' ? '/ month CAD (billed annually)' : '/ month CAD';
-      document.getElementById('pro-annual').textContent = b === 'annual' ? 'Save $120/yr · Cancel anytime' : 'Billed monthly · Cancel anytime';
-      document.getElementById('adv-annual').textContent = b === 'annual' ? 'Save $600/yr · Cancel anytime' : 'Billed monthly · Cancel anytime';
+      document.getElementById('pro-billed').textContent = b === 'annual' ? 'Save $120/yr · Cancel anytime' : 'Billed monthly · Cancel anytime';
+      document.getElementById('adv-billed').textContent = b === 'annual' ? 'Save $600/yr · Cancel anytime' : 'Billed monthly · Cancel anytime';
     };
 
-    // ── Pro trial CTA ────────────────────────────────────────
+    // Pro trial
     window.startProTrial = function() {
       const email = prompt('Enter your email to start your 14-day Pro trial:');
       if (!email || !email.includes('@')) return;
       const wl = JSON.parse(localStorage.getItem('waitlist') || '[]');
       wl.push({ email, tier: 'pro_trial', date: new Date().toISOString() });
       localStorage.setItem('waitlist', JSON.stringify(wl));
-      alert('✓ Pro trial request received! We\'ll be in touch within 24 hours to activate your account. 🌾');
+      alert('✓ Pro trial request received! We\'ll be in touch within 24 hours. 🌾');
     };
 
-    // ── FAQ accordion ────────────────────────────────────────
+    // FAQ
     const FAQS = [
-      {
-        q: 'Is there really a free plan with no credit card?',
-        a: 'Yes — the free plan is completely free with no credit card required. You get 10 AI queries/month, the full funding navigator, live weather, crop calendar, and the operations planner. No time limit.'
-      },
-      {
-        q: 'What happens to my data if I cancel?',
-        a: 'Your farm profile is stored locally in your browser. We don\'t collect or store personal data in the free tier. If you\'re on a paid plan and cancel, we provide a 30-day data export window.'
-      },
-      {
-        q: 'Can I use this if I\'m an agricultural advisor, not a farmer?',
-        a: 'Absolutely. The Advisor Pro plan is built specifically for ag consultants and advisors managing multiple farm clients. You get multi-farm profiles, client reports, and white-label options.'
-      },
-      {
-        q: 'How current is the funding program data?',
-        a: 'We monitor federal and provincial program announcements and update the database when new programs launch or existing ones change. The current data reflects the 2025–2026 policy landscape, including the February 2026 AgriMarketing expansion.'
-      },
-      {
-        q: 'What does the 1-on-1 advisor call include?',
-        a: 'A 30-minute video or phone call with a Canadian agriculture specialist — typically a retired AAFC extension officer or ag consultant. You\'ll get a personalized intake form beforehand so your advisor comes prepared.'
-      },
-      {
-        q: 'Does this work for all provinces and farm types?',
-        a: 'Yes — all 10 provinces are supported with tailored weather data, crop calendars, and funding program eligibility. We cover grain, dairy, livestock, produce, greenhouse, specialty crops, mixed farms, poultry, and aquaculture.'
-      }
+      { q: 'Is there really a free plan with no credit card?', a: 'Yes — completely free forever, no credit card. You get 10 AI queries/month, all 8 funding programs, live weather, crop calendar, operations planner, and the Farmer Wellness Hub. No time limit.' },
+      { q: 'What is the Farmer Wellness Hub?', a: 'The Wellness Hub connects you to mental health resources specifically for Canadian farmers — including the National Farmer Crisis Line (1-866-FARMS01), ag-literate counsellors, and stress check-in tools. Over 50% of Canadian farmers experience anxiety at clinical levels. This feature is free for everyone on any plan.' },
+      { q: 'What are the new community features?', a: 'We\'re building a Labour Exchange Board (TFW guide + seasonal job matching), a Young Farmer Land Matcher (connecting retiring farmers with next-gen entrants), an Equipment Share Board for rural communities, and a Peer Benchmark Tool. These are grounded in the AAFC Agricultural Labour Strategy and FCC succession priorities.' },
+      { q: 'What happens to my data if I cancel?', a: 'Your farm profile lives in your browser — we don\'t collect personal data in the free tier. On paid plans, you get a 30-day data export window after cancellation.' },
+      { q: 'Can agricultural advisors use this?', a: 'Absolutely — the Advisor Pro plan is built for ag consultants managing multiple farm clients. You get multi-farm profiles, client reports, white-label options, and unlimited advisor calls.' },
+      { q: 'How current is the funding program data?', a: 'We monitor federal and provincial announcements and update when programs change. Current data covers the 2025–2026 landscape including the February 2026 AgriMarketing expansion, AgriStability pasture-feed cost update, and the $30M Local Food Infrastructure Fund.' },
     ];
 
     document.getElementById('pr-faq-list').innerHTML = FAQS.map((f, i) => `
       <div class="pf-item" id="pf-${i}">
-        <div class="pf-q" onclick="togglePf(${i})">
-          <span>${f.q}</span>
-          <span class="pf-chevron">▾</span>
+        <div class="pf-q" onclick="document.getElementById('pf-${i}').classList.toggle('open')">
+          <span>${f.q}</span><span class="pf-chevron">▾</span>
         </div>
         <div class="pf-a">${f.a}</div>
       </div>
     `).join('');
 
-    window.togglePf = i => document.getElementById('pf-' + i).classList.toggle('open');
+    // URL param ?tab=signup
+    if (new URLSearchParams(location.search).get('tab') === 'signup') {
+      window.location.href = 'auth.html?tab=signup';
+    }
   </script>
 </body>
 </html>

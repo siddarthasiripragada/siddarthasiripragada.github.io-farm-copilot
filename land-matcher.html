@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Land Matcher — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    .match-tab-bar { display:flex; gap:4px; padding:0 0 20px; border-bottom:1px solid var(--border); margin-bottom:22px; flex-wrap:wrap; }
+    .match-tab { padding:9px 18px; border-radius:20px; border:1.5px solid var(--border); background:white; font-family:'Sora',sans-serif; font-size:13px; color:var(--muted); cursor:pointer; transition:all .15s; }
+    .match-tab.active { background:var(--forest); color:var(--wheat); border-color:var(--forest); }
+    .match-tab:hover:not(.active) { border-color:var(--sage); color:var(--forest); }
+
+    /* Land listing card */
+    .land-card {
+      background:white; border:1px solid var(--border);
+      border-radius:var(--r-lg); overflow:hidden;
+      box-shadow:var(--shadow-sm); margin-bottom:16px;
+      transition:box-shadow .15s;
+    }
+    .land-card:hover { box-shadow:var(--shadow); }
+    .land-card-header {
+      padding:16px 20px; background:var(--cream);
+      border-bottom:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+    }
+    .land-title { font-family:'DM Serif Display',serif; font-size:17px; color:var(--forest); margin-bottom:3px; }
+    .land-loc   { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.5px; color:var(--muted); }
+    .land-price { text-align:right; flex-shrink:0; }
+    .land-price-val { font-family:'DM Serif Display',serif; font-size:20px; color:var(--forest); line-height:1; }
+    .land-price-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+    .land-body  { padding:16px 20px; }
+    .land-specs { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px; }
+    .land-spec  { text-align:center; }
+    .land-spec-val { font-family:'DM Serif Display',serif; font-size:17px; color:var(--forest); }
+    .land-spec-lbl { font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.5px; color:var(--muted); text-transform:uppercase; margin-top:2px; }
+    .land-desc  { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:12px; }
+    .land-tags  { display:flex; gap:7px; flex-wrap:wrap; }
+    .land-tag   { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:3px 9px; border-radius:5px; background:var(--cream); border:1px solid var(--border); color:var(--forest); }
+    .land-footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:center; }
+    .land-match { margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 10px; border-radius:10px; background:rgba(74,200,120,.12); color:#1e8449; }
+
+    /* Profile build form */
+    .profile-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .profile-grid .full { grid-column:1/-1; }
+    .match-score-card {
+      background:var(--forest); border-radius:var(--r-lg);
+      padding:24px; color:var(--wheat); text-align:center;
+    }
+    .ms-val   { font-family:'DM Serif Display',serif; font-size:48px; color:var(--wheat); letter-spacing:-2px; line-height:1; }
+    .ms-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(244,236,218,.4); margin-bottom:8px; }
+    .ms-desc  { font-size:12px; color:rgba(244,236,218,.55); line-height:1.55; margin-top:8px; }
+
+    /* FCC programs */
+    .program-row { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); align-items:flex-start; }
+    .program-row:last-child { border-bottom:none; }
+    .prog-icon { font-size:22px; flex-shrink:0; }
+    .prog-name { font-size:13.5px; font-weight:600; color:var(--text); margin-bottom:3px; }
+    .prog-desc { font-size:12px; color:var(--muted); line-height:1.5; }
+    .prog-amt  { margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10.5px; padding:3px 9px; border-radius:6px; background:rgba(184,114,14,.1); color:#8a5800; white-space:nowrap; }
+
+    @media(max-width:900px) {
+      .land-specs   { grid-template-columns:repeat(2,1fr); }
+      .profile-grid { grid-template-columns:1fr; }
+      .matcher-layout { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">🤝 Young Farmer Land Matcher</div>
+          <div class="page-subtitle" id="lm-sub">Connect new farmers with land — and retiring farmers with successors</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <button class="btn btn-primary btn-sm" onclick="showLandTab('list')">+ List My Land</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up">
+        <div class="stat-card">
+          <div class="stat-label">Farm Assets Transferring</div>
+          <div class="stat-value">$50B+</div>
+          <div class="stat-change">This decade in Canada</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Operator Age</div>
+          <div class="stat-value">57 yrs</div>
+          <div class="stat-change neg">Retirement wave approaching</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Land Available</div>
+          <div class="stat-value" id="stat-land">8</div>
+          <div class="stat-change">Active listings near you</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Farmland Value ↑</div>
+          <div class="stat-value">+8.3%</div>
+          <div class="stat-change">YoY national — FCC 2026</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="match-tab-bar anim-fade-up anim-delay-1">
+        <button class="match-tab active" id="ltab-find"    onclick="showLandTab('find')">🔍 Find Land</button>
+        <button class="match-tab" id="ltab-list"    onclick="showLandTab('list')">🌾 List My Land</button>
+        <button class="match-tab" id="ltab-profile" onclick="showLandTab('profile')">👤 My Farmer Profile</button>
+        <button class="match-tab" id="ltab-funding" onclick="showLandTab('funding')">💰 Entry Funding</button>
+      </div>
+
+      <!-- ── FIND LAND ── -->
+      <div id="lview-find">
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+          <select class="filter-select" id="lf-prov" onchange="renderLand()">
+            <option value="">All Provinces</option>
+            <option>Alberta</option><option>British Columbia</option>
+            <option>Manitoba</option><option>Ontario</option>
+            <option>Quebec</option><option>Saskatchewan</option>
+          </select>
+          <select class="filter-select" id="lf-type" onchange="renderLand()">
+            <option value="">All Arrangements</option>
+            <option>Purchase</option><option>Lease</option><option>Succession</option><option>Partnership</option>
+          </select>
+          <select class="filter-select" id="lf-size" onchange="renderLand()">
+            <option value="">Any Size</option>
+            <option value="small">Under 200 acres</option>
+            <option value="med">200–500 acres</option>
+            <option value="large">500+ acres</option>
+          </select>
+        </div>
+        <div id="land-list"></div>
+      </div>
+
+      <!-- ── LIST LAND ── -->
+      <div id="lview-list" style="display:none;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">🌾 List Your Land or Farm</span></div>
+          <div class="card-body">
+            <div class="profile-grid">
+              <div class="form-group">
+                <label class="form-label">Farm / Property Name</label>
+                <input class="form-input" id="ll-name" placeholder="Homestead Farm">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Province *</label>
+                <select class="form-input" id="ll-prov">
+                  <option value="">Select…</option>
+                  <option>Alberta</option><option>British Columbia</option>
+                  <option>Manitoba</option><option>Ontario</option>
+                  <option>Quebec</option><option>Saskatchewan</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Acreage</label>
+                <input class="form-input form-mono" id="ll-acres" type="number" placeholder="320">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Arrangement Type *</label>
+                <select class="form-input" id="ll-type">
+                  <option>Lease</option><option>Purchase</option>
+                  <option>Succession</option><option>Partnership</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Asking Price / Lease Rate</label>
+                <input class="form-input form-mono" id="ll-price" placeholder="$3,200/acre or $80/acre/yr">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Primary Crop / Use</label>
+                <input class="form-input" id="ll-crop" placeholder="Grain, Cattle, Mixed…">
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Description *</label>
+                <span class="form-hint">Soil quality, infrastructure, what you're looking for in a successor</span>
+                <textarea class="form-input" id="ll-desc" rows="4" style="resize:vertical;"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Contact Email *</label>
+                <input class="form-input" id="ll-email" type="email">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Contact Phone</label>
+                <input class="form-input" id="ll-phone">
+              </div>
+              <div class="full" style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" onclick="showLandTab('find')">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="submitLand()">List Property →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FARMER PROFILE ── -->
+      <div id="lview-profile" style="display:none;">
+        <div class="grid-2 anim-fade-up" style="grid-template-columns:1fr 280px;" class="matcher-layout">
+          <div class="card">
+            <div class="card-header"><span class="card-title">👤 Your New Farmer Profile</span></div>
+            <div class="card-body">
+              <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6;">Build your profile so retiring farmers can see what kind of steward you'd be for their land.</p>
+              <div class="profile-grid">
+                <div class="form-group">
+                  <label class="form-label">Years of Farm Experience</label>
+                  <input class="form-input form-mono" id="fp-exp" type="number" placeholder="3" oninput="updateScore()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Target Province</label>
+                  <select class="form-input" id="fp-prov" onchange="updateScore()">
+                    <option>Alberta</option><option>British Columbia</option>
+                    <option>Manitoba</option><option>Ontario</option>
+                    <option>Quebec</option><option>Saskatchewan</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Target Acreage</label>
+                  <input class="form-input form-mono" id="fp-acres" placeholder="150–300 acres" oninput="updateScore()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Preferred Arrangement</label>
+                  <select class="form-input" id="fp-arr" onchange="updateScore()">
+                    <option>Lease</option><option>Purchase</option><option>Partnership</option><option>Any</option>
+                  </select>
+                </div>
+                <div class="form-group full">
+                  <label class="form-label">Farming Background &amp; Vision</label>
+                  <span class="form-hint">Tell retiring farmers who you are and your plan for the land</span>
+                  <textarea class="form-input" id="fp-bio" rows="4" style="resize:vertical;" oninput="updateScore()" placeholder="I grew up helping on my uncle's dairy farm in PEI. I completed the CFFO Young Farmer program and am looking to establish a small mixed vegetable operation…"></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Available Capital (CAD)</label>
+                  <input class="form-input form-mono" id="fp-cap" type="number" placeholder="85000" oninput="updateScore()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">FCC / AgriInvest Pre-Approved?</label>
+                  <select class="form-input" id="fp-fcc" onchange="updateScore()">
+                    <option value="no">No</option>
+                    <option value="inprog">In Progress</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </div>
+                <div class="full" style="display:flex;gap:10px;justify-content:flex-end;">
+                  <button class="btn btn-secondary btn-sm" onclick="saveProfile()">Save Profile</button>
+                  <button class="btn btn-primary btn-sm" onclick="alert('Profile published! Retiring farmers in your region can now see it.')">Publish Profile →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="match-score-card mb-16">
+              <div class="ms-label">Readiness Score</div>
+              <div class="ms-val" id="fp-score">--</div>
+              <div style="font-size:11px;color:rgba(244,236,218,.35);margin-top:4px;">/ 100</div>
+              <div class="ms-desc" id="fp-score-desc">Fill in your profile to calculate your farmer readiness score</div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">💡 Profile Tips</span></div>
+              <div class="card-body" style="font-size:12.5px;color:var(--muted);line-height:1.7;display:flex;flex-direction:column;gap:8px;">
+                <div>✅ Mention any farm courses (CFFO, YA, agricultural college)</div>
+                <div>✅ Be specific about your land-use vision</div>
+                <div>✅ Get FCC pre-approval before approaching sellers</div>
+                <div>✅ Join Young Agrarians for mentorship connections</div>
+                <div>✅ Apply for AgriInvest before making an offer</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ENTRY FUNDING ── -->
+      <div id="lview-funding" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">💰 Young Farmer Entry Funding Programs — 2026</span>
+          </div>
+          <div class="card-body" style="padding:8px 20px;">
+            <div id="entry-programs"></div>
+          </div>
+          <div class="card-footer">
+            <a href="funding.html" class="btn btn-secondary btn-sm">Browse All 8 Programs →</a>
+            <a href="copilot.html" class="btn btn-ghost btn-sm" style="margin-left:8px;">Ask AI Copilot →</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('land-matcher');
+  document.getElementById('lm-sub').textContent = `Land succession and new farmer connections · ${profile.province}`;
+
+  function showLandTab(t) {
+    ['find','list','profile','funding'].forEach(id => {
+      document.getElementById('lview-' + id).style.display = id === t ? '' : 'none';
+      const btn = document.getElementById('ltab-' + id);
+      if (btn) btn.classList.toggle('active', id === t);
+    });
+  }
+
+  // ── Land listings ────────────────────────────────────
+  const LANDS = [
+    { id:1, title:'320-Acre Grain Farm — Retiring Owner', loc:'Weyburn, SK', prov:'Saskatchewan', type:'Succession', acres:320, price:'$3,200/acre', soilClass:'Class 2 & 3', infra:'Full equipment available', desc:'Third-generation grain farm. Retiring couple seeking a young family to carry on the legacy. Will consider vendor financing and transition support period. Buildings, bins, and equipment negotiable.', tags:['Wheat','Canola','Barley','Equipment incl.','Vendor finance'], match:92 },
+    { id:2, title:'150-Acre Mixed Vegetable Operation', loc:'Simcoe County, ON', prov:'Ontario', type:'Lease',       acres:150, price:'$180/acre/yr', soilClass:'Class 1', infra:'Irrigation, cold storage', desc:'Well-established vegetable farm with irrigation infrastructure. Owners looking to lease to a motivated young farmer. 3-year lease with option to purchase. Mentorship from owner available first season.', tags:['Vegetables','Organic potential','Irrigation','Mentorship'], match:88 },
+    { id:3, title:'200-Acre Cattle Ranch — Partnership', loc:'Lethbridge, AB', prov:'Alberta', type:'Partnership', acres:200, price:'Partnership terms', soilClass:'Grazing land', infra:'Handling facility, corrals', desc:'Established beef operation seeking a working partner to eventually take over. Revenue sharing from day one. Current herd of 85 head included. Province AgriStability eligible.', tags:['Cattle','Beef','Partnership','Herd included'], match:79 },
+    { id:4, title:'80-Acre Hobby to Commercial Farm', loc:'Abbotsford, BC', prov:'British Columbia', type:'Purchase', acres:80, price:'$2.8M',         soilClass:'Class 1 ALR', infra:'Barn, well, 3-bed house', desc:'Prime Agricultural Land Reserve property in the Fraser Valley. Current owners transitioning out of farming. Ideal for berry, dairy, or mixed production. House included.', tags:['ALR land','Berry potential','House incl.','Dairy zoned'], match:74 },
+    { id:5, title:'480-Acre Prairie Grain Farm', loc:'Yorkton, SK', prov:'Saskatchewan', type:'Lease', acres:480, price:'$85/acre/yr', soilClass:'Class 2', infra:'Quonset, bins (50K bu)', desc:'Quality grain land available for long-term lease. Owner retaining residence. 10-year lease available. Modern bins, quonset, and good road access. Ideal for young farmer looking to scale quickly.', tags:['Grain','Long-term lease','Bins','Road access'], match:85 },
+  ];
+  let userLands = JSON.parse(localStorage.getItem('landListings') || '[]');
+
+  function renderLand() {
+    const prov = document.getElementById('lf-prov').value;
+    const type = document.getElementById('lf-type').value;
+    const size = document.getElementById('lf-size').value;
+    const all  = [...LANDS, ...userLands];
+    const list = all.filter(l =>
+      (!prov || l.prov === prov) &&
+      (!type || l.type === type) &&
+      (!size ||
+        (size === 'small' && l.acres < 200) ||
+        (size === 'med'   && l.acres >= 200 && l.acres <= 500) ||
+        (size === 'large' && l.acres > 500))
+    );
+    document.getElementById('stat-land').textContent = list.length;
+    const el = document.getElementById('land-list');
+    if (!list.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">No listings match your filters.</div>'; return; }
+    el.innerHTML = list.map(l => `
+      <div class="land-card">
+        <div class="land-card-header">
+          <div>
+            <div class="land-title">${l.title}</div>
+            <div class="land-loc">📍 ${l.loc} · ${l.type}</div>
+          </div>
+          <div class="land-price">
+            <div class="land-price-val">${l.price}</div>
+            <div class="land-price-sub">${l.type}</div>
+          </div>
+        </div>
+        <div class="land-body">
+          <div class="land-specs">
+            <div class="land-spec"><div class="land-spec-val">${l.acres}</div><div class="land-spec-lbl">Acres</div></div>
+            <div class="land-spec"><div class="land-spec-val" style="font-size:13px;">${l.soilClass}</div><div class="land-spec-lbl">Soil Class</div></div>
+            <div class="land-spec"><div class="land-spec-val" style="font-size:13px;">${l.type}</div><div class="land-spec-lbl">Arrangement</div></div>
+            <div class="land-spec"><div class="land-spec-val" style="font-size:13px;">${l.prov.slice(0,2).toUpperCase()}</div><div class="land-spec-lbl">Province</div></div>
+          </div>
+          <div class="land-desc">${l.desc}</div>
+          <div class="land-tags">${l.tags.map(t => `<span class="land-tag">${t}</span>`).join('')}</div>
+        </div>
+        <div class="land-footer">
+          <button class="btn btn-primary btn-sm" onclick="alert('Contact feature coming soon. Use AI Copilot to draft your inquiry.')">Express Interest →</button>
+          <button class="btn btn-ghost btn-sm" onclick="alert('Saved to your profile.')">Save</button>
+          <a href="copilot.html" class="btn btn-ghost btn-sm">Ask AI →</a>
+          ${l.match ? `<div class="land-match">${l.match}% match</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+  renderLand();
+
+  window.submitLand = function() {
+    const name = document.getElementById('ll-name').value.trim();
+    const prov = document.getElementById('ll-prov').value;
+    const desc = document.getElementById('ll-desc').value.trim();
+    if (!prov || !desc) { alert('Please fill in required fields.'); return; }
+    userLands.push({
+      id:Date.now(), title: name || 'My Farm Listing', loc: prov, prov,
+      type: document.getElementById('ll-type').value,
+      acres: parseInt(document.getElementById('ll-acres').value)||0,
+      price: document.getElementById('ll-price').value||'Contact for price',
+      soilClass:'—', infra:'—', desc,
+      tags:[(document.getElementById('ll-crop').value||'')],
+      match:null,
+    });
+    localStorage.setItem('landListings', JSON.stringify(userLands));
+    showLandTab('find'); renderLand();
+    alert('✓ Listing posted!');
+  };
+
+  window.saveProfile = function() {
+    const p = {
+      exp:  document.getElementById('fp-exp').value,
+      prov: document.getElementById('fp-prov').value,
+      acres:document.getElementById('fp-acres').value,
+      bio:  document.getElementById('fp-bio').value,
+      cap:  document.getElementById('fp-cap').value,
+      fcc:  document.getElementById('fp-fcc').value,
+    };
+    localStorage.setItem('landMatcherProfile', JSON.stringify(p));
+    alert('✓ Profile saved.');
+  };
+
+  window.updateScore = function() {
+    let score = 20;
+    const exp  = parseInt(document.getElementById('fp-exp').value)||0;
+    const bio  = document.getElementById('fp-bio').value.trim();
+    const cap  = parseInt(document.getElementById('fp-cap').value)||0;
+    const fcc  = document.getElementById('fp-fcc').value;
+    if (exp >= 1) score += 15;
+    if (exp >= 5) score += 10;
+    if (bio.length > 50) score += 20;
+    if (cap >= 50000) score += 15;
+    if (fcc === 'inprog') score += 10;
+    if (fcc === 'yes')    score += 20;
+    score = Math.min(100, score);
+    document.getElementById('fp-score').textContent = score;
+    const descs = [[80,'Strong profile — you\'re competitive for most listings.'],[60,'Good foundation — getting FCC pre-approval will boost your score significantly.'],[40,'Building your profile — add more detail to your bio and financial readiness.']];
+    const d = descs.find(([min]) => score >= min) || descs[descs.length-1];
+    document.getElementById('fp-score-desc').textContent = d[1];
+  };
+
+  // ── Entry funding programs ───────────────────────────
+  const ENTRY_PROGRAMS = [
+    { icon:'🏦', name:'FCC Young Farmer Loan', desc:'Farm Credit Canada offers preferred rates and flexible terms for first-time farm purchasers under 40. Reduced down payment options available.', amt:'Variable', url:'https://www.fcc-fac.ca' },
+    { icon:'🌾', name:'AgriInvest — Farmer Account', desc:'Government-matched savings account: you contribute up to 1% of net farm income, federal/provincial match dollar for dollar. Build capital toward land purchase.', amt:'1:1 match', url:'https://agriculture.canada.ca' },
+    { icon:'💼', name:'Canadian Agricultural Partnership (CAP)', desc:'Provincial streams specifically for new entrant farmers — business planning support, down payment assistance, and training programs.', amt:'Up to $50K', url:'https://agriculture.canada.ca' },
+    { icon:'📚', name:'EFAO New Farmer Program', desc:'Ecological Farmers Association of Ontario offers mentorship, training, and connection to established farmers seeking successors.', amt:'Free', url:'https://efao.ca' },
+    { icon:'🌱', name:'Young Agrarians Land Program', desc:'Nation-wide service connecting new and aspiring farmers with farmland for lease or partnership, with preference for ecological farming.', amt:'Free', url:'https://youngagrarians.org' },
+    { icon:'🏛️', name:'AgriStability — New Entrant Provisions', desc:'New farmers may be eligible for modified reference margin calculations. Contact your provincial ministry for new entrant enrolment guidance.', amt:'Income protection', url:'https://agriculture.canada.ca' },
+  ];
+  document.getElementById('entry-programs').innerHTML = ENTRY_PROGRAMS.map(p => `
+    <div class="program-row">
+      <div class="prog-icon">${p.icon}</div>
+      <div>
+        <div class="prog-name">${p.name}</div>
+        <div class="prog-desc">${p.desc}</div>
+        <a href="${p.url}" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);margin-top:4px;display:inline-block;">Learn more ↗</a>
+      </div>
+      <div class="prog-amt">${p.amt}</div>
+    </div>
+  `).join('');
+</script>
+</body>
+</html>

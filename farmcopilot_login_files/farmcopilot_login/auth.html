@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farm Copilot — Sign In</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      background: #1B3528;
+      color: #F4ECDA;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .auth-card {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 20px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 30px 70px rgba(0,0,0,.4);
+    }
+    .auth-logo {
+      font-family: monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #D4882E;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .auth-logo-dot {
+      width: 7px; height: 7px;
+      background: #D4882E;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .auth-title {
+      font-family: Georgia, serif;
+      font-size: 28px;
+      color: #F4ECDA;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .auth-subtitle {
+      font-size: 13px;
+      color: rgba(244,236,218,.5);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      margin-bottom: 24px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 10px 0;
+      background: none;
+      border: none;
+      font-family: monospace;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(244,236,218,.3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all .18s;
+    }
+    .auth-tab.active {
+      color: #D4882E;
+      border-bottom-color: #D4882E;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-family: monospace;
+      font-size: 9.5px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(244,236,218,.4);
+      margin-bottom: 7px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255,255,255,.07);
+      border: 1.5px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      color: #F4ECDA;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .form-input::placeholder { color: rgba(244,236,218,.25); }
+    .form-input:focus { border-color: #D4882E; }
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      background: #B8720E;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      margin-top: 8px;
+    }
+    .btn-primary:hover { background: #D4882E; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .divider {
+      text-align: center;
+      color: rgba(244,236,218,.25);
+      font-size: 11px;
+      font-family: monospace;
+      letter-spacing: 1px;
+      margin: 18px 0;
+      position: relative;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 38%;
+      height: 1px;
+      background: rgba(255,255,255,.08);
+    }
+    .divider::before { left: 0; }
+    .divider::after  { right: 0; }
+    .btn-google {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255,255,255,.06);
+      border: 1.5px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      color: rgba(244,236,218,.8);
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all .15s;
+    }
+    .btn-google:hover { background: rgba(255,255,255,.11); border-color: rgba(255,255,255,.22); }
+    .auth-msg {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 14px;
+      display: none;
+      line-height: 1.5;
+    }
+    .auth-msg.error   { background: rgba(248,113,113,.1);  border: 1px solid rgba(248,113,113,.25); color: #f87171; }
+    .auth-msg.success { background: rgba(74,200,120,.1);   border: 1px solid rgba(74,200,120,.2);  color: #4ac878; }
+    .auth-msg.info    { background: rgba(184,114,14,.1);   border: 1px solid rgba(184,114,14,.25); color: #D4882E; }
+    .forgot-link {
+      font-size: 12px;
+      color: rgba(244,236,218,.35);
+      text-align: right;
+      display: block;
+      margin-top: -8px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: color .14s;
+    }
+    .forgot-link:hover { color: #D4882E; }
+    .session-card { display: none; text-align: center; }
+    .session-avatar {
+      width: 56px; height: 56px;
+      background: rgba(184,114,14,.2);
+      border: 2px solid #D4882E;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin: 0 auto 16px;
+    }
+    .session-email {
+      font-size: 13px;
+      color: rgba(244,236,218,.6);
+      margin-bottom: 20px;
+      font-family: monospace;
+    }
+    .session-name {
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #F4ECDA;
+      margin-bottom: 4px;
+    }
+    .btn-dash {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: #B8720E;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: background .15s;
+    }
+    .btn-dash:hover { background: #D4882E; }
+    .btn-signout {
+      display: block;
+      width: 100%;
+      padding: 11px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      color: rgba(244,236,218,.6);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-signout:hover { background: rgba(255,255,255,.1); color: #f87171; border-color: rgba(248,113,113,.3); }
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .back-link a {
+      font-family: monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: rgba(244,236,218,.3);
+      text-decoration: none;
+      transition: color .14s;
+    }
+    .back-link a:hover { color: rgba(244,236,218,.7); }
+  </style>
+</head>
+<body>
+<div class="auth-card">
+  <div class="session-card" id="session-card">
+    <div class="session-avatar">🌾</div>
+    <div class="session-name" id="session-name">Welcome back</div>
+    <div class="session-email" id="session-email"></div>
+    <a href="dashboard.html" class="btn-dash">Go to Dashboard →</a>
+    <button class="btn-signout" id="btn-signout">Sign Out</button>
+  </div>
+
+  <div id="auth-form-wrap">
+    <div class="auth-logo">
+      <div class="auth-logo-dot"></div>
+      Farm Copilot
+    </div>
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-subtitle">Sign in to access your farm dashboard, funding alerts, and AI copilot.</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="signin">Sign In</button>
+      <button class="auth-tab" data-tab="signup">Sign Up</button>
+    </div>
+
+    <div id="tab-signin">
+      <div class="form-group">
+        <label class="form-label" for="si-email">Email</label>
+        <input class="form-input" type="email" id="si-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="si-password">Password</label>
+        <input class="form-input" type="password" id="si-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <span class="forgot-link" id="forgot-link">Forgot password?</span>
+      <button class="btn-primary" id="btn-signin">Sign In →</button>
+
+      <div class="divider">or</div>
+      <button class="btn-google" id="btn-google-signin" type="button">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+    </div>
+
+    <div id="tab-signup" style="display:none;">
+      <div class="form-group">
+        <label class="form-label" for="su-name">Full Name</label>
+        <input class="form-input" type="text" id="su-name" placeholder="Jane Smith" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="su-email">Email</label>
+        <input class="form-input" type="email" id="su-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="su-password">Password</label>
+        <input class="form-input" type="password" id="su-password" placeholder="Min. 8 characters" autocomplete="new-password">
+      </div>
+      <button class="btn-primary" id="btn-signup">Create Account →</button>
+
+      <div class="divider">or</div>
+      <button class="btn-google" id="btn-google-signup" type="button">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+        Sign up with Google
+      </button>
+    </div>
+
+    <div class="auth-msg" id="auth-msg"></div>
+  </div>
+
+  <div class="back-link">
+    <a href="landing.html">← Back to Farm Copilot</a>
+  </div>
+</div>
+
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

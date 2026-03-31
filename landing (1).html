@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canadian Farm Copilot — 18 AI Tools for Canadian Agriculture</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #1B3528; min-height: 100%; }
+body { background: var(--forest); font-family: 'Sora', sans-serif; overflow-x: hidden; color: var(--wheat); }
+
+.ln-nav, .ln-hero, .ln-section-dark, .ln-footer { background-color: #1B3528; }
+.ln-section-dark { background: linear-gradient(180deg, rgba(0,0,0,.16) 0%, rgba(0,0,0,.10) 100%); }
+.ln-preview-card, .feat-card, .testi-card, .price-card, .waitlist-wrap { box-shadow: 0 18px 48px rgba(0,0,0,.22); }
+
+/* ── NAV ─────────────────────────────────────────── */
+.ln-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 14px 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(27,53,40,.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.ln-nav-logo { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:2.5px; text-transform:uppercase; color:var(--amber-lt); display:flex; align-items:center; gap:8px; text-decoration:none; }
+.ln-nav-logo-dot { width:7px; height:7px; background:var(--amber-lt); border-radius:50%; animation:pulse 2.4s infinite; }
+.ln-nav-links { display:flex; align-items:center; gap:24px; }
+.ln-nav-link  { font-size:13px; color:rgba(244,236,218,.6); text-decoration:none; transition:color .14s; }
+.ln-nav-link:hover { color:var(--wheat); }
+.ln-nav-cta   { padding:9px 20px; background:var(--amber); color:white; border-radius:8px; font-size:13px; font-weight:500; text-decoration:none; transition:background .14s; }
+.ln-nav-cta:hover { background:var(--amber-lt); }
+
+/* ── HERO ─────────────────────────────────────────── */
+.ln-hero {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 120px 48px 80px;
+  position: relative;
+  overflow: hidden;
+}
+.ln-hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image:
+    radial-gradient(ellipse at 8% 85%, rgba(74,122,90,.5) 0%, transparent 55%),
+    radial-gradient(ellipse at 92% 8%, rgba(184,114,14,.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 55% 50%, rgba(10,24,16,.25) 0%, rgba(10,24,16,0) 70%),
+    repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.012) 39px,rgba(255,255,255,.012) 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 79px,rgba(255,255,255,.007) 79px,rgba(255,255,255,.007) 80px);
+}
+
+/* Floating ambient particles */
+.hero-particle {
+  position: absolute; border-radius: 50%;
+  animation: floatUp linear infinite;
+  pointer-events: none;
+}
+@keyframes floatUp {
+  0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  8%   { opacity: 1; }
+  85%  { opacity: .5; }
+  100% { transform: translateY(-110vh) translateX(20px) scale(1.4); opacity: 0; }
+}
+
+.ln-hero-inner {
+  max-width: 1100px; width: 100%;
+  display: grid; grid-template-columns: 1fr 450px; gap: 70px;
+  align-items: center; position: relative; z-index: 1;
+}
+
+/* Left hero content */
+.ln-eyebrow { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2.5px; text-transform:uppercase; color:var(--amber-lt); margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+.ln-eyebrow::before { content:''; width:20px; height:1.5px; background:var(--amber-lt); }
+
+.ln-title { font-family:'DM Serif Display',serif; font-size:54px; color:var(--wheat); line-height:1.1; letter-spacing:-1.5px; margin-bottom:12px; }
+.ln-title em { font-style:italic; color:var(--amber-lt); }
+
+.ln-title-pill {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(184,114,14,.14); border: 1px solid rgba(184,114,14,.35);
+  border-radius: 30px; padding: 7px 16px; margin-bottom: 22px;
+}
+.ln-title-pill-dot { width:6px; height:6px; background:#4ac878; border-radius:50%; flex-shrink:0; animation: pulse 2s infinite; }
+.ln-title-pill-text { font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--amber-lt); }
+
+/* Cycling farm type */
+.ln-farmtype-wrap { display:inline-block; position:relative; }
+.ln-farmtype-static { font-style:italic; color:var(--amber-lt); }
+#hero-farmtype { transition: opacity .35s, transform .35s; display:inline; }
+.hero-farmtype-out { opacity:0; transform:translateY(-8px); }
+.hero-farmtype-in  { opacity:1; transform:translateY(0); }
+
+.ln-desc { font-size:15px; color:rgba(244,236,218,.65); line-height:1.75; margin-bottom:32px; max-width:500px; }
+.ln-cta-row { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:28px; }
+.ln-cta-primary { padding:15px 30px; background:var(--amber); color:white; border-radius:10px; font-size:14px; font-weight:600; text-decoration:none; transition:all .15s; display:inline-flex; align-items:center; gap:8px; }
+.ln-cta-primary:hover { background:var(--amber-lt); transform:translateY(-2px); box-shadow:0 8px 28px rgba(184,114,14,.38); }
+.ln-cta-ghost { padding:15px 24px; border:1.5px solid rgba(255,255,255,.18); color:rgba(244,236,218,.8); border-radius:10px; font-size:14px; text-decoration:none; transition:all .15s; display:inline-flex; align-items:center; gap:8px; }
+.ln-cta-ghost:hover { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.3); }
+
+.ln-proof-point { margin-bottom:30px; font-size:14px; line-height:1.7; color:rgba(244,236,218,.72); max-width:520px; padding:12px 16px; background:rgba(74,200,120,.07); border:1px solid rgba(74,200,120,.15); border-radius:9px; }
+.ln-proof-point strong { color:#4ac878; font-weight:600; }
+
+.ln-stats { display:flex; gap:32px; flex-wrap:wrap; }
+.ln-stat-val { font-family:'DM Serif Display',serif; font-size:30px; color:var(--wheat); letter-spacing:-0.5px; }
+.ln-stat-lbl { font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:rgba(244,236,218,.38); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+
+/* ── HERO PREVIEW CARD ─────────────────────────────── */
+.ln-preview-card {
+  background: rgba(250,250,243,.05);
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 18px; overflow: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 30px 70px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.07);
+}
+.lpc-header { padding:14px 18px; background:rgba(255,255,255,.04); border-bottom:1px solid rgba(255,255,255,.07); display:flex; align-items:center; gap:8px; }
+.lpc-dot { width:10px; height:10px; border-radius:50%; }
+.lpc-title { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(244,236,218,.35); margin-left:6px; }
+
+/* Tabs */
+.lpc-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,.07); background:rgba(0,0,0,.1); }
+.lpc-tab-btn { flex:1; padding:11px 0; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(244,236,218,.32); background:transparent; border:none; cursor:pointer; transition:all .22s; border-bottom:2px solid transparent; margin-bottom:-1px; }
+.lpc-tab-btn:hover { color:rgba(244,236,218,.6); }
+.lpc-tab-btn.active { color:var(--amber-lt); border-bottom-color:var(--amber-lt); background:rgba(184,114,14,.05); }
+
+.lpc-body { padding:18px; min-height:260px; }
+.lpc-panel { display:none; }
+.lpc-panel.active { display:block; animation: fadePanel .28s ease; }
+@keyframes fadePanel { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+.lpc-row { display:flex; align-items:center; justify-content:space-between; padding:9px 13px; background:rgba(255,255,255,.04); border-radius:8px; margin-bottom:8px; border:1px solid rgba(255,255,255,.06); }
+.lpc-row-name { font-size:12.5px; color:rgba(244,236,218,.8); font-weight:500; }
+.lpc-row-score { font-family:'IBM Plex Mono',monospace; font-size:11px; padding:3px 9px; border-radius:4px; }
+.lpc-high { background:rgba(74,200,120,.15); color:#4ac878; }
+.lpc-med  { background:rgba(184,114,14,.2);  color:var(--amber-lt); }
+.lpc-low  { background:rgba(255,255,255,.07); color:rgba(244,236,218,.45); }
+.lpc-weather { margin-top:12px; padding:12px; background:rgba(255,255,255,.04); border-radius:10px; border:1px solid rgba(255,255,255,.06); display:flex; align-items:center; gap:12px; }
+.lpc-wx-icon { font-size:28px; }
+.lpc-wx-temp { font-family:'DM Serif Display',serif; font-size:24px; color:var(--wheat); }
+.lpc-wx-sub  { font-size:11px; color:rgba(244,236,218,.45); margin-top:2px; }
+.lpc-ai-bubble { margin-top:12px; padding:12px 14px; background:rgba(255,255,255,.06); border-radius:10px; border-left:3px solid var(--amber-lt); }
+.lpc-ai-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--amber-lt); margin-bottom:5px; }
+.lpc-ai-text  { font-size:12px; color:rgba(244,236,218,.68); line-height:1.6; }
+
+/* 18-tools mini grid */
+.lpc-tools-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; }
+.lpc-tool-tile { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:8px; padding:10px 6px; text-align:center; transition:all .18s; cursor:pointer; text-decoration:none; display:block; }
+.lpc-tool-tile:hover { background:rgba(184,114,14,.14); border-color:rgba(184,114,14,.35); transform:translateY(-2px); }
+.lpc-tool-icon { font-size:16px; margin-bottom:4px; }
+.lpc-tool-name { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:.3px; text-transform:uppercase; color:rgba(244,236,218,.45); line-height:1.3; }
+
+a.lpc-row { text-decoration:none; }
+a.lpc-row:hover { background:rgba(184,114,14,.12); border-color:rgba(184,114,14,.3); transform:translateX(3px); }
+a.lpc-risk-row { text-decoration:none; }
+a.lpc-risk-row:hover { background:rgba(184,114,14,.1); border-color:rgba(184,114,14,.25); transform:translateX(3px); }
+a.lpc-ai-bubble:hover { background:rgba(255,255,255,.1); cursor:pointer; }
+.lpc-row { transition:background .18s, border-color .18s, transform .18s; }
+.lpc-risk-row { transition:background .18s, border-color .18s, transform .18s; }
+.lpc-panel-cta { display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding:10px 13px; background:rgba(184,114,14,.1); border:1px solid rgba(184,114,14,.25); border-radius:8px; text-decoration:none; transition:all .18s; }
+.lpc-panel-cta:hover { background:rgba(184,114,14,.2); border-color:rgba(184,114,14,.5); transform:translateY(-1px); }
+.lpc-panel-cta-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--amber-lt); }
+.lpc-panel-cta-arrow { font-size:13px; color:var(--amber-lt); }
+
+/* Risk panel */
+.lpc-risk-row { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:rgba(255,255,255,.03); border-radius:8px; margin-bottom:7px; border:1px solid rgba(255,255,255,.05); }
+.lpc-risk-label { font-size:12px; color:rgba(244,236,218,.7); }
+.lpc-risk-bar { display:flex; align-items:center; gap:9px; }
+.lpc-risk-track { width:72px; height:5px; background:rgba(255,255,255,.08); border-radius:3px; overflow:hidden; }
+.lpc-risk-fill { height:100%; border-radius:3px; transition:width .5s; }
+.lpc-risk-val { font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(244,236,218,.45); min-width:28px; text-align:right; }
+
+/* ── MODULE TICKER ─────────────────────────────────── */
+.ln-ticker-wrap { background:rgba(0,0,0,.28); border-top:1px solid rgba(255,255,255,.06); border-bottom:1px solid rgba(255,255,255,.06); padding:13px 0; overflow:hidden; position:relative; }
+.ln-ticker-wrap::before,
+.ln-ticker-wrap::after { content:''; position:absolute; top:0; bottom:0; width:100px; z-index:2; pointer-events:none; }
+.ln-ticker-wrap::before { left:0; background:linear-gradient(90deg,#1B3528,transparent); }
+.ln-ticker-wrap::after  { right:0; background:linear-gradient(270deg,#1B3528,transparent); }
+.ln-ticker { display:flex; gap:0; animation:ticker 38s linear infinite; width:max-content; }
+.ln-ticker:hover { animation-play-state:paused; }
+.ln-ticker-item { display:flex; align-items:center; gap:8px; padding:0 22px; white-space:nowrap; font-size:12px; color:rgba(244,236,218,.5); transition:color .2s; text-decoration:none; }
+.ln-ticker-item:hover { color:rgba(244,236,218,.85); }
+.ln-ticker-item .ti-icon { font-size:15px; }
+.ln-ticker-sep { color:rgba(184,114,14,.45); font-family:'IBM Plex Mono',monospace; font-size:9px; padding-left:10px; }
+@keyframes ticker { 0% { transform:translateX(0); } 100% { transform:translateX(-50%); } }
+
+/* ── SECTION WRAPPER ──────────────────────────────── */
+.ln-section { padding:80px 48px; max-width:1120px; margin:0 auto; position:relative; z-index:1; }
+.ln-section-dark { background:rgba(0,0,0,.15); padding:80px 0; }
+
+/* ── SECTION HEADERS ──────────────────────────────── */
+.ln-sh { margin-bottom:48px; }
+.ln-sh-eyebrow { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--amber-lt); margin-bottom:12px; }
+.ln-sh-title { font-family:'DM Serif Display',serif; font-size:38px; color:var(--wheat); letter-spacing:-0.8px; line-height:1.15; margin-bottom:14px; }
+.ln-sh-title em { font-style:italic; color:var(--amber-lt); }
+.ln-sh-desc { font-size:14.5px; color:rgba(244,236,218,.55); max-width:620px; line-height:1.7; }
+
+/* ── ALL 18 TOOLS GRID ────────────────────────────── */
+.tools-overview-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; }
+.tool-ov-card {
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  border-radius:12px; padding:18px 12px; text-align:center;
+  text-decoration:none; transition:all .22s; display:block;
+  position:relative; overflow:hidden;
+}
+.tool-ov-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(184,114,14,.06),transparent); opacity:0; transition:opacity .22s; }
+.tool-ov-card:hover { background:rgba(255,255,255,.08); transform:translateY(-4px); border-color:rgba(184,114,14,.3); box-shadow:0 12px 30px rgba(0,0,0,.25); }
+.tool-ov-card:hover::before { opacity:1; }
+.tool-ov-icon { font-size:24px; margin-bottom:10px; }
+.tool-ov-name { font-size:11.5px; color:rgba(244,236,218,.82); font-weight:500; margin-bottom:4px; line-height:1.3; }
+.tool-ov-tag  { font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:.5px; text-transform:uppercase; color:rgba(244,236,218,.3); margin-bottom:8px; }
+.tool-ov-badge { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:8px; padding:2px 8px; border-radius:3px; background:rgba(255,255,255,.07); color:rgba(244,236,218,.45); }
+.tool-ov-badge.core { background:rgba(74,200,120,.1); color:#4ac878; }
+.tool-ov-badge.new  { background:rgba(184,114,14,.18); color:var(--amber-lt); }
+
+/* ── CORE FEATURES ────────────────────────────────── */
+.feat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+.feat-card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:14px; padding:26px; transition:all .22s; }
+.feat-card:hover { background:rgba(255,255,255,.07); transform:translateY(-3px); border-color:rgba(255,255,255,.16); box-shadow:0 12px 35px rgba(0,0,0,.2); }
+.feat-icon  { font-size:28px; margin-bottom:14px; }
+.feat-title { font-family:'DM Serif Display',serif; font-size:17px; color:var(--wheat); margin-bottom:8px; }
+.feat-desc  { font-size:13px; color:rgba(244,236,218,.55); line-height:1.65; }
+.feat-badge { margin-top:14px; display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:1px; padding:3px 9px; border-radius:4px; background:rgba(184,114,14,.2); color:var(--amber-lt); text-transform:uppercase; }
+.feat-badge.green { background:rgba(74,200,120,.12); color:#4ac878; }
+
+/* ── PLATFORM MODULES (new tools) ─────────────────── */
+.modules-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+.mod-card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); border-radius:12px; padding:22px; transition:all .22s; }
+.mod-card:hover { background:rgba(255,255,255,.06); transform:translateY(-3px); border-color:rgba(255,255,255,.13); }
+.mod-icon  { font-size:24px; margin-bottom:11px; }
+.mod-title { font-size:14px; color:rgba(244,236,218,.85); font-weight:500; margin-bottom:6px; }
+.mod-desc  { font-size:12.5px; color:rgba(244,236,218,.45); line-height:1.6; }
+.mod-badge { margin-top:12px; display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:.5px; padding:3px 9px; border-radius:3px; background:rgba(184,114,14,.15); color:var(--amber-lt); text-transform:uppercase; }
+.mod-badge.new { background:rgba(74,200,120,.1); color:#4ac878; }
+
+/* ── STEPS ────────────────────────────────────────── */
+.steps-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:28px; position:relative; }
+.steps-grid::before { content:''; position:absolute; top:28px; left:calc(12.5% + 14px); right:calc(12.5% + 14px); height:1.5px; background:linear-gradient(90deg,var(--amber-lt),rgba(184,114,14,.15)); z-index:0; }
+.step-item { text-align:center; position:relative; z-index:1; }
+.step-num-circle { width:56px; height:56px; background:var(--forest); border:2px solid var(--amber-lt); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'DM Serif Display',serif; font-size:22px; color:var(--amber-lt); margin:0 auto 16px; }
+.step-item-title { font-family:'DM Serif Display',serif; font-size:15px; color:var(--wheat); margin-bottom:7px; }
+.step-item-desc  { font-size:12.5px; color:rgba(244,236,218,.5); line-height:1.6; }
+
+/* ── PROGRAMS STRIP ───────────────────────────────── */
+.prog-strip { display:flex; gap:14px; flex-wrap:wrap; }
+.prog-pill { padding:8px 16px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:20px; font-size:12.5px; color:rgba(244,236,218,.75); display:flex; align-items:center; gap:8px; }
+.prog-pill-score { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:2px 7px; border-radius:3px; background:rgba(74,200,120,.15); color:#4ac878; }
+
+/* ── TESTIMONIALS ─────────────────────────────────── */
+.testi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+.testi-card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:24px; }
+.testi-quote { font-size:14px; color:rgba(244,236,218,.75); line-height:1.7; margin-bottom:18px; font-style:italic; }
+.testi-quote::before { content:'\201C'; font-family:'DM Serif Display',serif; font-size:36px; color:var(--amber-lt); line-height:.5; vertical-align:-.25em; margin-right:4px; }
+.testi-name { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; color:rgba(244,236,218,.4); text-transform:uppercase; }
+.testi-role { font-size:12px; color:rgba(244,236,218,.5); margin-top:2px; }
+
+/* ── PRICING ──────────────────────────────────────── */
+.pricing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.price-card { background:rgba(255,255,255,.04); border:1.5px solid rgba(255,255,255,.09); border-radius:16px; padding:28px; transition:all .2s; }
+.price-card:hover { transform:translateY(-4px); border-color:rgba(255,255,255,.18); }
+.price-card.featured { background:rgba(184,114,14,.12); border-color:var(--amber); }
+.price-tier { font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:2px; text-transform:uppercase; color:rgba(244,236,218,.4); margin-bottom:10px; }
+.price-tier.featured-t { color:var(--amber-lt); }
+.price-val { font-family:'DM Serif Display',serif; font-size:36px; color:var(--wheat); letter-spacing:-1px; margin-bottom:4px; }
+.price-per { font-size:13px; color:rgba(244,236,218,.45); margin-bottom:18px; }
+.price-features { list-style:none; margin-bottom:24px; }
+.price-features li { font-size:13px; color:rgba(244,236,218,.65); padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:flex-start; gap:8px; line-height:1.45; }
+.price-features li::before { content:'\2713'; color:var(--amber-lt); flex-shrink:0; font-size:12px; margin-top:1px; }
+.price-cta { display:block; width:100%; padding:11px; text-align:center; border-radius:8px; font-family:'Sora',sans-serif; font-size:13px; font-weight:500; text-decoration:none; cursor:pointer; border:none; transition:all .15s; }
+.price-cta.free { background:rgba(255,255,255,.08); color:rgba(244,236,218,.8); border:1px solid rgba(255,255,255,.14); }
+.price-cta.free:hover { background:rgba(255,255,255,.14); }
+.price-cta.pro  { background:var(--amber); color:white; }
+.price-cta.pro:hover { background:var(--amber-lt); }
+.price-cta.adv  { background:rgba(255,255,255,.08); color:rgba(244,236,218,.8); border:1px solid rgba(255,255,255,.14); }
+.price-cta.adv:hover { background:rgba(255,255,255,.14); }
+.price-badge { display:inline-block; background:var(--amber); color:white; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:1px; padding:3px 9px; border-radius:4px; margin-bottom:12px; text-transform:uppercase; }
+
+/* ── WAITLIST ─────────────────────────────────────── */
+.waitlist-wrap { background:linear-gradient(135deg,rgba(184,114,14,.15),rgba(74,122,90,.2)); border:1px solid rgba(255,255,255,.1); border-radius:20px; padding:52px; text-align:center; }
+.waitlist-title { font-family:'DM Serif Display',serif; font-size:36px; color:var(--wheat); margin-bottom:14px; letter-spacing:-0.6px; }
+.waitlist-desc  { font-size:14.5px; color:rgba(244,236,218,.6); margin-bottom:32px; line-height:1.7; }
+.waitlist-form  { display:flex; gap:12px; max-width:480px; margin:0 auto; flex-wrap:wrap; justify-content:center; }
+.waitlist-input { flex:1; min-width:200px; padding:13px 18px; background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.15); border-radius:10px; font-family:'Sora',sans-serif; font-size:14px; color:var(--wheat); outline:none; transition:border-color .14s; }
+.waitlist-input::placeholder { color:rgba(244,236,218,.3); }
+.waitlist-input:focus { border-color:var(--amber-lt); }
+.waitlist-btn { padding:13px 28px; background:var(--amber); color:white; border:none; border-radius:10px; font-family:'Sora',sans-serif; font-size:14px; font-weight:600; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.waitlist-btn:hover { background:var(--amber-lt); transform:translateY(-2px); }
+.waitlist-note { font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(244,236,218,.3); margin-top:14px; letter-spacing:.5px; }
+.waitlist-success { display:none; padding:18px; background:rgba(74,200,120,.12); border:1px solid rgba(74,200,120,.2); border-radius:10px; color:#4ac878; font-size:14px; font-weight:500; margin-top:14px; }
+
+/* ── FOOTER ───────────────────────────────────────── */
+.ln-footer { padding:40px 48px; border-top:1px solid rgba(255,255,255,.07); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.ln-footer-logo { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(244,236,218,.3); }
+.ln-footer-links { display:flex; gap:20px; flex-wrap:wrap; }
+.ln-footer-link  { font-size:12.5px; color:rgba(244,236,218,.3); text-decoration:none; transition:color .14s; }
+.ln-footer-link:hover { color:rgba(244,236,218,.7); }
+.ln-footer-copy { font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(244,236,218,.2); letter-spacing:.5px; }
+
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+/* ── MOBILE ───────────────────────────────────────── */
+@media(max-width:1024px){
+  .tools-overview-grid { grid-template-columns:repeat(4,1fr); }
+}
+@media(max-width:900px){
+  .ln-hero-inner { grid-template-columns:1fr; }
+  .ln-preview-card { display:none; }
+  .ln-nav { padding:12px 20px; }
+  .ln-nav-links a:not(.ln-nav-cta) { display:none; }
+  .ln-hero { padding:90px 24px 60px; }
+  .ln-title { font-size:38px; }
+  .ln-section { padding:56px 24px; }
+  .feat-grid { grid-template-columns:1fr 1fr; }
+  .modules-grid { grid-template-columns:1fr 1fr; }
+  .steps-grid { grid-template-columns:1fr 1fr; }
+  .steps-grid::before { display:none; }
+  .pricing-grid { grid-template-columns:1fr; max-width:420px; margin:0 auto; }
+  .testi-grid { grid-template-columns:1fr; }
+  .ln-footer { flex-direction:column; align-items:flex-start; padding:30px 24px; }
+  .ln-sh-title { font-size:28px; }
+  .tools-overview-grid { grid-template-columns:repeat(3,1fr); }
+}
+@media(max-width:480px){
+  .feat-grid { grid-template-columns:1fr; }
+  .modules-grid { grid-template-columns:1fr; }
+  .ln-title { font-size:30px; }
+  .waitlist-form { flex-direction:column; }
+  .ln-stats { gap:18px; }
+  .tools-overview-grid { grid-template-columns:repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="ln-nav">
+  <a href="landing.html" class="ln-nav-logo">
+    <div class="ln-nav-logo-dot"></div>
+    Farm Copilot
+  </a>
+  <div class="ln-nav-links">
+    <a href="#features"  class="ln-nav-link">Features</a>
+    <a href="#tools"     class="ln-nav-link">All Tools</a>
+    <a href="#programs"  class="ln-nav-link">Programs</a>
+    <a href="#pricing"   class="ln-nav-link">Pricing</a>
+    <a href="dashboard.html" class="ln-nav-link" id="nav-dashboard" style="display:none;">Dashboard</a>
+    <a href="index.html" class="ln-nav-cta">Start Free Setup →</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!--  HERO BANNER                                        -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="ln-hero">
+  <div class="ln-hero-bg"></div>
+
+  <!-- Ambient floating particles -->
+  <div class="hero-particle" style="left:10%;bottom:0;width:3px;height:3px;background:rgba(184,114,14,.5);animation-duration:20s;animation-delay:0s;"></div>
+  <div class="hero-particle" style="left:22%;bottom:0;width:2px;height:2px;background:rgba(74,122,90,.6);animation-duration:25s;animation-delay:4s;"></div>
+  <div class="hero-particle" style="left:38%;bottom:0;width:4px;height:4px;background:rgba(184,114,14,.35);animation-duration:17s;animation-delay:1.5s;"></div>
+  <div class="hero-particle" style="left:54%;bottom:0;width:2px;height:2px;background:rgba(74,200,120,.4);animation-duration:22s;animation-delay:6s;"></div>
+  <div class="hero-particle" style="left:67%;bottom:0;width:3px;height:3px;background:rgba(184,114,14,.45);animation-duration:19s;animation-delay:2.5s;"></div>
+  <div class="hero-particle" style="left:79%;bottom:0;width:2px;height:2px;background:rgba(74,122,90,.5);animation-duration:28s;animation-delay:8s;"></div>
+  <div class="hero-particle" style="left:89%;bottom:0;width:5px;height:5px;background:rgba(184,114,14,.25);animation-duration:23s;animation-delay:3s;"></div>
+
+  <div class="ln-hero-inner">
+    <!-- LEFT -->
+    <div>
+      <div class="ln-eyebrow">Canadian Agricultural Intelligence · 2026</div>
+
+      <h1 class="ln-title">
+        Canada's Complete AI<br>Platform for
+        <span class="ln-farmtype-static"><span id="hero-farmtype">Grain Farmers</span></span>
+      </h1>
+
+      <div class="ln-title-pill">
+        <div class="ln-title-pill-dot"></div>
+        <div class="ln-title-pill-text">18 Intelligent Tools &nbsp;·&nbsp; One Copilot &nbsp;·&nbsp; 10 Provinces</div>
+      </div>
+
+      <p class="ln-desc">
+        Funding discovery, AI decision support, weather intelligence, risk monitoring, grain tracking, soil health, peer benchmarking, labour management, and 10 more tools — built exclusively for Canadian producers.
+      </p>
+
+      <div class="ln-cta-row">
+        <a href="index.html" class="ln-cta-primary">
+          Start Free Setup →
+        </a>
+        <a href="dashboard.html" class="ln-cta-ghost" onclick="activateDemoModeFromLanding(); return false;">
+          Explore Live Demo
+        </a>
+      </div>
+
+      <div class="ln-proof-point">
+        ✓ Ontario vegetable farm discovered <strong>$120,000 in grant eligibility</strong> within 3 minutes of setup.
+      </div>
+
+      <div class="ln-stats">
+        <div>
+          <div class="ln-stat-val">18+</div>
+          <div class="ln-stat-lbl">Intelligent Tools</div>
+        </div>
+        <div>
+          <div class="ln-stat-val">$31M+</div>
+          <div class="ln-stat-lbl">Funding Mapped</div>
+        </div>
+        <div>
+          <div class="ln-stat-val">10</div>
+          <div class="ln-stat-lbl">Provinces Covered</div>
+        </div>
+        <div>
+          <div class="ln-stat-val">24/7</div>
+          <div class="ln-stat-lbl">AI Advisor</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: TABBED PREVIEW CARD -->
+    <div class="ln-preview-card">
+      <div class="lpc-header">
+        <div class="lpc-dot" style="background:#ff5f57;"></div>
+        <div class="lpc-dot" style="background:#febc2e;"></div>
+        <div class="lpc-dot" style="background:#28c840;"></div>
+        <div class="lpc-title">Farm Copilot · Dashboard</div>
+      </div>
+      <div class="lpc-tabs">
+        <button class="lpc-tab-btn active" onclick="switchTab(0)">Funding</button>
+        <button class="lpc-tab-btn" onclick="switchTab(1)">18 Tools</button>
+        <button class="lpc-tab-btn" onclick="switchTab(2)">Risk</button>
+        <button class="lpc-tab-btn" onclick="switchTab(3)">AI</button>
+      </div>
+      <div class="lpc-body">
+
+        <!-- Panel 0: Funding -->
+        <div class="lpc-panel active" id="lpc-panel-0">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(244,236,218,.3);margin-bottom:10px;">Top Matched Programs — click to open</div>
+          <a href="index.html" class="lpc-row"><span class="lpc-row-name">AgriStability</span><span class="lpc-row-score lpc-high">95%</span></a>
+          <a href="index.html" class="lpc-row"><span class="lpc-row-name">Canadian Ag Partnership</span><span class="lpc-row-score lpc-high">92%</span></a>
+          <a href="index.html" class="lpc-row"><span class="lpc-row-name">AgriMarketing</span><span class="lpc-row-score lpc-med">88%</span></a>
+          <a href="index.html" class="lpc-row"><span class="lpc-row-name">AgriInnovate</span><span class="lpc-row-score lpc-low">58%</span></a>
+          <a href="weather.html" class="lpc-weather" style="text-decoration:none;">
+            <div class="lpc-wx-icon">🌤️</div>
+            <div>
+              <div class="lpc-wx-temp" id="lpc-temp">Loading…</div>
+              <div class="lpc-wx-sub" id="lpc-cond">Ontario Weather</div>
+            </div>
+          </a>
+          <a href="index.html" class="lpc-panel-cta">
+            <span class="lpc-panel-cta-label">Open Funding Navigator</span>
+            <span class="lpc-panel-cta-arrow">→</span>
+          </a>
+        </div>
+
+        <!-- Panel 1: All 18 Tools -->
+        <div class="lpc-panel" id="lpc-panel-1">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(244,236,218,.3);margin-bottom:10px;">All 18 Platform Tools — click to open</div>
+          <div class="lpc-tools-grid">
+            <a href="index.html"          class="lpc-tool-tile"><div class="lpc-tool-icon">◈</div><div class="lpc-tool-name">Funding Nav</div></a>
+            <a href="dashboard.html"      class="lpc-tool-tile"><div class="lpc-tool-icon">✦</div><div class="lpc-tool-name">AI Copilot</div></a>
+            <a href="weather.html"        class="lpc-tool-tile"><div class="lpc-tool-icon">🌤</div><div class="lpc-tool-name">Weather</div></a>
+            <a href="risk-monitor.html"   class="lpc-tool-tile"><div class="lpc-tool-icon">⚠️</div><div class="lpc-tool-name">Risk Monitor</div></a>
+            <a href="dashboard.html"      class="lpc-tool-tile"><div class="lpc-tool-icon">◎</div><div class="lpc-tool-name">ROI Calc</div></a>
+            <a href="planner.html"        class="lpc-tool-tile"><div class="lpc-tool-icon">▦</div><div class="lpc-tool-name">Planner</div></a>
+            <a href="grain-tracker.html"  class="lpc-tool-tile"><div class="lpc-tool-icon">🌾</div><div class="lpc-tool-name">Grain Track</div></a>
+            <a href="labour.html"         class="lpc-tool-tile"><div class="lpc-tool-icon">👷</div><div class="lpc-tool-name">Labour Hub</div></a>
+            <a href="land-matcher.html"   class="lpc-tool-tile"><div class="lpc-tool-icon">🗺️</div><div class="lpc-tool-name">Land Match</div></a>
+            <a href="local-markets.html"  class="lpc-tool-tile"><div class="lpc-tool-icon">🏪</div><div class="lpc-tool-name">Markets</div></a>
+            <a href="soil-health.html"    class="lpc-tool-tile"><div class="lpc-tool-icon">🌱</div><div class="lpc-tool-name">Soil Health</div></a>
+            <a href="peer-benchmark.html" class="lpc-tool-tile"><div class="lpc-tool-icon">📊</div><div class="lpc-tool-name">Benchmarks</div></a>
+            <a href="policy-feed.html"    class="lpc-tool-tile"><div class="lpc-tool-icon">📰</div><div class="lpc-tool-name">Policy Feed</div></a>
+            <a href="training.html"       class="lpc-tool-tile"><div class="lpc-tool-icon">🎓</div><div class="lpc-tool-name">Training</div></a>
+            <a href="newcomers.html"      class="lpc-tool-tile"><div class="lpc-tool-icon">🍁</div><div class="lpc-tool-name">Newcomers</div></a>
+            <a href="wellness.html"       class="lpc-tool-tile"><div class="lpc-tool-icon">💚</div><div class="lpc-tool-name">Wellness</div></a>
+            <a href="women-ag.html"       class="lpc-tool-tile"><div class="lpc-tool-icon">👩‍🌾</div><div class="lpc-tool-name">Women in Ag</div></a>
+            <a href="support.html"        class="lpc-tool-tile"><div class="lpc-tool-icon">💬</div><div class="lpc-tool-name">Support</div></a>
+          </div>
+          <a href="#tools" class="lpc-panel-cta" style="margin-top:10px;" onclick="document.getElementById('tools').scrollIntoView({behavior:'smooth'});return false;">
+            <span class="lpc-panel-cta-label">See Full Tools Overview</span>
+            <span class="lpc-panel-cta-arrow">↓</span>
+          </a>
+        </div>
+
+        <!-- Panel 2: Risk Monitor -->
+        <div class="lpc-panel" id="lpc-panel-2">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(244,236,218,.3);margin-bottom:12px;">Risk Monitor · Ontario — click to open</div>
+          <a href="risk-monitor.html" class="lpc-risk-row" style="text-decoration:none;">
+            <span class="lpc-risk-label">Frost Risk</span>
+            <div class="lpc-risk-bar">
+              <div class="lpc-risk-track"><div class="lpc-risk-fill" style="width:28%;background:#4ac878;"></div></div>
+              <span class="lpc-risk-val" style="color:#4ac878;">Low</span>
+            </div>
+          </a>
+          <a href="risk-monitor.html" class="lpc-risk-row" style="text-decoration:none;">
+            <span class="lpc-risk-label">Drought Index</span>
+            <div class="lpc-risk-bar">
+              <div class="lpc-risk-track"><div class="lpc-risk-fill" style="width:54%;background:var(--amber-lt);"></div></div>
+              <span class="lpc-risk-val">Mod</span>
+            </div>
+          </a>
+          <a href="risk-monitor.html" class="lpc-risk-row" style="text-decoration:none;">
+            <span class="lpc-risk-label">Market Volatility</span>
+            <div class="lpc-risk-bar">
+              <div class="lpc-risk-track"><div class="lpc-risk-fill" style="width:72%;background:#f87171;"></div></div>
+              <span class="lpc-risk-val" style="color:#f87171;">High</span>
+            </div>
+          </a>
+          <a href="risk-monitor.html" class="lpc-risk-row" style="text-decoration:none;">
+            <span class="lpc-risk-label">Labour Supply</span>
+            <div class="lpc-risk-bar">
+              <div class="lpc-risk-track"><div class="lpc-risk-fill" style="width:42%;background:var(--amber-lt);"></div></div>
+              <span class="lpc-risk-val">Mod</span>
+            </div>
+          </a>
+          <a href="risk-monitor.html" class="lpc-ai-bubble" style="margin-top:14px;text-decoration:none;display:block;">
+            <div class="lpc-ai-label">Risk Alert</div>
+            <div class="lpc-ai-text">Commodity price spread elevated. Consider locking in canola contracts before week's end.</div>
+          </a>
+          <a href="risk-monitor.html" class="lpc-panel-cta">
+            <span class="lpc-panel-cta-label">Open Risk Monitor</span>
+            <span class="lpc-panel-cta-arrow">→</span>
+          </a>
+        </div>
+
+        <!-- Panel 3: AI Copilot -->
+        <div class="lpc-panel" id="lpc-panel-3">
+          <a href="dashboard.html" class="lpc-ai-bubble" style="margin-bottom:10px;text-decoration:none;display:block;">
+            <div class="lpc-ai-label">AI Copilot</div>
+            <div class="lpc-ai-text">Based on your Ontario vegetable operation, AgriStability deadline is in <strong style="color:var(--amber-lt);">40 days</strong>. Gather your production margin documents now.</div>
+          </a>
+          <a href="soil-health.html" class="lpc-ai-bubble" style="margin-bottom:10px;text-decoration:none;display:block;">
+            <div class="lpc-ai-label">Soil Health Insight</div>
+            <div class="lpc-ai-text">Soil pH in your region is averaging 6.1. Consider lime application before spring planting for optimal yield.</div>
+          </a>
+          <a href="dashboard.html" style="display:block;text-decoration:none;padding:11px 13px;background:rgba(255,255,255,.03);border-radius:8px;border:1px dashed rgba(255,255,255,.09);transition:background .18s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+            <div style="font-size:9px;color:rgba(244,236,218,.28);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Ask Copilot →</div>
+            <div style="font-size:12px;color:rgba(244,236,218,.45);font-style:italic;">"What grants apply to my greenhouse expansion?"</div>
+          </a>
+          <a href="dashboard.html" class="lpc-panel-cta">
+            <span class="lpc-panel-cta-label">Open AI Copilot</span>
+            <span class="lpc-panel-cta-arrow">→</span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!--  SCROLLING MODULE TICKER                            -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="ln-ticker-wrap">
+  <div class="ln-ticker" id="ln-ticker">
+    <a href="index.html"          class="ln-ticker-item"><span class="ti-icon">◈</span> Funding Navigator <span class="ln-ticker-sep">·</span></a>
+    <a href="dashboard.html"      class="ln-ticker-item"><span class="ti-icon">✦</span> AI Farm Copilot <span class="ln-ticker-sep">·</span></a>
+    <a href="weather.html"        class="ln-ticker-item"><span class="ti-icon">🌤</span> Weather Intelligence <span class="ln-ticker-sep">·</span></a>
+    <a href="risk-monitor.html"   class="ln-ticker-item"><span class="ti-icon">⚠️</span> Risk Monitor <span class="ln-ticker-sep">·</span></a>
+    <a href="dashboard.html"      class="ln-ticker-item"><span class="ti-icon">◎</span> ROI Calculator <span class="ln-ticker-sep">·</span></a>
+    <a href="planner.html"        class="ln-ticker-item"><span class="ti-icon">▦</span> Operations Planner <span class="ln-ticker-sep">·</span></a>
+    <a href="grain-tracker.html"  class="ln-ticker-item"><span class="ti-icon">🌾</span> Grain Tracker <span class="ln-ticker-sep">·</span></a>
+    <a href="labour.html"         class="ln-ticker-item"><span class="ti-icon">👷</span> Labour Hub <span class="ln-ticker-sep">·</span></a>
+    <a href="land-matcher.html"   class="ln-ticker-item"><span class="ti-icon">🗺️</span> Land Matcher <span class="ln-ticker-sep">·</span></a>
+    <a href="local-markets.html"  class="ln-ticker-item"><span class="ti-icon">🏪</span> Local Markets <span class="ln-ticker-sep">·</span></a>
+    <a href="soil-health.html"    class="ln-ticker-item"><span class="ti-icon">🌱</span> Soil Health <span class="ln-ticker-sep">·</span></a>
+    <a href="peer-benchmark.html" class="ln-ticker-item"><span class="ti-icon">📊</span> Peer Benchmarking <span class="ln-ticker-sep">·</span></a>
+    <a href="policy-feed.html"    class="ln-ticker-item"><span class="ti-icon">📰</span> Policy Feed <span class="ln-ticker-sep">·</span></a>
+    <a href="training.html"       class="ln-ticker-item"><span class="ti-icon">🎓</span> Training Hub <span class="ln-ticker-sep">·</span></a>
+    <a href="newcomers.html"      class="ln-ticker-item"><span class="ti-icon">🍁</span> Newcomer Hub <span class="ln-ticker-sep">·</span></a>
+    <a href="wellness.html"       class="ln-ticker-item"><span class="ti-icon">💚</span> Farmer Wellness <span class="ln-ticker-sep">·</span></a>
+    <a href="women-ag.html"       class="ln-ticker-item"><span class="ti-icon">👩‍🌾</span> Women in Ag <span class="ln-ticker-sep">·</span></a>
+    <a href="support.html"        class="ln-ticker-item"><span class="ti-icon">💬</span> Live Support <span class="ln-ticker-sep">·</span></a>
+    <!-- duplicate for seamless loop -->
+    <a href="index.html"          class="ln-ticker-item"><span class="ti-icon">◈</span> Funding Navigator <span class="ln-ticker-sep">·</span></a>
+    <a href="dashboard.html"      class="ln-ticker-item"><span class="ti-icon">✦</span> AI Farm Copilot <span class="ln-ticker-sep">·</span></a>
+    <a href="weather.html"        class="ln-ticker-item"><span class="ti-icon">🌤</span> Weather Intelligence <span class="ln-ticker-sep">·</span></a>
+    <a href="risk-monitor.html"   class="ln-ticker-item"><span class="ti-icon">⚠️</span> Risk Monitor <span class="ln-ticker-sep">·</span></a>
+    <a href="dashboard.html"      class="ln-ticker-item"><span class="ti-icon">◎</span> ROI Calculator <span class="ln-ticker-sep">·</span></a>
+    <a href="planner.html"        class="ln-ticker-item"><span class="ti-icon">▦</span> Operations Planner <span class="ln-ticker-sep">·</span></a>
+    <a href="grain-tracker.html"  class="ln-ticker-item"><span class="ti-icon">🌾</span> Grain Tracker <span class="ln-ticker-sep">·</span></a>
+    <a href="labour.html"         class="ln-ticker-item"><span class="ti-icon">👷</span> Labour Hub <span class="ln-ticker-sep">·</span></a>
+    <a href="land-matcher.html"   class="ln-ticker-item"><span class="ti-icon">🗺️</span> Land Matcher <span class="ln-ticker-sep">·</span></a>
+    <a href="local-markets.html"  class="ln-ticker-item"><span class="ti-icon">🏪</span> Local Markets <span class="ln-ticker-sep">·</span></a>
+    <a href="soil-health.html"    class="ln-ticker-item"><span class="ti-icon">🌱</span> Soil Health <span class="ln-ticker-sep">·</span></a>
+    <a href="peer-benchmark.html" class="ln-ticker-item"><span class="ti-icon">📊</span> Peer Benchmarking <span class="ln-ticker-sep">·</span></a>
+    <a href="policy-feed.html"    class="ln-ticker-item"><span class="ti-icon">📰</span> Policy Feed <span class="ln-ticker-sep">·</span></a>
+    <a href="training.html"       class="ln-ticker-item"><span class="ti-icon">🎓</span> Training Hub <span class="ln-ticker-sep">·</span></a>
+    <a href="newcomers.html"      class="ln-ticker-item"><span class="ti-icon">🍁</span> Newcomer Hub <span class="ln-ticker-sep">·</span></a>
+    <a href="wellness.html"       class="ln-ticker-item"><span class="ti-icon">💚</span> Farmer Wellness <span class="ln-ticker-sep">·</span></a>
+    <a href="women-ag.html"       class="ln-ticker-item"><span class="ti-icon">👩‍🌾</span> Women in Ag <span class="ln-ticker-sep">·</span></a>
+    <a href="support.html"        class="ln-ticker-item"><span class="ti-icon">💬</span> Live Support <span class="ln-ticker-sep">·</span></a>
+  </div>
+</div>
+
+<!-- TRUSTED DATA -->
+<section>
+  <div class="ln-section">
+    <div class="ln-sh" style="margin-bottom:22px;">
+      <div class="ln-sh-eyebrow">Trusted Data Sources</div>
+      <h2 class="ln-sh-title">Built on real Canadian public data</h2>
+      <p class="ln-sh-desc">Funding, weather, and risk insights are mapped from trusted public sources and structured for real farm decisions.</p>
+    </div>
+    <div class="prog-strip">
+      <div class="prog-pill">Agriculture Canada</div>
+      <div class="prog-pill">Provincial Weather Networks</div>
+      <div class="prog-pill">Canadian Disaster Database</div>
+      <div class="prog-pill">Government Funding Programs</div>
+      <div class="prog-pill">Open-Meteo Live Weather</div>
+      <div class="prog-pill">Grain Exchange Data</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!--  ALL 18 TOOLS OVERVIEW                             -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="tools">
+  <div class="ln-section-dark">
+    <div class="ln-section">
+      <div class="ln-sh">
+        <div class="ln-sh-eyebrow">Platform Overview</div>
+        <h2 class="ln-sh-title">18 tools. <em>One platform.</em><br>Built for Canada.</h2>
+        <p class="ln-sh-desc">Every tool you need to run a smarter Canadian farm — from funding discovery to farmer wellness. All in one place, all free to start.</p>
+      </div>
+      <div class="tools-overview-grid">
+        <a href="index.html" class="tool-ov-card">
+          <div class="tool-ov-icon">◈</div>
+          <div class="tool-ov-name">Funding Navigator</div>
+          <div class="tool-ov-tag">8 Programs · $31M+</div>
+          <div class="tool-ov-badge core">Core</div>
+        </a>
+        <a href="dashboard.html" class="tool-ov-card">
+          <div class="tool-ov-icon">✦</div>
+          <div class="tool-ov-name">AI Farm Copilot</div>
+          <div class="tool-ov-tag">Powered by Claude</div>
+          <div class="tool-ov-badge core">Core</div>
+        </a>
+        <a href="weather.html" class="tool-ov-card">
+          <div class="tool-ov-icon">🌤</div>
+          <div class="tool-ov-name">Weather Intelligence</div>
+          <div class="tool-ov-tag">Live · 7-Day Forecast</div>
+          <div class="tool-ov-badge core">Core</div>
+        </a>
+        <a href="risk-monitor.html" class="tool-ov-card">
+          <div class="tool-ov-icon">⚠️</div>
+          <div class="tool-ov-name">Risk Monitor</div>
+          <div class="tool-ov-tag">Frost · Drought · Market</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="planner.html" class="tool-ov-card">
+          <div class="tool-ov-icon">▦</div>
+          <div class="tool-ov-name">Operations Planner</div>
+          <div class="tool-ov-tag">Seasonal Templates</div>
+          <div class="tool-ov-badge core">Core</div>
+        </a>
+        <a href="dashboard.html" class="tool-ov-card">
+          <div class="tool-ov-icon">◎</div>
+          <div class="tool-ov-name">ROI Calculator</div>
+          <div class="tool-ov-tag">4-Tab · PDF Export</div>
+          <div class="tool-ov-badge core">Core</div>
+        </a>
+        <a href="grain-tracker.html" class="tool-ov-card">
+          <div class="tool-ov-icon">🌾</div>
+          <div class="tool-ov-name">Grain Tracker</div>
+          <div class="tool-ov-tag">Prices · Inventory · Bids</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="labour.html" class="tool-ov-card">
+          <div class="tool-ov-icon">👷</div>
+          <div class="tool-ov-name">Labour Hub</div>
+          <div class="tool-ov-tag">Hiring · Compliance</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="land-matcher.html" class="tool-ov-card">
+          <div class="tool-ov-icon">🗺️</div>
+          <div class="tool-ov-name">Land Matcher</div>
+          <div class="tool-ov-tag">Listings · Leases</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="local-markets.html" class="tool-ov-card">
+          <div class="tool-ov-icon">🏪</div>
+          <div class="tool-ov-name">Local Markets</div>
+          <div class="tool-ov-tag">Direct-to-Consumer</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="soil-health.html" class="tool-ov-card">
+          <div class="tool-ov-icon">🌱</div>
+          <div class="tool-ov-name">Soil Health</div>
+          <div class="tool-ov-tag">Testing · Carbon Track</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="peer-benchmark.html" class="tool-ov-card">
+          <div class="tool-ov-icon">📊</div>
+          <div class="tool-ov-name">Peer Benchmarking</div>
+          <div class="tool-ov-tag">Compare · Rank · Improve</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="policy-feed.html" class="tool-ov-card">
+          <div class="tool-ov-icon">📰</div>
+          <div class="tool-ov-name">Policy Feed</div>
+          <div class="tool-ov-tag">Federal · Provincial</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="training.html" class="tool-ov-card">
+          <div class="tool-ov-icon">🎓</div>
+          <div class="tool-ov-name">Training Hub</div>
+          <div class="tool-ov-tag">Courses · Certifications</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="newcomers.html" class="tool-ov-card">
+          <div class="tool-ov-icon">🍁</div>
+          <div class="tool-ov-name">Newcomer Hub</div>
+          <div class="tool-ov-tag">New-to-Canada Farmers</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="wellness.html" class="tool-ov-card">
+          <div class="tool-ov-icon">💚</div>
+          <div class="tool-ov-name">Farmer Wellness</div>
+          <div class="tool-ov-tag">Mental Health · Support</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="women-ag.html" class="tool-ov-card">
+          <div class="tool-ov-icon">👩‍🌾</div>
+          <div class="tool-ov-name">Women in Ag</div>
+          <div class="tool-ov-tag">Programs · Mentorship</div>
+          <div class="tool-ov-badge new">New 2026</div>
+        </a>
+        <a href="support.html" class="tool-ov-card">
+          <div class="tool-ov-icon">💬</div>
+          <div class="tool-ov-name">Live Support</div>
+          <div class="tool-ov-tag">AI + Human Advisors</div>
+          <div class="tool-ov-badge core">Core</div>
+        </a>
+      </div>
+      <div style="margin-top:32px;text-align:center;">
+        <a href="index.html" class="ln-cta-primary" style="display:inline-flex;">Set Up My Farm Profile →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!--  CORE FEATURES (deep dive)                         -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="features">
+  <div class="ln-section">
+    <div class="ln-sh">
+      <div class="ln-sh-eyebrow">Core Intelligence</div>
+      <h2 class="ln-sh-title">The tools that matter<br>most for <em>Canadian farms</em></h2>
+      <p class="ln-sh-desc">Deeply integrated, Canadian-specific, and built for real farm decisions — not generic business software.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-icon">◈</div>
+        <div class="feat-title">Funding Navigator</div>
+        <div class="feat-desc">8 federal and provincial programs mapped with eligibility scores. Deadline tracking, application checklists, and direct apply links with matched AI explanations.</div>
+        <div class="feat-badge">$31M+ Mapped</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">✦</div>
+        <div class="feat-title">AI Farm Copilot</div>
+        <div class="feat-desc">Claude-powered advisor with deep Canadian ag context. Answers funding questions, helps plan operations, and guides decisions in real time — 24/7.</div>
+        <div class="feat-badge">Powered by Claude</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🌤</div>
+        <div class="feat-title">Weather & Crop Intelligence</div>
+        <div class="feat-desc">Live weather from Open-Meteo, 7-day forecasts, growing degree days, frost windows, and a full crop calendar by province and season.</div>
+        <div class="feat-badge green">Live Data</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">⚠️</div>
+        <div class="feat-title">Risk Monitor</div>
+        <div class="feat-desc">Real-time scoring for frost, drought, market, and labour risks across all provinces. Configurable alerts and AI-generated mitigation plans tailored to your operation.</div>
+        <div class="feat-badge">Multi-Risk Scoring</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">◎</div>
+        <div class="feat-title">ROI Calculator</div>
+        <div class="feat-desc">4-tab calculator covering labour savings, equipment ROI, feed and pasture cost analysis, and full margin scenarios with PDF export ready for grant applications.</div>
+        <div class="feat-badge">PDF Export</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">▦</div>
+        <div class="feat-title">Operations Planner</div>
+        <div class="feat-desc">Seasonal task management with spring and fall templates. Priority tagging, deadlines, notes, and a full operations overview for your entire farm year.</div>
+        <div class="feat-badge">Seasonal Templates</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!--  12 NEW PLATFORM MODULES                           -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section>
+  <div class="ln-section-dark">
+    <div class="ln-section">
+      <div class="ln-sh">
+        <div class="ln-sh-eyebrow">Platform Modules · New in 2026</div>
+        <h2 class="ln-sh-title">12 new tools added<br>to the <em>platform</em></h2>
+        <p class="ln-sh-desc">Specialized modules covering every dimension of modern Canadian farm management — all accessible from the same dashboard.</p>
+      </div>
+      <div class="modules-grid">
+        <div class="mod-card">
+          <div class="mod-icon">🌾</div>
+          <div class="mod-title">Grain Tracker</div>
+          <div class="mod-desc">Live commodity prices, elevator bids, grain inventory management, and forward contract optimization tools across Canadian exchanges.</div>
+          <div class="mod-badge new">New 2026</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-icon">👷</div>
+          <div class="mod-title">Labour Hub</div>
+          <div class="mod-desc">Seasonal labour management, wage compliance, TFWP guidance, and end-to-end hiring workflows — all aligned with Canadian employment standards.</div>
+          <div class="mod-badge new">New 2026</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-icon">🗺️</div>
+          <div class="mod-title">Land Matcher</div>
+          <div class="mod-desc">Browse available farmland, lease opportunities, and land acquisition support. Filter by province, acreage, soil class, and water access.</div>
+          <div class="mod-badge new">New 2026</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-icon">🏪</div>
+          <div class="mod-title">Local Markets</div>
+          <div class="mod-desc">Find nearby farmers markets, CSA networks, food hubs, and direct-to-consumer sales channels. Expand revenue beyond traditional wholesalers.</div>
+          <div class="mod-badge new">New 2026</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-icon">🌱</div>
+          <div class="mod-title">Soil Health</div>
+          <div class="mod-desc">Soil testing guidance, amendment recommendations, carbon sequestration tracking, and regenerative agriculture planning tools by province.</div>
+          <div class="mod-badge new">New 2026</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-icon">📊</div>
+          <div class="mod-title">Peer Benchmarking</div>
+          <div class="mod-desc">Compare your yield, labour costs, and profitability against similar Canadian operations. Identify gaps and find where you lead the pack.</div>
+          <div class="mod-badge new">New 2026</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-icon">📰</div>
+          <div class="mod-title">Policy Feed</div>
+          <div class="mod-desc">Real-time federal and provincial agricultural policy updates, regulatory changes, and program announcements — filtered by your farm type and province.</div>
+          <div class="mod-badge new">New 2026</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-icon">🎓</div>
+          <div class="mod-title">Training Hub</div>
+          <div class="mod-desc">Curated agronomy courses, certification guides, webinar calendar, and skill-building resources for farm operators at every experience level.</div>
+          <div class="mod-badge new">New 2026</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-icon">🍁</div>
+          <div class="mod-title">Newcomer Hub</div>
+          <div class="mod-desc">Tailored resources for new-to-Canada farmers navigating land ownership, federal programs, provincial regulations, and Canadian agricultural standards.</div>
+          <div class="mod-badge new">New 2026</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-icon">💚</div>
+          <div class="mod-title">Farmer Wellness</div>
+          <div class="mod-desc">Mental health resources, seasonal stress tracking, peer support networks, and crisis helplines for farm families navigating the pressures of agriculture.</div>
+          <div class="mod-badge new">New 2026</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-icon">👩‍🌾</div>
+          <div class="mod-title">Women in Ag</div>
+          <div class="mod-desc">Dedicated programs, mentorship matching, and funding specifically for women-led Canadian farm operations — surfaced and applied through the Copilot.</div>
+          <div class="mod-badge new">New 2026</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-icon">💬</div>
+          <div class="mod-title">Live Support + 1-on-1</div>
+          <div class="mod-desc">AI chat advisor available 24/7. Pro plan includes scheduled calls with Canadian agriculture specialists — real human advice when you need it most.</div>
+          <div class="mod-badge">Included</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="ln-section">
+    <div class="ln-sh">
+      <div class="ln-sh-eyebrow">Getting Started</div>
+      <h2 class="ln-sh-title">Up and running in <em>under 4 minutes</em></h2>
+      <p class="ln-sh-desc">No account required. No credit card. Your data stays in your browser.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-item">
+        <div class="step-num-circle">1</div>
+        <div class="step-item-title">Tell us about your farm</div>
+        <div class="step-item-desc">Province, farm type, size, and current challenges. 4 quick steps, no sign-up.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num-circle">2</div>
+        <div class="step-item-title">Get your personalized dashboard</div>
+        <div class="step-item-desc">Matched funding programs, weather for your province, and priority alerts ready instantly.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num-circle">3</div>
+        <div class="step-item-title">Explore all 18 tools</div>
+        <div class="step-item-desc">From grain tracking to soil health — every module is pre-configured for your farm profile.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num-circle">4</div>
+        <div class="step-item-title">Apply and grow</div>
+        <div class="step-item-desc">Follow checklists, track deadlines, model ROI, and book a human advisor call when needed.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRAMS -->
+<section id="programs">
+  <div class="ln-section-dark">
+    <div class="ln-section">
+      <div class="ln-sh">
+        <div class="ln-sh-eyebrow">2026 Funding Programs</div>
+        <h2 class="ln-sh-title">The full Canadian funding<br><em>landscape, mapped</em></h2>
+        <p class="ln-sh-desc">We track federal and provincial programs active in 2025–2026, updated as new policy is announced.</p>
+      </div>
+      <div class="prog-strip" id="prog-strip">
+        <!-- filled by JS -->
+      </div>
+      <div style="margin-top:28px;">
+        <a href="index.html" class="ln-cta-ghost" style="display:inline-flex;">View All Programs →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section>
+  <div class="ln-section">
+    <div class="ln-sh">
+      <div class="ln-sh-eyebrow">Early Feedback</div>
+      <h2 class="ln-sh-title">What farmers are saying</h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-quote">Saved us weeks researching grants. Found funding we didn't know existed in the first session.</div>
+        <div class="testi-name">M. Bouchard</div>
+        <div class="testi-role">Grain & Oilseeds · Quebec</div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-quote">Finally a dashboard built for farm decisions, not generic business software. The risk monitor alone is worth it.</div>
+        <div class="testi-name">K. Thiessen</div>
+        <div class="testi-role">Mixed Farm · Manitoba</div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-quote">We found funding opportunities we didn't know existed. The AI copilot explained exactly what to prepare.</div>
+        <div class="testi-name">L. Vanderburg</div>
+        <div class="testi-role">Produce & Vegetables · Ontario</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING TEASER -->
+<section id="pricing">
+  <div class="ln-section-dark">
+    <div class="ln-section">
+      <div class="ln-sh">
+        <div class="ln-sh-eyebrow">Simple Pricing</div>
+        <h2 class="ln-sh-title">Start free. <em>Scale when ready.</em></h2>
+        <p class="ln-sh-desc">Free tier covers everything you need to get started. Pro and Advisor plans unlock unlimited AI, human calls, and multi-farm tools.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div class="price-tier">Free</div>
+          <div class="price-val">$0</div>
+          <div class="price-per">forever</div>
+          <ul class="price-features">
+            <li>AI Copilot (10 questions/month)</li>
+            <li>Funding Navigator (all 8 programs)</li>
+            <li>Weather & crop calendar</li>
+            <li>Basic ROI calculator</li>
+            <li>Operations planner</li>
+          </ul>
+          <a href="index.html" class="price-cta free">Start Free Setup</a>
+        </div>
+        <div class="price-card featured">
+          <div class="price-badge">Most Popular</div>
+          <div class="price-tier featured-t">Farm Pro</div>
+          <div class="price-val">$39</div>
+          <div class="price-per">/ month CAD</div>
+          <ul class="price-features">
+            <li>Unlimited AI Copilot</li>
+            <li>Funding deadline email alerts</li>
+            <li>All calculator tabs + PDF export</li>
+            <li>Priority email support</li>
+            <li>Commodity price feed</li>
+            <li>1 × advisor call/month included</li>
+          </ul>
+          <a href="pricing.html" class="price-cta pro">Start Pro Trial →</a>
+        </div>
+        <div class="price-card">
+          <div class="price-tier">Advisor Pro</div>
+          <div class="price-val">$199</div>
+          <div class="price-per">/ month CAD</div>
+          <ul class="price-features">
+            <li>Everything in Farm Pro</li>
+            <li>Manage up to 25 client farms</li>
+            <li>Client report generation</li>
+            <li>Unlimited advisor calls</li>
+            <li>White-label option</li>
+            <li>Dedicated account manager</li>
+          </ul>
+          <a href="pricing.html" class="price-cta adv">Contact Us →</a>
+        </div>
+      </div>
+      <div style="margin-top:24px;text-align:center;">
+        <a href="pricing.html" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(244,236,218,.4);text-decoration:none;letter-spacing:.5px;">See all plans →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WAITLIST -->
+<section>
+  <div class="ln-section">
+    <div class="waitlist-wrap">
+      <h2 class="waitlist-title">Be the first to know when<br>new programs are added</h2>
+      <p class="waitlist-desc">We track federal and provincial funding as it's announced. Join the waitlist and get notified when new programs matching your farm type open up.</p>
+      <div class="waitlist-form">
+        <input type="email" class="waitlist-input" id="wl-email" placeholder="your@email.com">
+        <button class="waitlist-btn" onclick="joinWaitlist()">Notify Me →</button>
+      </div>
+      <div class="waitlist-success" id="wl-success">✓ You're on the list! We'll notify you when new programs are added for your region.</div>
+      <div class="waitlist-note">No spam. Unsubscribe anytime. Canadian farms only.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="ln-footer">
+  <div class="ln-footer-logo">Canadian Farm Copilot · v2.0 · 2026</div>
+  <div class="ln-footer-links">
+    <a href="landing.html"   class="ln-footer-link">Home</a>
+    <a href="index.html"     class="ln-footer-link">Setup</a>
+    <a href="pricing.html"   class="ln-footer-link">Pricing</a>
+    <a href="dashboard.html" class="ln-footer-link">Dashboard</a>
+    <a href="support.html"   class="ln-footer-link">Support</a>
+  </div>
+  <div class="ln-footer-copy">Covering 2025–2026 Canadian federal & provincial programs · Open-Meteo weather · Powered by Claude</div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/nav-patch.js"></script>
+<script>
+  if (Profile.load()) {
+    document.getElementById('nav-dashboard').style.display = 'inline';
+  }
+
+  const strip = document.getElementById('prog-strip');
+  PROGRAMS.forEach(p => {
+    strip.innerHTML += `<div class="prog-pill">${p.name} <span class="prog-pill-score">${p.match}%</span></div>`;
+  });
+
+  /* ── Hero cycling farm type ─── */
+  const farmTypes = ['Grain Farmers','Dairy Operations','Vegetable Growers','Farm Advisors','Beef Producers','Hog Farmers'];
+  let ftIdx = 0;
+  const ftEl = document.getElementById('hero-farmtype');
+  setInterval(() => {
+    ftEl.style.opacity = '0';
+    ftEl.style.transform = 'translateY(-8px)';
+    setTimeout(() => {
+      ftIdx = (ftIdx + 1) % farmTypes.length;
+      ftEl.textContent = farmTypes[ftIdx];
+      ftEl.style.transition = 'none';
+      ftEl.style.opacity = '0';
+      ftEl.style.transform = 'translateY(10px)';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          ftEl.style.transition = 'opacity .35s, transform .35s';
+          ftEl.style.opacity = '1';
+          ftEl.style.transform = 'translateY(0)';
+        });
+      });
+    }, 350);
+  }, 2800);
+  ftEl.style.transition = 'opacity .35s, transform .35s';
+
+  /* ── Preview card tab logic ─── */
+  let currentTab = 0;
+  let tabTimer;
+
+  window.switchTab = function(idx) {
+    clearInterval(tabTimer);
+    setActiveTab(idx);
+    tabTimer = setInterval(autoNextTab, 5000);
+  };
+
+  function setActiveTab(idx) {
+    document.querySelectorAll('.lpc-tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', i === idx);
+    });
+    document.querySelectorAll('.lpc-panel').forEach((p, i) => {
+      p.classList.toggle('active', i === idx);
+    });
+    currentTab = idx;
+  }
+
+  function autoNextTab() {
+    setActiveTab((currentTab + 1) % 4);
+  }
+
+  tabTimer = setInterval(autoNextTab, 5000);
+
+  /* ── Live weather ─── */
+  async function renderLandingWeather() {
+    const tempEl = document.getElementById('lpc-temp');
+    const condEl = document.getElementById('lpc-cond');
+    try {
+      const profile = Profile.load();
+      const province = profile?.province || 'Ontario';
+      tempEl.textContent = 'Loading…';
+      condEl.textContent = `${province} · live weather`;
+      const live = await loadProvinceWeather(province);
+      tempEl.textContent = `${Math.round(live.current.temperature)}°C`;
+      condEl.textContent = `${live.city} · ${live.current.label} · Updated ${live.updatedLabel}`;
+    } catch (err) {
+      console.error('Landing weather failed', err);
+      const fallback = getCurrentMonthWeather('Ontario');
+      tempEl.textContent = `${fallback.high}°C / ${fallback.low}°C`;
+      condEl.textContent = `Ontario · ${fallback.m} · ${fallback.cond}`;
+    }
+  }
+
+  renderLandingWeather();
+
+  window.joinWaitlist = function() {
+    const email = document.getElementById('wl-email').value.trim();
+    if (!email || !email.includes('@')) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    const list = JSON.parse(localStorage.getItem('waitlist') || '[]');
+    list.push({ email, date: new Date().toISOString() });
+    localStorage.setItem('waitlist', JSON.stringify(list));
+    document.getElementById('wl-success').style.display = 'block';
+    document.getElementById('wl-email').value = '';
+  };
+
+  window.activateDemoModeFromLanding = function() {
+    const real = Profile.load();
+    if (real) {
+      localStorage.setItem('preDemo', JSON.stringify(real));
+    }
+    Profile.save({
+      province: 'Ontario',
+      farmType: 'Produce / Vegetables',
+      painPoints: ['Labour Shortage', 'Funding Discovery'],
+      size: 'Small (< 100 acres / < 50 head)'
+    });
+    localStorage.setItem('demoMode', '1');
+    window.location.href = 'dashboard.html';
+  };
+
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+</script>
+</body>
+</html>

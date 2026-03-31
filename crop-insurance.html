@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crop Insurance Calculator — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    .ins-hero {
+      background: linear-gradient(135deg, #1a4a38 0%, var(--forest) 100%);
+      border-radius: var(--r-lg); padding: 22px 28px;
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+      margin-bottom: 24px; color: var(--wheat); box-shadow: var(--shadow-lg);
+    }
+    .ins-hero-icon { font-size: 44px; flex-shrink: 0; }
+    .ins-hero-text h3 { font-family:'DM Serif Display',serif; font-size:20px; margin-bottom:5px; }
+    .ins-hero-text p  { font-size:13px; color:rgba(244,236,218,.62); line-height:1.6; max-width:600px; }
+    .ins-hero-cta { margin-left:auto; flex-shrink:0; }
+
+    /* Result card */
+    .result-card {
+      background: var(--forest); border-radius: var(--r-lg);
+      padding: 24px 26px; color: var(--wheat);
+    }
+    .rc-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.08); }
+    .rc-row:last-child { border-bottom:none; }
+    .rc-label { font-size:13px; color:rgba(244,236,218,.65); }
+    .rc-val   { font-family:'DM Serif Display',serif; font-size:18px; color:var(--wheat); }
+    .rc-val.big { font-size:28px; letter-spacing:-.5px; }
+    .rc-val.green { color:#4ac878; }
+    .rc-val.amber { color:var(--amber-lt); }
+
+    /* Province cards */
+    .prov-ins-card {
+      background:white; border:1px solid var(--border);
+      border-radius:var(--r); padding:14px 16px;
+      margin-bottom:10px;
+    }
+    .prov-ins-name { font-family:'DM Serif Display',serif; font-size:14px; color:var(--forest); margin-bottom:3px; }
+    .prov-ins-org  { font-size:12px; color:var(--muted); margin-bottom:8px; }
+    .prov-ins-row  { display:flex; gap:10px; flex-wrap:wrap; }
+    .prov-ins-tag  { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:3px 9px; border-radius:5px; background:var(--cream); border:1px solid var(--border); color:var(--forest); }
+
+    @media(max-width:900px) { .ins-layout { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">🛡 Crop Insurance Calculator</div>
+          <div class="page-subtitle" id="ci-sub">Estimate your AgriInsurance premium and coverage for 2026</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <a href="funding.html" class="btn btn-secondary btn-sm">View Programs →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Hero -->
+      <div class="ins-hero anim-fade-up">
+        <div class="ins-hero-icon">🛡</div>
+        <div class="ins-hero-text">
+          <h3>AgriInsurance — Canada's Production Insurance Program</h3>
+          <p>Federal-provincial cost-shared crop insurance covers production losses from natural hazards: drought, excess moisture, frost, pests, and disease. Premiums are shared: ~40% farmer, ~40% provincial, ~20% federal. Apply through your provincial crop insurance corporation before the planting deadline.</p>
+        </div>
+        <div class="ins-hero-cta">
+          <a href="https://agriculture.canada.ca" target="_blank" class="btn btn-primary btn-sm">Apply via Province →</a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up anim-delay-1">
+        <div class="stat-card">
+          <div class="stat-label">Federal Cost Share</div>
+          <div class="stat-value">~20%</div>
+          <div class="stat-change">AAFC contribution</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Provincial Cost Share</div>
+          <div class="stat-value">~40%</div>
+          <div class="stat-change">Varies by province</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Farmer Share</div>
+          <div class="stat-value">~40%</div>
+          <div class="stat-change neutral">Of total premium</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Coverage Levels</div>
+          <div class="stat-value">50–90%</div>
+          <div class="stat-change">Of established yield</div>
+        </div>
+      </div>
+
+      <div class="grid-2 mb-24 anim-fade-up anim-delay-1" style="grid-template-columns:1fr 1fr;" class="ins-layout">
+
+        <!-- Calculator inputs -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">🌾 Premium Estimator</span></div>
+          <div class="card-body">
+            <div class="calc-header-note" style="background:var(--sage-pale);border:1px solid rgba(74,122,90,.2);border-radius:var(--r-sm);padding:11px 16px;font-size:12.5px;color:var(--sage);margin-bottom:20px;line-height:1.5;">
+              Estimates based on provincial average rates. Actual premiums vary by yield history, crop type, and coverage level. Contact your provincial crop insurance corporation for an exact quote.
+            </div>
+            <div class="form-group">
+              <label class="form-label">Province *</label>
+              <select class="form-input" id="ci-prov" onchange="calcInsurance()">
+                <option value="">Select province…</option>
+                <option value="AB">Alberta (AFSC)</option>
+                <option value="BC">British Columbia (BCAC)</option>
+                <option value="MB">Manitoba (MASC)</option>
+                <option value="ON">Ontario (Agricorp)</option>
+                <option value="QC">Quebec (La Financière agricole)</option>
+                <option value="SK">Saskatchewan (SCIC)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Primary Crop</label>
+              <select class="form-input" id="ci-crop" onchange="calcInsurance()">
+                <option value="canola">Canola</option>
+                <option value="wheat">Spring Wheat</option>
+                <option value="corn">Corn</option>
+                <option value="soy">Soybeans</option>
+                <option value="barley">Barley</option>
+                <option value="oats">Oats</option>
+                <option value="potato">Potatoes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Insured Acres</label>
+              <span class="form-hint">Acres of this crop you want to insure</span>
+              <input class="form-input form-mono" id="ci-acres" type="number" value="320" min="1" oninput="calcInsurance()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Established Yield (bu/acre or t/acre)</label>
+              <span class="form-hint">Your farm's APH yield — from your crop insurance records</span>
+              <input class="form-input form-mono" id="ci-yield" type="number" value="42" oninput="calcInsurance()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Price Election ($/bu or $/t)</label>
+              <span class="form-hint">The price used to calculate indemnity — set by province each year</span>
+              <input class="form-input form-mono" id="ci-price" type="number" value="15.80" step="0.01" oninput="calcInsurance()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Coverage Level</label>
+              <span class="form-hint">% of your established yield you want to protect</span>
+              <div class="range-row" style="display:flex;align-items:center;gap:12px;margin-top:4px;">
+                <input type="range" id="ci-cov" min="50" max="90" step="5" value="70" oninput="calcInsurance();document.getElementById('ci-cov-val').textContent=this.value+'%'" style="flex:1;accent-color:var(--forest);">
+                <span class="range-val" id="ci-cov-val" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--forest);font-weight:600;min-width:44px;text-align:right;">70%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div>
+          <div class="result-card mb-16">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(244,236,218,.35);margin-bottom:16px;">2026 Premium Estimate</div>
+            <div class="rc-row">
+              <div class="rc-label">Total Liability (Coverage Value)</div>
+              <div class="rc-val big" id="res-liability">—</div>
+            </div>
+            <div class="rc-row">
+              <div class="rc-label">Gross Premium (before subsidies)</div>
+              <div class="rc-val" id="res-gross">—</div>
+            </div>
+            <div class="rc-row">
+              <div class="rc-label">Government Subsidy (~60%)</div>
+              <div class="rc-val green" id="res-subsidy">—</div>
+            </div>
+            <div class="rc-row">
+              <div class="rc-label">Your Net Premium (~40%)</div>
+              <div class="rc-val amber big" id="res-net">—</div>
+            </div>
+            <div class="rc-row">
+              <div class="rc-label">Cost per Acre</div>
+              <div class="rc-val" id="res-peracre">—</div>
+            </div>
+            <div class="rc-row">
+              <div class="rc-label">Max Indemnity (total loss)</div>
+              <div class="rc-val green" id="res-max">—</div>
+            </div>
+          </div>
+          <div class="card mb-16">
+            <div class="card-header"><span class="card-title">📅 Enrolment Deadlines</span></div>
+            <div class="card-body" style="padding:8px 18px;" id="deadline-body">
+              <div style="font-size:13px;color:var(--muted);padding:10px 0;line-height:1.6;">Select your province to see enrolment and coverage change deadlines.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">💡 Key Reminders</span></div>
+            <div class="card-body" style="font-size:13px;color:var(--muted);line-height:1.8;display:flex;flex-direction:column;gap:4px;">
+              <div>⏱ You must enrol before planting to be covered for that crop year</div>
+              <div>📋 Report seeded acreage within required window after seeding</div>
+              <div>📞 Report losses within 72 hours of occurrence</div>
+              <div>📁 Keep yield records — they determine your APH and future premiums</div>
+              <div>💰 AgriStability and crop insurance can both be held simultaneously</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Provincial programs -->
+      <div class="card anim-fade-up anim-delay-2">
+        <div class="card-header"><span class="card-title">🏛️ Provincial Crop Insurance Corporations</span></div>
+        <div class="card-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div class="prov-ins-card">
+            <div class="prov-ins-name">Alberta — AFSC</div>
+            <div class="prov-ins-org">Agriculture Financial Services Corporation</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">📞 1-877-899-2372 · afsc.ca</div>
+            <div class="prov-ins-row"><span class="prov-ins-tag">Grain</span><span class="prov-ins-tag">Horticulture</span><span class="prov-ins-tag">Livestock</span></div>
+          </div>
+          <div class="prov-ins-card">
+            <div class="prov-ins-name">BC — BCAC</div>
+            <div class="prov-ins-org">BC Agriculture &amp; Food Climate Corp</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">📞 1-888-221-7141 · bcac.bc.ca</div>
+            <div class="prov-ins-row"><span class="prov-ins-tag">Fruit</span><span class="prov-ins-tag">Vegetables</span><span class="prov-ins-tag">Berries</span></div>
+          </div>
+          <div class="prov-ins-card">
+            <div class="prov-ins-name">Manitoba — MASC</div>
+            <div class="prov-ins-org">Manitoba Ag Services Corporation</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">📞 1-800-567-6836 · masc.mb.ca</div>
+            <div class="prov-ins-row"><span class="prov-ins-tag">Cereals</span><span class="prov-ins-tag">Oilseeds</span><span class="prov-ins-tag">Pulses</span></div>
+          </div>
+          <div class="prov-ins-card">
+            <div class="prov-ins-name">Ontario — Agricorp</div>
+            <div class="prov-ins-org">Agricorp (Crown corporation)</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">📞 1-888-247-4999 · agricorp.com</div>
+            <div class="prov-ins-row"><span class="prov-ins-tag">Corn</span><span class="prov-ins-tag">Soy</span><span class="prov-ins-tag">Winter wheat</span></div>
+          </div>
+          <div class="prov-ins-card">
+            <div class="prov-ins-name">Quebec — La Financière</div>
+            <div class="prov-ins-org">La Financière agricole du Québec</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">📞 1-800-749-3646 · fadq.qc.ca</div>
+            <div class="prov-ins-row"><span class="prov-ins-tag">Grains</span><span class="prov-ins-tag">Apiculture</span><span class="prov-ins-tag">Maple</span></div>
+          </div>
+          <div class="prov-ins-card">
+            <div class="prov-ins-name">Saskatchewan — SCIC</div>
+            <div class="prov-ins-org">Saskatchewan Crop Insurance Corp</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">📞 1-888-935-0000 · scic.gov.sk.ca</div>
+            <div class="prov-ins-row"><span class="prov-ins-tag">Canola</span><span class="prov-ins-tag">Wheat</span><span class="prov-ins-tag">Lentils</span></div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI Copilot about crop insurance →</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('crop-insurance');
+  document.getElementById('ci-sub').textContent = `AgriInsurance premium estimator and deadlines · ${profile.province}`;
+
+  const RATE_FACTORS = { canola:.042, wheat:.038, corn:.035, soy:.032, barley:.030, oats:.028, potato:.055 };
+  const DEADLINES = {
+    AB: [['Spring enrolment', 'March 31, 2026'],['Seeded acreage report','June 30, 2026'],['Fall coverage change','October 31, 2026']],
+    BC: [['Tree fruit / berry enrolment','February 28, 2026'],['Vegetable seeding report','June 1, 2026'],['Fall crop enrolment','September 30, 2026']],
+    MB: [['Spring crop enrolment','April 30, 2026'],['Seeded acreage report','July 15, 2026'],['Fall crop change','November 30, 2026']],
+    ON: [['Winter wheat enrolment','October 15, 2025'],['Spring enrolment','April 30, 2026'],['Seeded acreage report','June 30, 2026']],
+    QC: [['Printemps enrolment','April 1, 2026'],['Acreage report','July 1, 2026'],['Automne coverage','October 15, 2026']],
+    SK: [['Spring enrolment','April 30, 2026'],['Seeded acreage report','July 15, 2026'],['Fall coverage election','October 31, 2026']],
+  };
+
+  function calcInsurance() {
+    const prov   = document.getElementById('ci-prov').value;
+    const crop   = document.getElementById('ci-crop').value;
+    const acres  = parseFloat(document.getElementById('ci-acres').value) || 0;
+    const yield_ = parseFloat(document.getElementById('ci-yield').value) || 0;
+    const price  = parseFloat(document.getElementById('ci-price').value) || 0;
+    const cov    = parseFloat(document.getElementById('ci-cov').value) / 100;
+    const rate   = RATE_FACTORS[crop] || 0.04;
+
+    if (!prov || !acres || !yield_ || !price) return;
+
+    const liability  = acres * yield_ * price;
+    const covValue   = liability * cov;
+    const grossPrem  = covValue * rate;
+    const govShare   = grossPrem * 0.60;
+    const farmerNet  = grossPrem * 0.40;
+    const perAcre    = farmerNet / acres;
+    const maxIndem   = covValue;
+
+    const fmt = v => '$' + Math.round(v).toLocaleString();
+    document.getElementById('res-liability').textContent = fmt(covValue);
+    document.getElementById('res-gross').textContent     = fmt(grossPrem);
+    document.getElementById('res-subsidy').textContent   = '−' + fmt(govShare);
+    document.getElementById('res-net').textContent       = fmt(farmerNet);
+    document.getElementById('res-peracre').textContent   = '$' + perAcre.toFixed(2) + '/acre';
+    document.getElementById('res-max').textContent       = fmt(maxIndem);
+
+    const dd = DEADLINES[prov];
+    if (dd) {
+      document.getElementById('deadline-body').innerHTML = dd.map(([label, date]) => {
+        const daysLeft = getDaysUntil(date.replace(',','').replace(' 2026','').replace(' 2025',''));
+        return `<div class="deadline-item" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div><div style="font-weight:500;font-size:13px;color:var(--text);">${label}</div><div style="font-size:11px;color:var(--faint);font-family:'IBM Plex Mono',monospace;">${date}</div></div>
+        </div>`;
+      }).join('');
+    }
+  }
+  calcInsurance();
+</script>
+</body>
+</html>

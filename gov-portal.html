@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Government Portal Navigator — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    .tab-bar { display:flex; gap:4px; padding:0 0 20px; border-bottom:1px solid var(--border); margin-bottom:22px; flex-wrap:wrap; }
+    .pg-tab { padding:9px 18px; border-radius:20px; border:1.5px solid var(--border); background:white; font-family:'Sora',sans-serif; font-size:13px; color:var(--muted); cursor:pointer; transition:all .15s; }
+    .pg-tab.active { background:var(--forest); color:var(--wheat); border-color:var(--forest); }
+    .pg-tab:hover:not(.active) { border-color:var(--sage); color:var(--forest); }
+
+    /* Hero */
+    .gov-hero {
+      background: linear-gradient(135deg, #1a2e45 0%, #1B3528 100%);
+      border-radius:var(--r-lg); padding:24px 30px;
+      color:var(--wheat); margin-bottom:24px; box-shadow:var(--shadow-lg);
+      display:flex; gap:20px; align-items:center; flex-wrap:wrap;
+    }
+    .gh-icon { font-size:44px; flex-shrink:0; }
+    .gh-text h2 { font-family:'DM Serif Display',serif; font-size:22px; margin-bottom:6px; }
+    .gh-text p  { font-size:13px; color:rgba(244,236,218,.62); line-height:1.65; max-width:620px; }
+
+    /* Portal cards */
+    .portal-card {
+      background:white; border:1px solid var(--border);
+      border-radius:var(--r-lg); padding:0; overflow:hidden;
+      box-shadow:var(--shadow-sm); transition:all .18s;
+      display:flex; flex-direction:column;
+    }
+    .portal-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
+    .pc-header {
+      padding:16px 18px; display:flex; align-items:flex-start; gap:12px;
+      border-bottom:1px solid var(--border);
+    }
+    .pc-flag { font-size:28px; flex-shrink:0; }
+    .pc-name { font-family:'DM Serif Display',serif; font-size:15px; color:var(--forest); margin-bottom:3px; }
+    .pc-org  { font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.5px; color:var(--muted); text-transform:uppercase; }
+    .pc-badge { margin-left:auto; flex-shrink:0; }
+    .pc-body { padding:14px 18px; flex:1; }
+    .pc-desc { font-size:12.5px; color:var(--muted); line-height:1.6; margin-bottom:10px; }
+    .pc-links { display:flex; flex-direction:column; gap:7px; }
+    .pc-link {
+      display:flex; align-items:center; gap:8px; padding:8px 12px;
+      background:var(--cream); border:1px solid var(--border);
+      border-radius:8px; text-decoration:none; font-size:12.5px; color:var(--forest);
+      transition:all .14s;
+    }
+    .pc-link:hover { background:var(--forest); color:var(--wheat); }
+    .pc-link-icon { font-size:14px; flex-shrink:0; }
+    .pc-link-label { flex:1; font-weight:500; }
+    .pc-link-arrow { font-size:12px; color:var(--muted); }
+    .pc-link:hover .pc-link-arrow { color:rgba(244,236,218,.6); }
+    .pc-footer { padding:12px 18px; border-top:1px solid var(--border); display:flex; gap:8px; }
+
+    /* Portal grid */
+    .portal-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+
+    /* Wizard */
+    .wizard-step { display:none; animation:fadeIn .2s ease; }
+    .wizard-step.active { display:block; }
+    .wizard-option {
+      background:white; border:1.5px solid var(--border);
+      border-radius:var(--r-lg); padding:16px 20px;
+      cursor:pointer; margin-bottom:10px; transition:all .15s;
+      display:flex; align-items:center; gap:14px;
+    }
+    .wizard-option:hover { border-color:var(--sage); background:var(--sage-pale); }
+    .wizard-option.selected { border-color:var(--forest); background:var(--cream); }
+    .wo-icon  { font-size:26px; flex-shrink:0; }
+    .wo-label { font-size:14px; font-weight:600; color:var(--text); margin-bottom:2px; }
+    .wo-sub   { font-size:12px; color:var(--muted); }
+    .wo-arrow { margin-left:auto; font-size:18px; color:var(--muted); }
+
+    /* Document checklist */
+    .doc-item {
+      display:flex; align-items:flex-start; gap:10px;
+      padding:11px 0; border-bottom:1px solid var(--border);
+    }
+    .doc-item:last-child { border-bottom:none; }
+    .doc-check {
+      width:20px; height:20px; border-radius:4px;
+      border:1.5px solid var(--border-md); cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0; font-size:11px; color:white;
+      transition:all .14s; margin-top:1px;
+    }
+    .doc-check.checked { background:var(--sage); border-color:var(--sage); }
+    .doc-label { font-size:13px; color:var(--text); line-height:1.5; }
+    .doc-hint  { font-size:11.5px; color:var(--muted); margin-top:2px; }
+
+    /* Deadline rows */
+    .dl-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--border); }
+    .dl-row:last-child { border-bottom:none; }
+    .dl-name { font-size:13px; font-weight:500; color:var(--text); }
+    .dl-sub  { font-size:11.5px; color:var(--muted); }
+    .dl-pill { font-family:'IBM Plex Mono',monospace; font-size:10.5px; padding:3px 10px; border-radius:10px; }
+    .dl-red  { background:rgba(192,57,43,.1); color:var(--red); }
+    .dl-amber{ background:rgba(184,114,14,.1); color:#8a5800; }
+    .dl-green{ background:rgba(74,200,120,.1); color:#1e8449; }
+
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);} }
+    @media(max-width:900px) { .portal-grid { grid-template-columns:1fr; } }
+    @media(max-width:600px) { .portal-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">🏛️ Government Portal Navigator</div>
+          <div class="page-subtitle" id="gp-sub">Every federal and provincial ag portal in one place — with direct links and document checklists</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <a href="funding.html"   class="btn btn-secondary btn-sm">◈ Funding Programs</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Hero -->
+      <div class="gov-hero anim-fade-up">
+        <div class="gh-icon">🏛️</div>
+        <div class="gh-text">
+          <h2>Stop searching. Start applying.</h2>
+          <p>Canada's agricultural support system spans 60+ government portals across AAFC, CFIA, ESDC, CRA, and 10 provincial ministries. We've mapped every portal you need as a Canadian farmer — with direct links, document checklists, and plain-language descriptions of what each portal does.</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up anim-delay-1">
+        <div class="stat-card">
+          <div class="stat-label">Federal Portals</div>
+          <div class="stat-value">8</div>
+          <div class="stat-change">AAFC, CFIA, CRA, ESDC</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Provincial Portals</div>
+          <div class="stat-value">10</div>
+          <div class="stat-change">All provinces covered</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Direct Links</div>
+          <div class="stat-value">47</div>
+          <div class="stat-change">No searching required</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Deadlines Tracked</div>
+          <div class="stat-value">12</div>
+          <div class="stat-change neg">Action required soon</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar anim-fade-up anim-delay-1">
+        <button class="pg-tab active" id="ptab-federal"   onclick="showGovTab('federal')">🇨🇦 Federal</button>
+        <button class="pg-tab"        id="ptab-provincial" onclick="showGovTab('provincial')">🍁 Provincial</button>
+        <button class="pg-tab"        id="ptab-wizard"    onclick="showGovTab('wizard')">🧭 Which Portal?</button>
+        <button class="pg-tab"        id="ptab-docs"      onclick="showGovTab('docs')">📋 Document Checklist</button>
+        <button class="pg-tab"        id="ptab-deadlines" onclick="showGovTab('deadlines')">⏱ Deadlines</button>
+      </div>
+
+      <!-- ── FEDERAL ── -->
+      <div id="gview-federal">
+        <div class="portal-grid">
+          <div class="portal-card">
+            <div class="pc-header">
+              <div class="pc-flag">🏛️</div>
+              <div><div class="pc-name">Agriculture Canada (AAFC)</div><div class="pc-org">Agriculture &amp; Agri-Food Canada</div></div>
+              <span class="badge badge-sage pc-badge">Main hub</span>
+            </div>
+            <div class="pc-body">
+              <div class="pc-desc">Canada's primary agricultural department. Manages AgriStability, AgriMarketing, AgriInvest, and all national farm support programs.</div>
+              <div class="pc-links">
+                <a href="https://agriculture.canada.ca" target="_blank" class="pc-link"><span class="pc-link-icon">🌐</span><span class="pc-link-label">Main Portal</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://agriculture.canada.ca/en/agricultural-programs-and-services/agristability" target="_blank" class="pc-link"><span class="pc-link-icon">💰</span><span class="pc-link-label">AgriStability Enrollment</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://agriculture.canada.ca/en/agricultural-programs-and-services/agri-marketing" target="_blank" class="pc-link"><span class="pc-link-icon">📈</span><span class="pc-link-label">AgriMarketing Program</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://agriculture.canada.ca/en/agricultural-programs-and-services/agriinvest" target="_blank" class="pc-link"><span class="pc-link-icon">🏦</span><span class="pc-link-label">AgriInvest Account</span><span class="pc-link-arrow">↗</span></a>
+              </div>
+            </div>
+            <div class="pc-footer"><a href="tel:18557730241" class="btn btn-ghost btn-sm">📞 1-855-773-0241</a><a href="copilot.html" class="btn btn-secondary btn-sm" style="margin-left:auto;">Ask AI →</a></div>
+          </div>
+
+          <div class="portal-card">
+            <div class="pc-header">
+              <div class="pc-flag">🔬</div>
+              <div><div class="pc-name">CFIA — Food Safety &amp; Animal</div><div class="pc-org">Canadian Food Inspection Agency</div></div>
+              <span class="badge badge-red pc-badge">Required</span>
+            </div>
+            <div class="pc-body">
+              <div class="pc-desc">Regulates food safety, plant health, animal health, and traceability. Premises registration, livestock ID tags, and Safe Food for Canadians licences.</div>
+              <div class="pc-links">
+                <a href="https://www.inspection.gc.ca" target="_blank" class="pc-link"><span class="pc-link-icon">🌐</span><span class="pc-link-label">CFIA Portal</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://www.inspection.gc.ca/food-safety-for-industry/licensing/eng/1524771261065/1524771261349" target="_blank" class="pc-link"><span class="pc-link-icon">📄</span><span class="pc-link-label">SFCA Licence Application</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://www.inspection.gc.ca/animals/terrestrial-animals/traceability/eng/1370983127388/1370983219645" target="_blank" class="pc-link"><span class="pc-link-icon">🐄</span><span class="pc-link-label">Livestock Traceability</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://www.inspection.gc.ca/plant-health/seeds/eng/1299162629065/1299162708850" target="_blank" class="pc-link"><span class="pc-link-icon">🌱</span><span class="pc-link-label">Plant Health &amp; Seeds</span><span class="pc-link-arrow">↗</span></a>
+              </div>
+            </div>
+            <div class="pc-footer"><a href="tel:18004422342" class="btn btn-ghost btn-sm">📞 1-800-442-2342</a></div>
+          </div>
+
+          <div class="portal-card">
+            <div class="pc-header">
+              <div class="pc-flag">💧</div>
+              <div><div class="pc-name">PMRA — Pesticide Regulation</div><div class="pc-org">Pest Management Regulatory Agency</div></div>
+              <span class="badge badge-amber pc-badge">Compliance</span>
+            </div>
+            <div class="pc-body">
+              <div class="pc-desc">Regulates pesticides, herbicides, and fungicides. Applicator licences, label compliance, and the new reduced-risk pesticide program.</div>
+              <div class="pc-links">
+                <a href="https://www.canada.ca/en/health-canada/services/consumer-product-safety/pesticides-pest-management.html" target="_blank" class="pc-link"><span class="pc-link-icon">🌐</span><span class="pc-link-label">PMRA Portal</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://www.canada.ca/en/health-canada/services/consumer-product-safety/pesticides-pest-management/registrants-applicants.html" target="_blank" class="pc-link"><span class="pc-link-icon">📄</span><span class="pc-link-label">Registrant Portal</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://pr-rp.hc-sc.gc.ca/ls-re/result-resultat-eng.php" target="_blank" class="pc-link"><span class="pc-link-icon">🔍</span><span class="pc-link-label">Label Search (PMRA)</span><span class="pc-link-arrow">↗</span></a>
+              </div>
+            </div>
+            <div class="pc-footer"><a href="tel:18002676315" class="btn btn-ghost btn-sm">📞 1-800-267-6315</a></div>
+          </div>
+
+          <div class="portal-card">
+            <div class="pc-header">
+              <div class="pc-flag">🏦</div>
+              <div><div class="pc-name">CRA — Farm Tax</div><div class="pc-org">Canada Revenue Agency</div></div>
+              <span class="badge badge-amber pc-badge">Annual</span>
+            </div>
+            <div class="pc-body">
+              <div class="pc-desc">Farm income reporting, GST/HST registration, capital cost allowance for equipment, and AgriInvest savings account tax reporting.</div>
+              <div class="pc-links">
+                <a href="https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/sole-proprietorships-partnerships/farm-income.html" target="_blank" class="pc-link"><span class="pc-link-icon">🌐</span><span class="pc-link-label">Farm Income Reporting</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/t4003.html" target="_blank" class="pc-link"><span class="pc-link-icon">📄</span><span class="pc-link-label">T4003 Farming Income Guide</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://www.canada.ca/en/revenue-agency/services/e-services/digital-services-businesses/business-account.html" target="_blank" class="pc-link"><span class="pc-link-icon">💻</span><span class="pc-link-label">My Business Account</span><span class="pc-link-arrow">↗</span></a>
+              </div>
+            </div>
+            <div class="pc-footer"><a href="tel:18009595525" class="btn btn-ghost btn-sm">📞 1-800-959-5525</a></div>
+          </div>
+
+          <div class="portal-card">
+            <div class="pc-header">
+              <div class="pc-flag">👷</div>
+              <div><div class="pc-name">ESDC — Labour &amp; TFW</div><div class="pc-org">Employment &amp; Social Development Canada</div></div>
+              <span class="badge badge-blue pc-badge">Labour</span>
+            </div>
+            <div class="pc-body">
+              <div class="pc-desc">Temporary Foreign Worker Program, LMIA applications, and agricultural seasonal worker programs. Also manages federal employment standards.</div>
+              <div class="pc-links">
+                <a href="https://www.canada.ca/en/employment-social-development/services/foreign-workers/agricultural.html" target="_blank" class="pc-link"><span class="pc-link-icon">🌐</span><span class="pc-link-label">Agricultural TFW Program</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://www.canada.ca/en/employment-social-development/services/foreign-workers/agricultural/seasonal.html" target="_blank" class="pc-link"><span class="pc-link-icon">🌍</span><span class="pc-link-label">SAWP (Seasonal Workers)</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://www.canada.ca/en/employment-social-development/services/foreign-workers/lmia-online.html" target="_blank" class="pc-link"><span class="pc-link-icon">📄</span><span class="pc-link-label">LMIA Application Portal</span><span class="pc-link-arrow">↗</span></a>
+              </div>
+            </div>
+            <div class="pc-footer"><a href="tel:18003675693" class="btn btn-ghost btn-sm">📞 1-800-367-5693</a></div>
+          </div>
+
+          <div class="portal-card">
+            <div class="pc-header">
+              <div class="pc-flag">🌿</div>
+              <div><div class="pc-name">Environment Canada — Carbon</div><div class="pc-org">Environment &amp; Climate Change Canada</div></div>
+              <span class="badge badge-sage pc-badge">Carbon</span>
+            </div>
+            <div class="pc-body">
+              <div class="pc-desc">Carbon pricing exemptions for farms, Clean Fuel Regulation compliance, and greenhouse gas reporting for large operations.</div>
+              <div class="pc-links">
+                <a href="https://www.canada.ca/en/environment-climate-change/services/climate-change/pricing-pollution-how-it-will-work/output-based-pricing-system.html" target="_blank" class="pc-link"><span class="pc-link-icon">🌐</span><span class="pc-link-label">Carbon Pricing for Farmers</span><span class="pc-link-arrow">↗</span></a>
+                <a href="https://www.canada.ca/en/environment-climate-change/services/canadian-environmental-protection-act-registry/greenhouse-gas-reporting.html" target="_blank" class="pc-link"><span class="pc-link-icon">📊</span><span class="pc-link-label">GHG Reporting Portal</span><span class="pc-link-arrow">↗</span></a>
+              </div>
+            </div>
+            <div class="pc-footer"><a href="tel:18009978243" class="btn btn-ghost btn-sm">📞 1-800-997-8243</a></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PROVINCIAL ── -->
+      <div id="gview-provincial" style="display:none;">
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;" class="anim-fade-up">
+          <select class="filter-select" id="prov-filter" onchange="renderProvPortals(this.value)" style="min-width:220px;">
+            <option value="">All Provinces</option>
+            <option value="AB">Alberta</option>
+            <option value="BC">British Columbia</option>
+            <option value="MB">Manitoba</option>
+            <option value="NB">New Brunswick</option>
+            <option value="NL">Newfoundland &amp; Labrador</option>
+            <option value="NS">Nova Scotia</option>
+            <option value="ON">Ontario</option>
+            <option value="PE">Prince Edward Island</option>
+            <option value="QC">Quebec</option>
+            <option value="SK">Saskatchewan</option>
+          </select>
+        </div>
+        <div class="portal-grid" id="prov-portal-grid"></div>
+      </div>
+
+      <!-- ── WIZARD ── -->
+      <div id="gview-wizard" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">🧭 Which Portal Do I Need?</span>
+            <button class="btn btn-ghost btn-sm" onclick="resetWizard()">Restart</button>
+          </div>
+          <div class="card-body">
+            <div id="wizard-content"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DOCUMENT CHECKLIST ── -->
+      <div id="gview-docs" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📋 AgriStability Application Checklist</span>
+              <span class="badge badge-amber" id="doc-progress">0 / 10</span>
+            </div>
+            <div class="card-body" style="padding:8px 20px;" id="doc-checklist"></div>
+            <div class="card-footer">
+              <a href="https://agriculture.canada.ca" target="_blank" class="btn btn-primary btn-sm">Apply at AAFC.gc.ca →</a>
+              <a href="copilot.html" class="btn btn-ghost btn-sm" style="margin-left:8px;">Ask AI for help →</a>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">📋 CFIA Premises Registration</span></div>
+            <div class="card-body" style="font-size:13px;color:var(--text);line-height:1.8;display:flex;flex-direction:column;gap:8px;">
+              <div>✅ Legal name and mailing address of operation</div>
+              <div>✅ Geographic location / GPS coordinates of premises</div>
+              <div>✅ Species of livestock or commodities produced</div>
+              <div>✅ Federal business number (BN) from CRA</div>
+              <div>✅ Contact person name and phone number</div>
+              <div style="margin-top:8px;padding:10px;background:var(--cream);border-radius:8px;font-size:12px;color:var(--muted);">Registration is free and takes about 20 minutes online. Required before any livestock leave your premises.</div>
+              <a href="https://www.inspection.gc.ca" target="_blank" class="btn btn-secondary btn-sm">Register at CFIA →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DEADLINES ── -->
+      <div id="gview-deadlines" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">⏱ Government Filing Deadlines — 2026</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">Federal &amp; provincial</span>
+          </div>
+          <div class="card-body" style="padding:4px 20px;" id="deadline-list"></div>
+          <div class="card-footer">
+            <a href="compliance.html" class="btn btn-secondary btn-sm">Full Compliance Tracker →</a>
+            <a href="copilot.html" class="btn btn-ghost btn-sm" style="margin-left:8px;">Ask AI about deadlines →</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('gov-portal');
+  document.getElementById('gp-sub').textContent = `Government portals for ${profile.farmType} operators · ${profile.province}`;
+
+  function showGovTab(t) {
+    ['federal','provincial','wizard','docs','deadlines'].forEach(id => {
+      document.getElementById('gview-' + id).style.display = id===t?'':'none';
+      document.getElementById('ptab-' + id).classList.toggle('active', id===t);
+    });
+    if (t==='provincial') { renderProvPortals(profile.province.slice(0,2).toUpperCase()||'ON'); const sel=document.getElementById('prov-filter'); if(sel){const map={'Alberta':'AB','British Columbia':'BC','Manitoba':'MB','Ontario':'ON','Quebec':'QC','Saskatchewan':'SK','New Brunswick':'NB','Nova Scotia':'NS','Prince Edward Island':'PE','Newfoundland & Labrador':'NL'}; sel.value=map[profile.province]||'';} }
+    if (t==='wizard')    initWizard();
+    if (t==='docs')      renderDocChecklist();
+    if (t==='deadlines') renderDeadlines();
+  }
+
+  /* Provincial portals */
+  const PROV_PORTALS = {
+    ON: [{ name:'OMAFRA', org:'Ontario Ministry of Agriculture, Food & Rural Affairs', icon:'🌾', phone:'1-877-424-1300', url:'https://www.ontario.ca/page/agriculture', links:[['Programs & Services','https://www.ontario.ca/page/agriculture'],['OSCIA Cost-Share','https://www.oscia.on.ca'],['Agricorp Insurance','https://www.agricorp.com']] }],
+    AB: [{ name:'Alberta Agriculture', org:'Agriculture, Forestry, Fishing & Food', icon:'🌻', phone:'310-3276', url:'https://www.alberta.ca/agriculture', links:[['Programs','https://www.alberta.ca/agriculture'],['AFSC Financial Services','https://www.afsc.ca'],['AB Crop Insurance','https://www.afsc.ca/crop-insurance']] }],
+    BC: [{ name:'BC Ministry of Agriculture', org:'Ministry of Agriculture & Food', icon:'🍎', phone:'1-888-221-7141', url:'https://www2.gov.bc.ca/gov/content/industry/agriculture-seafood', links:[['BC Ag Programs','https://www2.gov.bc.ca/gov/content/industry/agriculture-seafood'],['On-Farm Tech Program','https://www2.gov.bc.ca/gov/content/industry/agriculture-seafood'],['BCAC Insurance','https://www.bcac.bc.ca']] }],
+    SK: [{ name:'Saskatchewan Agriculture', org:'Sask Ministry of Agriculture', icon:'🌾', phone:'1-866-457-2377', url:'https://www.saskatchewan.ca/business/agriculture', links:[['Sask Programs','https://www.saskatchewan.ca/business/agriculture'],['SCIC Insurance','https://www.scic.gov.sk.ca'],['Sask AgriCorp','https://www.Saskatchewan.ca']] }],
+    MB: [{ name:'Manitoba Agriculture', org:'Agriculture & Resource Development', icon:'🌿', phone:'204-726-6136', url:'https://www.gov.mb.ca/agriculture', links:[['MB Programs','https://www.gov.mb.ca/agriculture'],['MASC Insurance','https://www.masc.mb.ca'],['Growing Forward MB','https://www.gov.mb.ca/agriculture']] }],
+    QC: [{ name:'MAPAQ', org:'Ministère de l\'Agriculture du Québec', icon:'🍁', phone:'1-888-222-6272', url:'https://www.mapaq.gouv.qc.ca', links:[['MAPAQ Programs','https://www.mapaq.gouv.qc.ca'],['La Financière agricole','https://www.fadq.qc.ca'],['Agri-Québec','https://www.mapaq.gouv.qc.ca']] }],
+    NB: [{ name:'NB Agriculture', org:'NB Agriculture, Aquaculture &amp; Fisheries', icon:'🌲', phone:'506-453-2666', url:'https://www2.gnb.ca/content/gnb/en/departments/10.html', links:[['NB Programs','https://www2.gnb.ca/content/gnb/en/departments/10.html']] }],
+    NS: [{ name:'NS Agriculture', org:'Nova Scotia Department of Agriculture', icon:'🐟', phone:'902-893-6582', url:'https://novascotia.ca/agri', links:[['NS Programs','https://novascotia.ca/agri'],['NS Farm Loan Board','https://novascotia.ca/agri/programs/farm-loan-board']] }],
+    PE: [{ name:'PEI Agriculture', org:'PEI Department of Agriculture', icon:'🥔', phone:'902-368-4880', url:'https://www.princeedwardisland.ca/en/topic/agriculture', links:[['PEI Programs','https://www.princeedwardisland.ca/en/topic/agriculture']] }],
+    NL: [{ name:'NL Agriculture', org:'NL Fisheries, Forestry &amp; Agriculture', icon:'🦞', phone:'709-637-2000', url:'https://www.gov.nl.ca/ffa', links:[['NL Programs','https://www.gov.nl.ca/ffa']] }],
+  };
+
+  function renderProvPortals(code) {
+    const portals = PROV_PORTALS[code] || Object.values(PROV_PORTALS).flat();
+    const grid = document.getElementById('prov-portal-grid');
+    const toRender = code ? (PROV_PORTALS[code]||[]) : Object.values(PROV_PORTALS).flat();
+    grid.innerHTML = toRender.map(p => `
+      <div class="portal-card">
+        <div class="pc-header">
+          <div class="pc-flag">${p.icon}</div>
+          <div><div class="pc-name">${p.name}</div><div class="pc-org">${p.org}</div></div>
+        </div>
+        <div class="pc-body">
+          <div class="pc-links">
+            ${p.links.map(([label,url])=>`
+            <a href="${url}" target="_blank" class="pc-link">
+              <span class="pc-link-icon">🔗</span>
+              <span class="pc-link-label">${label}</span>
+              <span class="pc-link-arrow">↗</span>
+            </a>`).join('')}
+          </div>
+        </div>
+        <div class="pc-footer"><a href="tel:${p.phone.replace(/[-\s]/g,'')}" class="btn btn-ghost btn-sm">📞 ${p.phone}</a></div>
+      </div>
+    `).join('') || '<div style="text-align:center;padding:40px;color:var(--muted);">Select a province to see its portals.</div>';
+  }
+  renderProvPortals('');
+
+  /* Wizard */
+  const WIZARD_TREE = [
+    { id:'root', q:'What do you need to do?', opts:[
+      { label:'Apply for funding or income support', sub:'AgriStability, AgriMarketing, CAP', next:'funding', icon:'💰' },
+      { label:'Register my farm or premises',        sub:'CFIA, livestock ID, food safety',  next:'register', icon:'📋' },
+      { label:'Hire foreign workers',                sub:'TFW, SAWP, LMIA',                  next:'labour',   icon:'👷' },
+      { label:'File taxes or manage CRA',            sub:'Farm income, GST, AgriInvest',     next:'tax',      icon:'🏦' },
+      { label:'Deal with pesticide compliance',      sub:'PMRA labels, applicator licence',  next:'pmra',     icon:'🌿' },
+      { label:'Access provincial programs',          sub:'OMAFRA, AFSC, MASC, etc.',         next:'provincial',icon:'🍁'},
+    ]},
+    { id:'funding', result:true, title:'You need AAFC', body:'Go to <strong>agriculture.canada.ca</strong> and navigate to "Agricultural Programs and Services". For AgriStability, click "AgriStability" and follow your province\'s enrollment portal link. Deadline: April 30, 2026.', links:[['AAFC Portal','https://agriculture.canada.ca'],['AgriStability','https://agriculture.canada.ca/en/agricultural-programs-and-services/agristability']] },
+    { id:'register', result:true, title:'You need CFIA', body:'Go to <strong>inspection.gc.ca</strong> for premises registration, livestock traceability tags, and Safe Food for Canadians Act licensing. Registration is free — takes 20 minutes.', links:[['CFIA Portal','https://www.inspection.gc.ca']] },
+    { id:'labour', result:true, title:'You need ESDC', body:'Go to <strong>canada.ca/tfwp-agricultural</strong> to apply for an LMIA and recruit TFW agricultural workers. For SAWP (Mexico/Caribbean) use the Seasonal Agricultural Worker stream.', links:[['ESDC TFW Agricultural','https://www.canada.ca/en/employment-social-development/services/foreign-workers/agricultural.html']] },
+    { id:'tax', result:true, title:'You need CRA', body:'Log in to <strong>My Business Account</strong> at canada.ca/cra-arc. For farm income use Form T2042. GST/HST annual filers use My Business Account. AgriInvest deposits are reported on T2042.', links:[['My Business Account','https://www.canada.ca/en/revenue-agency/services/e-services/digital-services-businesses/business-account.html'],['T2042 Farm Form','https://www.canada.ca/en/revenue-agency/services/forms-publications/forms/t2042.html']] },
+    { id:'pmra', result:true, title:'You need Health Canada PMRA', body:'Go to <strong>canada.ca/pesticides</strong> for pesticide labels, applicator licence renewal, and product registrations. Label search is free and public — always check the current label before applying.', links:[['PMRA Portal','https://www.canada.ca/en/health-canada/services/consumer-product-safety/pesticides-pest-management.html']] },
+    { id:'provincial', result:true, title:'Check the Provincial tab', body:'Switch to the <strong>Provincial</strong> tab above and select your province. We\'ve mapped all 10 provincial agriculture ministries with direct links.', links:[] },
+  ];
+
+  function initWizard() {
+    renderWizardNode('root');
+  }
+  function renderWizardNode(id) {
+    const node = WIZARD_TREE.find(n=>n.id===id);
+    if (!node) return;
+    const el = document.getElementById('wizard-content');
+    if (node.result) {
+      el.innerHTML = `
+        <div style="padding:8px 0;">
+          <div style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--forest);margin-bottom:12px;">${node.title}</div>
+          <div style="font-size:13.5px;color:var(--text);line-height:1.7;margin-bottom:16px;">${node.body}</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+            ${node.links.map(([label,url])=>`<a href="${url}" target="_blank" class="pc-link"><span class="pc-link-icon">🔗</span><span class="pc-link-label">${label}</span><span class="pc-link-arrow">↗</span></a>`).join('')}
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="resetWizard()">← Start Over</button>
+          <a href="copilot.html" class="btn btn-secondary btn-sm" style="margin-left:8px;">Ask AI Copilot for more help →</a>
+        </div>`;
+    } else {
+      el.innerHTML = `
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px;">${node.q}</div>
+        ${node.opts.map(o=>`
+          <div class="wizard-option" onclick="renderWizardNode('${o.next}')">
+            <span class="wo-icon">${o.icon}</span>
+            <div><div class="wo-label">${o.label}</div><div class="wo-sub">${o.sub}</div></div>
+            <span class="wo-arrow">›</span>
+          </div>`).join('')}`;
+    }
+  }
+  function resetWizard() { renderWizardNode('root'); }
+
+  /* Document checklist */
+  const DOC_ITEMS = [
+    ['Your CRA Business Number (BN15)', 'Get from CRA My Business Account — takes 10 minutes online'],
+    ['Most recent Income Tax Return (T2042)', 'Required to calculate your reference margin'],
+    ['Allowable Net Sales documentation', 'Records of all farm commodity sales for the year'],
+    ['Production expenses breakdown', 'Separated by allowable/non-allowable categories'],
+    ['Pasture and feed cost records (2026)', 'New in 2026 — eligible as allowable expenses'],
+    ['AgriInvest account information', 'Contribution history from your My Business Account'],
+    ['Province of operation confirmation', 'Enrollment administered by your provincial ministry'],
+    ['Contact information for farm operator', 'Primary applicant must be registered farm operator'],
+    ['Banking information for direct deposit', 'Required for any payment deposit from AAFC'],
+    ['Previous year AgriStability reference', 'If applicable — bring prior year claim numbers'],
+  ];
+  let docChecked = JSON.parse(localStorage.getItem('docChecklist') || '[]');
+
+  function renderDocChecklist() {
+    const el = document.getElementById('doc-checklist');
+    el.innerHTML = DOC_ITEMS.map((item, i) => `
+      <div class="doc-item">
+        <div class="doc-check ${docChecked.includes(i)?'checked':''}" onclick="toggleDoc(${i})">${docChecked.includes(i)?'✓':''}</div>
+        <div>
+          <div class="doc-label" style="${docChecked.includes(i)?'text-decoration:line-through;color:var(--faint);':''}">${item[0]}</div>
+          <div class="doc-hint">${item[1]}</div>
+        </div>
+      </div>`).join('');
+    document.getElementById('doc-progress').textContent = docChecked.length + ' / ' + DOC_ITEMS.length;
+  }
+  window.toggleDoc = function(i) {
+    if (docChecked.includes(i)) docChecked = docChecked.filter(x=>x!==i);
+    else docChecked.push(i);
+    localStorage.setItem('docChecklist', JSON.stringify(docChecked));
+    renderDocChecklist();
+  };
+
+  /* Deadlines */
+  const DEADLINES = [
+    { name:'AgriStability Enrollment', org:'AAFC', date:'April 30, 2026', days:35, level:'red' },
+    { name:'AgriInvest Matching Contribution', org:'CRA / AAFC', date:'June 30, 2026', days:96, level:'amber' },
+    { name:'Crop Insurance — Spring Seeded Crops', org:'Provincial', date:'May 1, 2026', days:36, level:'red' },
+    { name:'SFCA Licence Renewal', org:'CFIA', date:'Varies by licence type', days:null, level:'amber' },
+    { name:'Farm Income Tax Return (T2042)', org:'CRA', date:'June 15, 2026', days:81, level:'amber' },
+    { name:'GST/HST Annual Return', org:'CRA', date:'June 15, 2026', days:81, level:'amber' },
+    { name:'Environmental Farm Plan Review', org:'Provincial', date:'Rolling — 5-year renewal', days:null, level:'green' },
+    { name:'Pesticide Applicator Licence Renewal', org:'PMRA / Provincial', date:'September 30, 2026', days:188, level:'green' },
+    { name:'Fertilizer / Nutrient Mgmt Plan', org:'Provincial OHS', date:'Before field application', days:null, level:'amber' },
+    { name:'LMIA Application (for spring workers)', org:'ESDC', date:'10-20 business days before needed', days:null, level:'red' },
+    { name:'AgriMarketing Application', org:'AAFC', date:'Rolling — apply before pool exhausted', days:null, level:'amber' },
+    { name:'Seeded Acreage Report', org:'Provincial Crop Insurance', date:'July 15, 2026', days:111, level:'green' },
+  ];
+
+  function renderDeadlines() {
+    document.getElementById('deadline-list').innerHTML = DEADLINES.map(d => `
+      <div class="dl-row">
+        <div>
+          <div class="dl-name">${d.name}</div>
+          <div class="dl-sub">${d.org} · ${d.date}</div>
+        </div>
+        <span class="dl-pill dl-${d.level}">${d.days ? d.days + ' days' : 'Check portal'}</span>
+      </div>`).join('');
+  }
+</script>
+</body>
+</html>

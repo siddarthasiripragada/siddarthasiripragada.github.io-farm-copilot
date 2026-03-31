@@ -219,6 +219,54 @@ body {
     .ln-footer-link:hover { color:rgba(244,236,218,.7); }
     .ln-footer-copy { font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(244,236,218,.2); letter-spacing:.5px; }
 
+
+    .ln-proof-point {
+      margin-top: 6px;
+      margin-bottom: 30px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: rgba(244,236,218,.72);
+      max-width: 560px;
+    }
+
+    .ln-proof-point strong {
+      color: var(--amber-lt);
+      font-weight: 600;
+    }
+
+    .ln-shot-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .ln-shot-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 18px 48px rgba(0,0,0,.22);
+    }
+
+    .ln-shot-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      background: rgba(255,255,255,.03);
+    }
+
+    .ln-shot-label {
+      padding: 12px 14px;
+      font-size: 12px;
+      color: rgba(244,236,218,.72);
+      font-family: 'IBM Plex Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-top: 1px solid rgba(255,255,255,.07);
+    }
+
     /* ── MOBILE ──────────────────────────────────────────── */
     @media(max-width:900px){
       .ln-hero-inner { grid-template-columns:1fr; }
@@ -235,6 +283,8 @@ body {
       .testi-grid { grid-template-columns:1fr; }
       .ln-footer { flex-direction:column; align-items:flex-start; padding:30px 24px; }
       .ln-sh-title { font-size:28px; }
+      .ln-shot-grid { grid-template-columns:1fr; }
+      .ln-proof-point { margin-bottom:24px; }
     }
     @media(max-width:480px){
       .feat-grid { grid-template-columns:1fr; }
@@ -258,7 +308,7 @@ body {
     <a href="#pricing" class="ln-nav-link">Pricing</a>
     <a href="pricing.html" class="ln-nav-link">Plans</a>
     <a href="dashboard.html" class="ln-nav-link" id="nav-dashboard" style="display:none;">Dashboard</a>
-    <a href="index.html" class="ln-nav-cta">Get Started Free →</a>
+    <a href="index.html" class="ln-nav-cta">Start Free Setup →</a>
   </div>
 </nav>
 
@@ -267,16 +317,20 @@ body {
   <div class="ln-hero-inner">
     <div>
       <div class="ln-eyebrow">Canadian Agricultural Intelligence · 2026</div>
-      <h1 class="ln-title">Smarter decisions<br>for the <em>Canadian</em><br>farm.</h1>
+      <h1 class="ln-title">AI Decision Support<br>for <em>Canadian Farmers</em></h1>
       <p class="ln-desc">
-        Find funding programs you qualify for, model ROI on technology, 
-        plan operations season by season, and get real-time AI answers — 
-        all built specifically for Canadian producers in 2026.
+        Find funding, monitor weather risks, and plan farm operations with real-time AI insights built specifically for Canadian producers.
       </p>
+
       <div class="ln-cta-row">
-        <a href="index.html" class="ln-cta-primary">🌾 Start Free — 4 min setup</a>
-        <a href="#" class="ln-cta-ghost" onclick="activateDemoModeFromLanding(); return false;">🎭 Live Demo</a>
+        <a href="index.html" class="ln-cta-primary">Start Free Setup</a>
+        <a href="dashboard.html" class="ln-cta-ghost" onclick="activateDemoModeFromLanding(); return false;">Explore Live Demo</a>
       </div>
+
+      <div class="ln-proof-point">
+        Ontario vegetable farm discovered <strong>$120,000 grant eligibility</strong> within 3 minutes using Farm Copilot.
+      </div>
+
       <div class="ln-stats">
         <div>
           <div class="ln-stat-val">8+</div>
@@ -297,7 +351,6 @@ body {
       </div>
     </div>
 
-    <!-- Preview card -->
     <div class="ln-preview-card">
       <div class="lpc-header">
         <div class="lpc-dot" style="background:#ff5f57;"></div>
@@ -311,6 +364,7 @@ body {
         <div class="lpc-row"><span class="lpc-row-name">Canadian Ag Partnership</span><span class="lpc-row-score lpc-high">92%</span></div>
         <div class="lpc-row"><span class="lpc-row-name">AgriMarketing</span><span class="lpc-row-score lpc-med">88%</span></div>
         <div class="lpc-row"><span class="lpc-row-name">AgriInnovate</span><span class="lpc-row-score lpc-low">58%</span></div>
+
         <div class="lpc-weather">
           <div class="lpc-wx-icon">🌤️</div>
           <div>
@@ -318,10 +372,60 @@ body {
             <div class="lpc-wx-sub" id="lpc-cond">Ontario Weather</div>
           </div>
         </div>
+
         <div class="lpc-ai-bubble">
           <div class="lpc-ai-label">AI Copilot</div>
-          <div class="lpc-ai-text">Based on your Ontario vegetable operation, AgriStability deadline is in <strong style="color:var(--amber-lt);">40 days</strong>. Gather your production margin docs now.</div>
+          <div class="lpc-ai-text">
+            Based on your Ontario vegetable operation, AgriStability deadline is in
+            <strong style="color:var(--amber-lt);">40 days</strong>. Gather your production margin documents now.
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="ln-section">
+    <div class="ln-sh" style="margin-bottom:22px;">
+      <div class="ln-sh-eyebrow">Trusted Data Sources</div>
+      <h2 class="ln-sh-title">Built on real Canadian public data</h2>
+      <p class="ln-sh-desc">Funding, weather, and risk insights are mapped from trusted public sources and structured for farm decisions.</p>
+    </div>
+
+    <div class="prog-strip">
+      <div class="prog-pill">Agriculture Canada</div>
+      <div class="prog-pill">Provincial Weather Networks</div>
+      <div class="prog-pill">Canadian Disaster Database</div>
+      <div class="prog-pill">Government Funding Programs</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="ln-section">
+    <div class="ln-sh">
+      <div class="ln-sh-eyebrow">Product Preview</div>
+      <h2 class="ln-sh-title">See Farm Copilot in action</h2>
+      <p class="ln-sh-desc">Use real screenshots here to make the product feel more credible and easier to understand at a glance.</p>
+    </div>
+
+    <div class="ln-shot-grid">
+      <div class="ln-shot-card">
+        <img src="images/dashboard.png" alt="Farm Copilot dashboard screenshot" class="ln-shot-img">
+        <div class="ln-shot-label">Dashboard</div>
+      </div>
+      <div class="ln-shot-card">
+        <img src="images/weather.png" alt="Weather intelligence screenshot" class="ln-shot-img">
+        <div class="ln-shot-label">Weather</div>
+      </div>
+      <div class="ln-shot-card">
+        <img src="images/funding.png" alt="Funding navigator screenshot" class="ln-shot-img">
+        <div class="ln-shot-label">Funding Navigator</div>
+      </div>
+      <div class="ln-shot-card">
+        <img src="images/risk.png" alt="Risk monitor screenshot" class="ln-shot-img">
+        <div class="ln-shot-label">Risk Monitor</div>
       </div>
     </div>
   </div>
@@ -378,6 +482,23 @@ body {
   </div>
 </section>
 
+<section>
+  <div class="ln-section">
+    <div class="ln-sh" style="margin-bottom:22px;">
+      <div class="ln-sh-eyebrow">Who It Helps</div>
+      <h2 class="ln-sh-title">Built for Canadian agriculture</h2>
+      <p class="ln-sh-desc">Farm Copilot is designed for real farm operations, not generic business software.</p>
+    </div>
+
+    <div class="prog-strip">
+      <div class="prog-pill">Grain Farms</div>
+      <div class="prog-pill">Dairy Operations</div>
+      <div class="prog-pill">Vegetable Growers</div>
+      <div class="prog-pill">Agribusiness Consultants</div>
+    </div>
+  </div>
+</section>
+
 <!-- HOW IT WORKS -->
 <section>
   <div class="ln-section">
@@ -424,7 +545,7 @@ body {
         <!-- filled by JS -->
       </div>
       <div style="margin-top:28px;">
-        <a href="index.html" class="ln-cta-primary" style="display:inline-flex;">View All Programs in Dashboard →</a>
+        <a href="index.html" class="ln-cta-ghost" style="display:inline-flex;">View Programs</a>
       </div>
     </div>
   </div>
@@ -439,17 +560,17 @@ body {
     </div>
     <div class="testi-grid">
       <div class="testi-card">
-        <div class="testi-quote">Finally found a tool that actually understands Canadian farm programs, not just American ones. The AgriStability guidance alone saved me hours of research.</div>
+        <div class="testi-quote">Saved us weeks researching grants.</div>
         <div class="testi-name">M. Bouchard</div>
         <div class="testi-role">Grain & Oilseeds · Quebec</div>
       </div>
       <div class="testi-card">
-        <div class="testi-quote">The ROI calculator helped me build the case for a new automated irrigation system. Got 68% payback in year one modelled out in minutes.</div>
+        <div class="testi-quote">Finally a dashboard built for farm decisions.</div>
         <div class="testi-name">K. Thiessen</div>
         <div class="testi-role">Mixed Farm · Manitoba</div>
       </div>
       <div class="testi-card">
-        <div class="testi-quote">The weather + crop calendar combination is something I didn't know I needed. Having it all in one place tied to my province makes planning so much easier.</div>
+        <div class="testi-quote">We found funding opportunities we didn’t know existed.</div>
         <div class="testi-name">L. Vanderburg</div>
         <div class="testi-role">Produce & Vegetables · Ontario</div>
       </div>
@@ -478,7 +599,7 @@ body {
             <li>Basic ROI calculator</li>
             <li>Operations planner</li>
           </ul>
-          <a href="index.html" class="price-cta free">Get Started Free</a>
+          <a href="index.html" class="price-cta free">Start Free Setup</a>
         </div>
         <div class="price-card featured">
           <div class="price-badge">Most Popular</div>
@@ -511,7 +632,7 @@ body {
         </div>
       </div>
       <div style="margin-top:24px;text-align:center;">
-        <a href="pricing.html" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(244,236,218,.4);text-decoration:none;letter-spacing:.5px;">View full pricing details →</a>
+        <a href="pricing.html" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(244,236,218,.4);text-decoration:none;letter-spacing:.5px;">See all plans →</a>
       </div>
     </div>
   </div>
@@ -547,6 +668,7 @@ body {
 </footer>
 
 <script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
 <script>
   if (Profile.load()) {
     document.getElementById('nav-dashboard').style.display = 'inline';
@@ -626,5 +748,4 @@ body {
   });
 </script>
 </body>
-</html>
 </html>

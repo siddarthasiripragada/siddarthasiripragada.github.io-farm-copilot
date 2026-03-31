@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farm Safety Centre — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    .tab-bar { display:flex; gap:4px; padding:0 0 20px; border-bottom:1px solid var(--border); margin-bottom:22px; flex-wrap:wrap; }
+    .pg-tab { padding:9px 18px; border-radius:20px; border:1.5px solid var(--border); background:white; font-family:'Sora',sans-serif; font-size:13px; color:var(--muted); cursor:pointer; transition:all .15s; }
+    .pg-tab.active { background:#c0392b; color:white; border-color:#c0392b; }
+    .pg-tab:hover:not(.active) { border-color:#c0392b; color:#c0392b; }
+
+    /* Emergency strip */
+    .emergency-strip {
+      background:linear-gradient(135deg, #c0392b 0%, #922b21 100%);
+      border-radius:var(--r-lg); padding:18px 24px;
+      display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+      margin-bottom:24px; box-shadow:0 8px 28px rgba(192,57,43,.3);
+    }
+    .es-icon { font-size:36px; flex-shrink:0; animation:pulse 2s infinite; }
+    .es-text h3 { font-family:'DM Serif Display',serif; font-size:17px; color:white; margin-bottom:4px; }
+    .es-text p  { font-size:12.5px; color:rgba(255,255,255,.75); }
+    .es-actions { display:flex; gap:10px; flex-wrap:wrap; margin-left:auto; }
+    .es-btn-primary { padding:11px 20px; background:white; color:#c0392b; border-radius:var(--r-sm); font-family:'Sora',sans-serif; font-size:13px; font-weight:700; text-decoration:none; transition:all .14s; white-space:nowrap; }
+    .es-btn-primary:hover { background:#f5f5f5; }
+    .es-btn-ghost { padding:11px 20px; background:rgba(255,255,255,.15); color:white; border:1.5px solid rgba(255,255,255,.3); border-radius:var(--r-sm); font-family:'Sora',sans-serif; font-size:13px; text-decoration:none; white-space:nowrap; transition:background .14s; }
+    .es-btn-ghost:hover { background:rgba(255,255,255,.25); }
+
+    /* Safety checklist */
+    .safety-section { margin-bottom:22px; }
+    .ss-title {
+      font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:2px;
+      text-transform:uppercase; color:var(--muted);
+      padding:8px 0 8px; margin-bottom:8px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .safety-item {
+      background:white; border:1px solid var(--border); border-radius:var(--r);
+      padding:12px 16px; margin-bottom:8px;
+      display:flex; align-items:flex-start; gap:12px;
+      transition:box-shadow .14s; cursor:pointer;
+    }
+    .safety-item:hover { box-shadow:var(--shadow-sm); }
+    .safety-item.checked { background:rgba(74,200,120,.04); border-color:rgba(74,200,120,.22); }
+    .si-check {
+      width:22px; height:22px; border-radius:5px; flex-shrink:0;
+      border:1.5px solid var(--border-md); margin-top:1px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; color:white; transition:all .14s;
+    }
+    .checked .si-check { background:var(--sage); border-color:var(--sage); }
+    .si-body h4 { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px; }
+    .si-body.checked h4 { color:var(--faint); text-decoration:line-through; }
+    .si-body p  { font-size:12px; color:var(--muted); line-height:1.5; }
+    .si-risk { margin-left:auto; flex-shrink:0; }
+
+    /* Risk level badges */
+    .risk-high   { font-family:'IBM Plex Mono',monospace; font-size:9px; padding:2px 8px; border-radius:6px; background:rgba(192,57,43,.1); color:#c0392b; }
+    .risk-medium { font-family:'IBM Plex Mono',monospace; font-size:9px; padding:2px 8px; border-radius:6px; background:rgba(184,114,14,.1); color:#8a5800; }
+    .risk-low    { font-family:'IBM Plex Mono',monospace; font-size:9px; padding:2px 8px; border-radius:6px; background:rgba(74,200,120,.1); color:#1e8449; }
+
+    /* Incident report form */
+    .incident-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .incident-grid .full { grid-column:1/-1; }
+
+    /* First aid requirements */
+    .fa-result {
+      background:var(--forest); border-radius:var(--r-lg);
+      padding:22px 24px; color:var(--wheat); margin-top:16px;
+    }
+    .fa-result h3 { font-family:'DM Serif Display',serif; font-size:18px; margin-bottom:12px; }
+    .fa-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.08); font-size:13px; color:rgba(244,236,218,.8); }
+    .fa-item:last-child { border-bottom:none; }
+    .fa-dot { width:7px; height:7px; border-radius:50%; background:var(--amber-lt); flex-shrink:0; }
+
+    /* Emergency contacts */
+    .contact-card {
+      background:white; border:1px solid var(--border); border-radius:var(--r);
+      padding:14px 16px; display:flex; align-items:center; gap:12px;
+      margin-bottom:10px; box-shadow:var(--shadow-sm);
+    }
+    .cc-icon-wrap { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+    .cc-name { font-size:13.5px; font-weight:600; color:var(--text); }
+    .cc-sub  { font-size:12px; color:var(--muted); }
+    .cc-num  { margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:700; color:var(--forest); white-space:nowrap; }
+
+    @media(max-width:900px) { .incident-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">🛡 Farm Safety Centre</div>
+          <div class="page-subtitle" id="fs-sub">Checklists, training, emergency contacts and incident tools for your operation</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <a href="compliance.html" class="btn btn-secondary btn-sm">Compliance Tracker →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Emergency strip -->
+      <div class="emergency-strip anim-fade-up">
+        <div class="es-icon">🚨</div>
+        <div class="es-text">
+          <h3>Farm Emergency? Get help immediately.</h3>
+          <p>For life-threatening emergencies call 911. For agricultural emergencies and CFIA reportable disease, call the numbers below.</p>
+        </div>
+        <div class="es-actions">
+          <a href="tel:911" class="es-btn-primary">📞 Call 911</a>
+          <a href="tel:18004422342" class="es-btn-ghost">CFIA: 1-800-442-2342</a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up anim-delay-1">
+        <div class="stat-card">
+          <div class="stat-label">Checklist Items</div>
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-change">All categories</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Completed</div>
+          <div class="stat-value" id="stat-done">0</div>
+          <div class="stat-change">Up to date</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">High Risk Outstanding</div>
+          <div class="stat-value" id="stat-high">0</div>
+          <div class="stat-change neg">Needs immediate attention</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Safety Score</div>
+          <div class="stat-value" id="stat-score">—</div>
+          <div class="stat-change neutral">Based on checklist</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar anim-fade-up anim-delay-1">
+        <button class="pg-tab active" id="fstab-checklist" onclick="showFsTab('checklist')">✅ Safety Checklist</button>
+        <button class="pg-tab"        id="fstab-training"  onclick="showFsTab('training')">🎓 Safety Training</button>
+        <button class="pg-tab"        id="fstab-incident"  onclick="showFsTab('incident')">📋 Incident Report</button>
+        <button class="pg-tab"        id="fstab-firstaid"  onclick="showFsTab('firstaid')">🩺 First Aid Requirements</button>
+        <button class="pg-tab"        id="fstab-contacts"  onclick="showFsTab('contacts')">📞 Emergency Contacts</button>
+      </div>
+
+      <!-- ── CHECKLIST ── -->
+      <div id="fsview-checklist">
+        <div class="grid-2 anim-fade-up" style="grid-template-columns:1fr 280px;">
+          <div id="safety-checklist-body"></div>
+          <div>
+            <div class="card mb-16" style="background:var(--forest);border:none;">
+              <div class="card-body" style="padding:20px;text-align:center;">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(244,236,218,.35);margin-bottom:8px;">Safety Score</div>
+                <div style="font-family:'DM Serif Display',serif;font-size:52px;color:var(--wheat);letter-spacing:-2px;line-height:1;" id="score-big">—</div>
+                <div style="font-size:12px;color:rgba(244,236,218,.5);margin-top:6px;" id="score-label">Complete items to calculate</div>
+              </div>
+            </div>
+            <div class="card mb-16">
+              <div class="card-header"><span class="card-title">⚠️ Top Priorities</span></div>
+              <div class="card-body" id="top-priorities" style="padding:8px 16px;font-size:13px;color:var(--muted);">Complete the checklist to see your top priorities.</div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Quick Actions</span></div>
+              <div class="card-body" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px;">
+                <a href="copilot.html" class="btn btn-primary btn-sm">✦ Ask AI for safety plan</a>
+                <a href="compliance.html" class="btn btn-secondary btn-sm">Compliance Tracker →</a>
+                <button class="btn btn-ghost btn-sm" onclick="clearSafetyChecks()">Reset checklist</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TRAINING ── -->
+      <div id="fsview-training" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header"><span class="card-title">🎓 CASA Safety Training — Free Certificates</span><a href="https://casa-acsa.ca" target="_blank" class="btn btn-ghost btn-sm">CASA Website ↗</a></div>
+          <div class="card-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+            <div style="background:var(--cream);border-radius:var(--r);padding:16px;">
+              <div style="font-size:24px;margin-bottom:8px;">🚜</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">Agricultural Machinery Safeguarding</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:10px;">Guards, lockout/tagout, PTO safety, and machine startup procedures. Certificate issued on completion.</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"><span class="risk-low">Free</span><span class="risk-low">Certificate</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(41,128,185,.1);color:#1a5276;">3 hrs</span></div>
+              <a href="https://casa-acsa.ca" target="_blank" class="btn btn-primary btn-sm" style="width:100%;text-align:center;display:block;">Enrol Free →</a>
+            </div>
+            <div style="background:var(--cream);border-radius:var(--r);padding:16px;">
+              <div style="font-size:24px;margin-bottom:8px;">🌾</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">Grain Bin Safety &amp; Confined Spaces</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:10px;">Grain entrapment, toxic atmospheres, and rescue procedures. Mandatory in SK and AB for bin operators.</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"><span class="risk-low">Free</span><span class="risk-low">Certificate</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(41,128,185,.1);color:#1a5276;">3 hrs</span></div>
+              <a href="https://casa-acsa.ca" target="_blank" class="btn btn-primary btn-sm" style="width:100%;text-align:center;display:block;">Enrol Free →</a>
+            </div>
+            <div style="background:var(--cream);border-radius:var(--r);padding:16px;">
+              <div style="font-size:24px;margin-bottom:8px;">🏍</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">ATV &amp; UTV Safe Operation</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:10px;">Terrain assessment, load limits, rollover prevention, and PPE requirements for farm ATVs and side-by-sides.</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"><span class="risk-low">Free</span><span class="risk-low">Certificate</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(41,128,185,.1);color:#1a5276;">2 hrs</span></div>
+              <a href="https://casa-acsa.ca" target="_blank" class="btn btn-primary btn-sm" style="width:100%;text-align:center;display:block;">Enrol Free →</a>
+            </div>
+            <div style="background:var(--cream);border-radius:var(--r);padding:16px;">
+              <div style="font-size:24px;margin-bottom:8px;">🐄</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">Dairy Worker Safety Orientation</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:10px;">Animal handling, milking safety, chemical storage, and dairy facility hazards for all workers.</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"><span class="risk-low">Free</span><span class="risk-low">Certificate</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(41,128,185,.1);color:#1a5276;">2 hrs</span></div>
+              <a href="https://casa-acsa.ca" target="_blank" class="btn btn-primary btn-sm" style="width:100%;text-align:center;display:block;">Enrol Free →</a>
+            </div>
+            <div style="background:var(--cream);border-radius:var(--r);padding:16px;">
+              <div style="font-size:24px;margin-bottom:8px;">☣️</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">WHMIS 2015 for Farms</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:10px;">Workplace Hazardous Materials — mandatory for anyone handling pesticides, fertilizers, or fuels on farms with employees.</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"><span class="risk-low">Free</span><span class="risk-low">Certificate</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(41,128,185,.1);color:#1a5276;">2 hrs</span></div>
+              <a href="https://www.ccohs.ca/products/courses/whmis_agri/" target="_blank" class="btn btn-primary btn-sm" style="width:100%;text-align:center;display:block;">Enrol Free →</a>
+            </div>
+            <div style="background:var(--cream);border-radius:var(--r);padding:16px;">
+              <div style="font-size:24px;margin-bottom:8px;">🏥</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">Farm Emergency First Aid</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:10px;">Agricultural-specific first aid: crush injuries, chemical exposure, heat stroke, and AED use. Red Cross certified.</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"><span class="risk-medium">Paid (~$80)</span><span class="risk-low">Certificate</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(41,128,185,.1);color:#1a5276;">8 hrs</span></div>
+              <a href="https://www.redcross.ca/training-and-certification/first-aid-tips-and-videos" target="_blank" class="btn btn-secondary btn-sm" style="width:100%;text-align:center;display:block;">Find a Course →</a>
+            </div>
+          </div>
+          <div class="card-footer"><a href="training.html" class="btn btn-secondary btn-sm">Full Training Academy →</a></div>
+        </div>
+      </div>
+
+      <!-- ── INCIDENT REPORT ── -->
+      <div id="fsview-incident" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">📋 Farm Incident / Near-Miss Report</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">Stored locally on your device</span>
+          </div>
+          <div class="card-body">
+            <div style="background:rgba(184,114,14,.07);border:1px solid rgba(184,114,14,.2);border-radius:var(--r-sm);padding:12px 16px;font-size:13px;color:var(--text);margin-bottom:20px;line-height:1.6;">
+              ⚠️ <strong>Serious injury or fatality:</strong> You must notify your provincial OHS ministry within 24 hours. This form is for your internal records only.
+            </div>
+            <div class="incident-grid">
+              <div class="form-group">
+                <label class="form-label">Date of Incident *</label>
+                <input class="form-input" id="inc-date" type="date">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Time of Incident</label>
+                <input class="form-input" id="inc-time" type="time">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Incident Type *</label>
+                <select class="form-input" id="inc-type">
+                  <option value="">Select…</option>
+                  <option>Equipment / Machinery</option>
+                  <option>Chemical / Pesticide Exposure</option>
+                  <option>Animal Handling</option>
+                  <option>Fall or Slip</option>
+                  <option>ATV / UTV Accident</option>
+                  <option>Grain Bin / Confined Space</option>
+                  <option>Heat / Cold Stress</option>
+                  <option>Near-Miss (no injury)</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Severity</label>
+                <select class="form-input" id="inc-severity">
+                  <option>Near-Miss (no injury)</option>
+                  <option>Minor Injury (first aid only)</option>
+                  <option>Medical Treatment Required</option>
+                  <option>Lost Time Injury</option>
+                  <option>Critical / Fatality</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Description of Incident *</label>
+                <span class="form-hint">What happened? Where? What equipment was involved?</span>
+                <textarea class="form-input" id="inc-desc" rows="4" style="resize:vertical;"></textarea>
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Immediate Corrective Action Taken</label>
+                <textarea class="form-input" id="inc-action" rows="3" style="resize:vertical;" placeholder="What was done immediately after the incident to prevent further harm?"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Person(s) Involved</label>
+                <input class="form-input" id="inc-persons" placeholder="Farm operator, employee, visitor…">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Witnesses (if any)</label>
+                <input class="form-input" id="inc-witnesses" placeholder="Names of witnesses">
+              </div>
+              <div class="full" style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" onclick="clearIncidentForm()">Clear</button>
+                <button class="btn btn-primary btn-sm" onclick="saveIncident()">Save Report →</button>
+              </div>
+            </div>
+            <div id="past-incidents" style="margin-top:24px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FIRST AID REQUIREMENTS ── -->
+      <div id="fsview-firstaid" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header"><span class="card-title">🩺 First Aid Requirements Calculator</span></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;">Provincial OHS regulations require different first aid kits and trained personnel depending on your workforce size and proximity to medical facilities.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+              <div class="form-group">
+                <label class="form-label">Number of Workers on Site (peak)</label>
+                <input class="form-input form-mono" id="fa-workers" type="number" value="3" min="1" oninput="calcFirstAid()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Distance to Nearest Hospital</label>
+                <select class="form-input" id="fa-distance" onchange="calcFirstAid()">
+                  <option value="near">Under 20 minutes</option>
+                  <option value="mid">20–40 minutes</option>
+                  <option value="far">Over 40 minutes</option>
+                </select>
+              </div>
+            </div>
+            <div id="fa-result"></div>
+          </div>
+          <div class="card-footer">
+            <a href="https://www.ccohs.ca/oshanswers/hsprograms/firstaid_req.html" target="_blank" class="btn btn-secondary btn-sm">CCOHS First Aid Requirements →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── EMERGENCY CONTACTS ── -->
+      <div id="fsview-contacts" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🚨 Emergency Contacts</span></div>
+            <div class="card-body" style="padding:8px 16px;" id="emergency-contacts"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">📋 My Farm Emergency Card</span></div>
+            <div class="card-body">
+              <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Fill in your farm-specific contacts and print this card for the shop, barn, and tractor cab.</p>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div class="form-group"><label class="form-label">Farm Address (for 911)</label><input class="form-input" id="em-address" placeholder="Full civic address, RR number" oninput="saveEmCard()"></div>
+                <div class="form-group"><label class="form-label">Nearest Intersection</label><input class="form-input" id="em-intersection" placeholder="e.g. County Rd 4 &amp; Hwy 89" oninput="saveEmCard()"></div>
+                <div class="form-group"><label class="form-label">Farm Owner / Emergency Contact</label><input class="form-input" id="em-owner" placeholder="Name and phone number" oninput="saveEmCard()"></div>
+                <div class="form-group"><label class="form-label">Local Fire Station</label><input class="form-input" id="em-fire" placeholder="Station name and direct line" oninput="saveEmCard()"></div>
+                <div class="form-group"><label class="form-label">Nearest Hospital / ER</label><input class="form-input" id="em-hospital" placeholder="Hospital name and distance" oninput="saveEmCard()"></div>
+                <div class="form-group"><label class="form-label">Vet / Large Animal Emergency</label><input class="form-input" id="em-vet" placeholder="Vet clinic and after-hours number" oninput="saveEmCard()"></div>
+              </div>
+              <button class="btn btn-primary btn-sm" style="margin-top:14px;" onclick="printEmCard()">🖨️ Print Emergency Card</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('farm-safety');
+  document.getElementById('fs-sub').textContent = `Safety checklists and emergency resources for ${profile.farmType} · ${profile.province}`;
+
+  function showFsTab(t) {
+    ['checklist','training','incident','firstaid','contacts'].forEach(id => {
+      document.getElementById('fsview-'+id).style.display = id===t?'':'none';
+      document.getElementById('fstab-'+id).classList.toggle('active', id===t);
+    });
+    if(t==='firstaid') calcFirstAid();
+    if(t==='contacts') { renderContacts(); loadEmCard(); }
+    if(t==='incident') renderPastIncidents();
+  }
+
+  // ── Safety Checklist ─────────────────────────────────
+  const SAFETY_ITEMS = [
+    { cat:'Equipment', id:'s01', title:'PTO shaft guards in place and undamaged', desc:'Check all power take-off covers before seasonal use. Exposed PTOs cause dozens of deaths annually.', risk:'high' },
+    { cat:'Equipment', id:'s02', title:'Tractor ROPS (rollover bar) installed and functional', desc:'Required by law in most provinces for tractors operated by employees. Seatbelt must be worn.', risk:'high' },
+    { cat:'Equipment', id:'s03', title:'Equipment pre-season inspection completed', desc:'Brakes, hydraulics, lighting, tires, and safety decals checked and documented.', risk:'medium' },
+    { cat:'Equipment', id:'s04', title:'Lockout/Tagout procedures posted and followed', desc:'Written procedures for de-energizing equipment before maintenance. Required under OHS legislation.', risk:'high' },
+    { cat:'Chemical', id:'s05', title:'Pesticide storage — locked, labelled, ventilated', desc:'All pesticides stored in original containers with current labels. Locked cabinet away from food/water.', risk:'high' },
+    { cat:'Chemical', id:'s06', title:'PPE available for pesticide application', desc:'Gloves, eye protection, respirator, and coveralls appropriate for products being used.', risk:'high' },
+    { cat:'Chemical', id:'s07', title:'WHMIS Safety Data Sheets (SDS) accessible', desc:'Current SDS for all hazardous products readily accessible to all workers in the workplace.', risk:'medium' },
+    { cat:'Grain & Storage', id:'s08', title:'Grain bin entry permit system in place', desc:'Written confined space entry procedure with rescue plan required before entering grain bins.', risk:'high' },
+    { cat:'Grain & Storage', id:'s09', title:'Atmospheric testing equipment available', desc:'Gas detector to test for oxygen deficiency and toxic gases before entering confined spaces.', risk:'high' },
+    { cat:'Farm Facilities', id:'s10', title:'First aid kit stocked and accessible', desc:'Contents checked and expired items replaced. Location known to all workers.', risk:'medium' },
+    { cat:'Farm Facilities', id:'s11', title:'Fire extinguishers charged and inspected', desc:'Annual inspection by certified technician. Located in shop, barn, and crop storage.', risk:'medium' },
+    { cat:'Farm Facilities', id:'s12', title:'Emergency contacts posted in shop and barn', desc:'911 address, farm owner contact, nearest hospital, and vet posted visibly.', risk:'low' },
+    { cat:'Livestock', id:'s13', title:'Animal handling facilities in good repair', desc:'Chutes, squeeze, and loading facilities without sharp edges, loose boards, or broken gates.', risk:'medium' },
+    { cat:'Livestock', id:'s14', title:'Isolation protocols for sick animals documented', desc:'Written protocol for handling animals with suspected reportable diseases.', risk:'medium' },
+    { cat:'Workers', id:'s15', title:'Farm safety orientation completed for all workers', desc:'All employees including seasonal and TFW workers received safety orientation before first shift.', risk:'high' },
+    { cat:'Workers', id:'s16', title:'OHS Farm Safety Plan documented', desc:'Required in ON, AB, BC, SK for farms with employees. Signed and dated by owner.', risk:'medium' },
+  ];
+
+  let safetyChecked = JSON.parse(localStorage.getItem('safetyChecked') || '[]');
+
+  function renderSafetyChecklist() {
+    const categories = [...new Set(SAFETY_ITEMS.map(i=>i.cat))];
+    const body = document.getElementById('safety-checklist-body');
+    body.innerHTML = categories.map(cat => {
+      const items = SAFETY_ITEMS.filter(i=>i.cat===cat);
+      return `<div class="safety-section">
+        <div class="ss-title">
+          <span>${cat}</span>
+          <span>${items.filter(i=>safetyChecked.includes(i.id)).length}/${items.length} done</span>
+        </div>
+        ${items.map(item => {
+          const done = safetyChecked.includes(item.id);
+          return `<div class="safety-item ${done?'checked':''}" onclick="toggleSafety('${item.id}')">
+            <div class="si-check">${done?'✓':''}</div>
+            <div class="si-body ${done?'checked':''}">
+              <h4>${item.title}</h4>
+              <p>${item.desc}</p>
+            </div>
+            <div class="si-risk"><span class="risk-${item.risk}">${item.risk.toUpperCase()}</span></div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+    updateSafetyStats();
+  }
+
+  function toggleSafety(id) {
+    if (safetyChecked.includes(id)) safetyChecked = safetyChecked.filter(x=>x!==id);
+    else safetyChecked.push(id);
+    localStorage.setItem('safetyChecked', JSON.stringify(safetyChecked));
+    renderSafetyChecklist();
+  }
+
+  function updateSafetyStats() {
+    const total  = SAFETY_ITEMS.length;
+    const done   = safetyChecked.length;
+    const highOut = SAFETY_ITEMS.filter(i=>i.risk==='high' && !safetyChecked.includes(i.id)).length;
+    const score  = Math.round((done/total)*100);
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-done').textContent  = done;
+    document.getElementById('stat-high').textContent  = highOut;
+    document.getElementById('stat-score').textContent = score + '%';
+    document.getElementById('score-big').textContent  = score + '%';
+    document.getElementById('score-label').textContent = score>=80?'✅ Good standing':score>=50?'⚠ Needs attention':'🔴 Action required';
+
+    const topRisk = SAFETY_ITEMS.filter(i=>i.risk==='high'&&!safetyChecked.includes(i.id)).slice(0,3);
+    document.getElementById('top-priorities').innerHTML = topRisk.length
+      ? topRisk.map(i=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px;color:var(--text);">🔴 ${i.title}</div>`).join('')
+      : '<div style="padding:10px 0;font-size:13px;color:var(--sage);">✅ All high-risk items addressed!</div>';
+  }
+
+  window.clearSafetyChecks = () => { safetyChecked=[]; localStorage.removeItem('safetyChecked'); renderSafetyChecklist(); };
+  renderSafetyChecklist();
+
+  // ── First Aid Calculator ──────────────────────────────
+  function calcFirstAid() {
+    const workers  = parseInt(document.getElementById('fa-workers').value) || 1;
+    const distance = document.getElementById('fa-distance').value;
+    let kit, firstAider, notes = [];
+    if (workers <= 5 && distance === 'near')       { kit='Basic First Aid Kit (Level 1)'; firstAider='1 person with Level A first aid certificate'; }
+    else if (workers <= 10 && distance !== 'far')  { kit='Intermediate Kit (Level 2)'; firstAider='1 person with Level B / Standard First Aid'; }
+    else if (workers <= 20)                         { kit='Advanced Kit (Level 3)'; firstAider='1 Level C holder per 50 workers on site'; }
+    else                                            { kit='Hospital-grade Kit (Level 4)'; firstAider='Registered nurse or paramedic required on site'; }
+    if (distance === 'far') notes.push('Remote location: advanced kit required regardless of workforce size');
+    if (workers > 10)       notes.push('Written emergency response plan required under most provincial OHS acts');
+    document.getElementById('fa-result').innerHTML = `
+      <div class="fa-result">
+        <h3>Requirements for ${workers} worker${workers>1?'s':''} · ${distance==='near'?'Near':'Mid/Remote'} medical access</h3>
+        <div class="fa-item"><div class="fa-dot"></div>First Aid Kit: <strong style="margin-left:4px;">${kit}</strong></div>
+        <div class="fa-item"><div class="fa-dot"></div>Trained Personnel: <strong style="margin-left:4px;">${firstAider}</strong></div>
+        ${notes.map(n=>`<div class="fa-item"><div class="fa-dot"></div>${n}</div>`).join('')}
+        <div class="fa-item"><div class="fa-dot"></div>AED (defibrillator): <strong style="margin-left:4px;">${workers>5?'Strongly recommended':'Optional but recommended'}</strong></div>
+        <div style="margin-top:14px;font-size:12px;color:rgba(244,236,218,.45);">Requirements vary by province. Confirm with your provincial OHS ministry. General guidance based on CCOHS standards.</div>
+      </div>`;
+  }
+
+  // ── Emergency Contacts ───────────────────────────────
+  const CONTACTS = [
+    { icon:'🚑', bg:'#c0392b', name:'Medical Emergency', sub:'Ambulance, fire, police', num:'911', url:'tel:911' },
+    { icon:'🔬', bg:'#1a5276', name:'CFIA Animal Disease', sub:'Reportable disease hotline — 24/7', num:'1-800-442-2342', url:'tel:18004422342' },
+    { icon:'🌿', bg:'#1e8449', name:'PMRA Pesticide Poison', sub:'Pesticide emergency or exposure', num:'1-800-267-6315', url:'tel:18002676315' },
+    { icon:'💧', bg:'#2471a3', name:'Environment Spill Line', sub:'Fuel, chemical, or manure spill', num:'1-800-567-1967', url:'tel:18005671967' },
+    { icon:'🧠', bg:'#1e8449', name:'Farmer Crisis Line', sub:'Mental health — 24/7 confidential', num:'1-866-FARMS01', url:'tel:18666327601' },
+    { icon:'⚡', bg:'#8a5800', name:'Electrical Emergency', sub:'Your provincial utility emergency', num:'Call 911 first', url:'tel:911' },
+  ];
+
+  function renderContacts() {
+    document.getElementById('emergency-contacts').innerHTML = CONTACTS.map(c => `
+      <div class="contact-card">
+        <div class="cc-icon-wrap" style="background:${c.bg}20;"><span style="font-size:20px;">${c.icon}</span></div>
+        <div><div class="cc-name">${c.name}</div><div class="cc-sub">${c.sub}</div></div>
+        <a href="${c.url}" class="cc-num">${c.num}</a>
+      </div>`).join('');
+  }
+
+  // ── Emergency card ───────────────────────────────────
+  function saveEmCard() {
+    const card = ['address','intersection','owner','fire','hospital','vet'].reduce((o,k)=>{o[k]=document.getElementById('em-'+k).value;return o;},{});
+    localStorage.setItem('emCard', JSON.stringify(card));
+  }
+  function loadEmCard() {
+    const card = JSON.parse(localStorage.getItem('emCard')||'{}');
+    ['address','intersection','owner','fire','hospital','vet'].forEach(k=>{ const el=document.getElementById('em-'+k); if(el&&card[k]) el.value=card[k]; });
+  }
+  function printEmCard() {
+    const c = JSON.parse(localStorage.getItem('emCard')||'{}');
+    const w = window.open('','_blank','width=600,height=400');
+    w.document.write(`<html><body style="font-family:Arial;padding:20px;">
+      <h2 style="color:#c0392b;">🚨 FARM EMERGENCY CARD</h2>
+      <p><strong>📍 Address:</strong> ${c.address||'—'}</p>
+      <p><strong>🗺 Intersection:</strong> ${c.intersection||'—'}</p>
+      <p><strong>👤 Emergency Contact:</strong> ${c.owner||'—'}</p>
+      <p><strong>🚒 Fire Station:</strong> ${c.fire||'—'}</p>
+      <p><strong>🏥 Hospital:</strong> ${c.hospital||'—'}</p>
+      <p><strong>🐄 Large Animal Vet:</strong> ${c.vet||'—'}</p>
+      <hr><p><strong>📞 Medical Emergency: 911</strong></p>
+      <p>CFIA Disease Hotline: 1-800-442-2342</p>
+      <p>Farmer Wellness: 1-866-FARMS01</p>
+      <script>window.print();<\/script></body></html>`);
+  }
+
+  // ── Incident form ────────────────────────────────────
+  let incidents = JSON.parse(localStorage.getItem('incidents')||'[]');
+  window.saveIncident = function() {
+    const date = document.getElementById('inc-date').value;
+    const type = document.getElementById('inc-type').value;
+    const desc = document.getElementById('inc-desc').value.trim();
+    if (!date||!type||!desc) { alert('Please fill in Date, Incident Type, and Description.'); return; }
+    incidents.push({ date, time:document.getElementById('inc-time').value, type, severity:document.getElementById('inc-severity').value, desc, action:document.getElementById('inc-action').value, persons:document.getElementById('inc-persons').value, witnesses:document.getElementById('inc-witnesses').value, saved:new Date().toISOString() });
+    localStorage.setItem('incidents', JSON.stringify(incidents));
+    clearIncidentForm(); renderPastIncidents();
+    alert('✓ Incident report saved to your device.');
+  };
+  window.clearIncidentForm = function() { ['date','time','type','severity','desc','action','persons','witnesses'].forEach(id=>{ const el=document.getElementById('inc-'+id); if(el) el.value=''; }); };
+  function renderPastIncidents() {
+    const el = document.getElementById('past-incidents');
+    if (!incidents.length) { el.innerHTML=''; return; }
+    el.innerHTML = `<div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Saved Reports (${incidents.length})</div>` +
+      incidents.slice(-5).reverse().map(i=>`
+        <div style="background:var(--cream);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <strong style="font-size:13px;color:var(--text);">${i.type}</strong>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">${i.date}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">${i.severity} · ${i.desc.slice(0,80)}${i.desc.length>80?'…':''}</div>
+        </div>`).join('');
+  }
+</script>
+</body>
+</html>

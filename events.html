@@ -1,0 +1,129 @@
+<!-- ═══════════ FARM EVENT CALENDAR ═══════════ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farm Event Calendar — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css"><link rel="manifest" href="manifest.json">
+  <style>
+    .tab-bar{display:flex;gap:4px;padding:0 0 20px;border-bottom:1px solid var(--border);margin-bottom:22px;flex-wrap:wrap;}
+    .pg-tab{padding:9px 18px;border-radius:20px;border:1.5px solid var(--border);background:white;font-family:'Sora',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;}
+    .pg-tab.active{background:var(--forest);color:var(--wheat);border-color:var(--forest);}
+    .pg-tab:hover:not(.active){border-color:var(--sage);color:var(--forest);}
+    .event-row{display:flex;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);align-items:flex-start;transition:background .13s;}
+    .event-row:hover{background:rgba(0,0,0,.02);}
+    .er-date{flex-shrink:0;width:54px;text-align:center;background:var(--forest);border-radius:8px;padding:8px 6px;}
+    .er-day{font-family:'DM Serif Display',serif;font-size:18px;color:var(--wheat);line-height:1;}
+    .er-mon{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--amber-lt);}
+    .er-body{flex:1;}
+    .er-title{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:3px;}
+    .er-meta{font-size:12px;color:var(--muted);margin-bottom:6px;}
+    .er-tags{display:flex;gap:6px;flex-wrap:wrap;}
+    .et-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:5px;}
+    .et-webinar{background:rgba(41,128,185,.1);color:#1a5276;}
+    .et-show{background:rgba(184,114,14,.1);color:#8a5800;}
+    .et-workshop{background:rgba(27,53,40,.08);color:var(--sage);}
+    .et-deadline{background:rgba(192,57,43,.1);color:#c0392b;}
+    .et-free{background:rgba(74,200,120,.1);color:#1e8449;}
+    .et-virtual{background:rgba(142,68,173,.1);color:#7d3c98;}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><div class="page-title">📅 Farm Event Calendar</div><div class="page-subtitle" id="ec-sub">Farm shows, webinars, workshops, and funding deadlines — Canada-wide</div></div>
+        <div style="display:flex;gap:8px;"><a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a><a href="policy-feed.html" class="btn btn-secondary btn-sm">Policy Feed →</a></div>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="planner-stats anim-fade-up">
+        <div class="stat-card"><div class="stat-label">Events This Month</div><div class="stat-value" id="stat-events">0</div><div class="stat-change">Spring 2026</div></div>
+        <div class="stat-card"><div class="stat-label">Upcoming Deadlines</div><div class="stat-value">4</div><div class="stat-change neg">Government programs</div></div>
+        <div class="stat-card"><div class="stat-label">Free Events</div><div class="stat-value" id="stat-free">0</div><div class="stat-change">No cost to attend</div></div>
+        <div class="stat-card"><div class="stat-label">Saved / RSVP'd</div><div class="stat-value" id="stat-saved">0</div><div class="stat-change neutral">Your watchlist</div></div>
+      </div>
+      <div class="tab-bar anim-fade-up anim-delay-1">
+        <button class="pg-tab active" id="ectab-all"      onclick="showEcTab('all')">📅 All Events</button>
+        <button class="pg-tab"        id="ectab-deadlines" onclick="showEcTab('deadlines')">⏱ Deadlines</button>
+        <button class="pg-tab"        id="ectab-shows"    onclick="showEcTab('shows')">🏟 Farm Shows</button>
+        <button class="pg-tab"        id="ectab-training" onclick="showEcTab('training')">🎓 Training</button>
+        <button class="pg-tab"        id="ectab-saved"    onclick="showEcTab('saved')">🔖 Saved</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;" class="anim-fade-up">
+        <input class="filter-search" id="ev-search" placeholder="Search events…" style="flex:1;min-width:200px;" oninput="renderEvents()">
+        <select class="filter-select" id="ev-prov" onchange="renderEvents()"><option value="">All Provinces</option><option>Alberta</option><option>British Columbia</option><option>Manitoba</option><option>Ontario</option><option>Quebec</option><option>Saskatchewan</option><option>Virtual</option></select>
+        <select class="filter-select" id="ev-type" onchange="renderEvents()"><option value="">All Types</option><option>Webinar</option><option>Farm Show</option><option>Workshop</option><option>Deadline</option></select>
+      </div>
+      <div class="card anim-fade-up anim-delay-1">
+        <div id="event-main-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/data.js"></script>
+<script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('events');
+  document.getElementById('ec-sub').textContent = `Agriculture events · ${profile.province} + Virtual`;
+  let savedEvents = JSON.parse(localStorage.getItem('savedEvents')||'[]');
+
+  const EVENTS = [
+    {id:'e01',day:'28',mon:'Mar',title:'AgriStability Filing Workshop',host:'AAFC',prov:'Virtual',type:'Webinar',free:true,desc:'Step-by-step guide to filing your 2025 AgriStability claim. Provincial agents available for questions.',url:'https://agriculture.canada.ca',tags:['et-webinar','et-free','et-virtual']},
+    {id:'e02',day:'3',mon:'Apr',title:'Grain Marketing Strategy Webinar',host:'FCC',prov:'Virtual',type:'Webinar',free:true,desc:'Navigating canola marketing amid US tariffs. Forward contracting, APP program, basis strategies.',url:'https://www.fcc-fac.ca',tags:['et-webinar','et-free','et-virtual']},
+    {id:'e03',day:'6',mon:'Apr',title:'BC On-Farm Tech Grant DEADLINE',host:'BC Ministry',prov:'British Columbia',type:'Deadline',free:true,desc:'FINAL DAY to submit your BC On-Farm Technology Adoption Program application (up to $100K).',url:'https://www2.gov.bc.ca',tags:['et-deadline']},
+    {id:'e04',day:'10',mon:'Apr',title:'On-Farm Safety for Spring Workshop',host:'CASA',prov:'Virtual',type:'Workshop',free:true,desc:'Pre-season safety checklist, machinery inspection, and PTO safety refresher. Certificate issued.',url:'https://casa-acsa.ca',tags:['et-workshop','et-free','et-virtual']},
+    {id:'e05',day:'16',mon:'Apr',title:'Manitoba Ag Days — Brandon',host:'Keystone Agricultural Producers',prov:'Manitoba',type:'Farm Show',free:false,desc:'Manitoba\'s largest indoor ag trade show. 400+ exhibitors, livestock shows, and government program booths.',url:'https://www.mbagdays.org',tags:['et-show']},
+    {id:'e06',day:'24',mon:'Apr',title:'Precision Agriculture Summit — Calgary',host:'Agri-Tech Alberta',prov:'Alberta',type:'Farm Show',free:false,desc:'GPS, drones, sensors, and digital farm management. 60+ tech vendors. Demos and hands-on sessions.',url:'https://www.albertaag.ca',tags:['et-show','et-workshop']},
+    {id:'e07',day:'30',mon:'Apr',title:'AgriStability ENROLLMENT DEADLINE',host:'AAFC',prov:'Virtual',type:'Deadline',free:true,desc:'FINAL DAY to enroll in AgriStability for the 2026 crop year. Missing this means no coverage.',url:'https://agriculture.canada.ca',tags:['et-deadline']},
+    {id:'e08',day:'1',mon:'May',title:'Spring Crop Insurance Deadline',host:'Provincial Insurance Corps',prov:'Virtual',type:'Deadline',free:true,desc:'Spring seeded crop insurance enrollment deadline in most provinces. Contact your provincial corporation.',url:'https://agriculture.canada.ca',tags:['et-deadline']},
+    {id:'e09',day:'8',mon:'May',title:'Carbon Farming for Grain Growers',host:'University of Guelph',prov:'Virtual',type:'Webinar',free:true,desc:'Regenerative agriculture practices, carbon credit protocols, and RALP funding for Ontario producers.',url:'https://www.uoguelph.ca',tags:['et-webinar','et-free','et-virtual']},
+    {id:'e10',day:'13',mon:'May',title:'Canada\'s Outdoor Farm Show Registration Opens',host:'Farm Business Communications',prov:'Ontario',type:'Farm Show',free:false,desc:'Canada\'s largest outdoor farm show — September 16–18, 2026 in Woodstock, ON. Register early for exhibitor/attendee pricing.',url:'https://www.outdoorfarmshow.com',tags:['et-show']},
+    {id:'e11',day:'15',mon:'May',title:'Women in Ag Leadership Cohort Launch',host:'CAHRC',prov:'Virtual',type:'Workshop',free:true,desc:'10-week virtual leadership program for women in Canadian agriculture. Certificate on completion.',url:'https://cahrc-ccrha.ca',tags:['et-workshop','et-free','et-virtual']},
+    {id:'e12',day:'22',mon:'May',title:'Young Farmer Forum — Saskatchewan',host:'Young Agrarians',prov:'Saskatchewan',type:'Workshop',free:false,desc:'Land access, succession planning, and new entrant financial tools. In-person networking.',url:'https://youngagrarians.org',tags:['et-workshop']},
+  ];
+
+  function renderEvents(filter){
+    const search=(document.getElementById('ev-search')?.value||'').toLowerCase();
+    const prov=document.getElementById('ev-prov')?.value||'';
+    const type=document.getElementById('ev-type')?.value||'';
+    let list=EVENTS.filter(e=>
+      (!search||e.title.toLowerCase().includes(search)||e.host.toLowerCase().includes(search))&&
+      (!prov||e.prov===prov||e.prov==='Virtual')&&
+      (!type||e.type===type));
+    if(filter==='deadlines') list=list.filter(e=>e.type==='Deadline');
+    if(filter==='shows') list=list.filter(e=>e.type==='Farm Show');
+    if(filter==='training') list=list.filter(e=>e.type==='Webinar'||e.type==='Workshop');
+    if(filter==='saved') list=EVENTS.filter(e=>savedEvents.includes(e.id));
+    document.getElementById('stat-events').textContent=list.length;
+    document.getElementById('stat-free').textContent=EVENTS.filter(e=>e.free).length;
+    document.getElementById('stat-saved').textContent=savedEvents.length;
+    const el=document.getElementById('event-main-list');
+    if(!list.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);">No events match your filters.</div>';return;}
+    el.innerHTML=list.map(e=>{
+      const isSaved=savedEvents.includes(e.id);
+      return `<div class="event-row">
+        <div class="er-date"><div class="er-day">${e.day}</div><div class="er-mon">${e.mon}</div></div>
+        <div class="er-body">
+          <div class="er-title">${e.title}</div>
+          <div class="er-meta">${e.host} · 📍 ${e.prov}</div>
+          <div class="er-desc" style="font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:8px;">${e.desc}</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="er-tags">${e.tags.map(t=>`<span class="et-tag ${t}">${t==='et-webinar'?'Webinar':t==='et-show'?'Farm Show':t==='et-workshop'?'Workshop':t==='et-deadline'?'⚡ Deadline':t==='et-free'?'Free':t==='et-virtual'?'Virtual':''}</span>`).join('')}</div>
+            <a href="${e.url}" target="_blank" class="btn btn-${e.type==='Deadline'?'primary':'ghost'} btn-sm">${e.type==='Deadline'?'Apply Now →':'Register →'}</a>
+            <button class="btn btn-ghost btn-sm" onclick="toggleSaveEvent('${e.id}')" id="esave-${e.id}">${isSaved?'🔖 Saved':'🔖 Save'}</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  window.toggleSaveEvent=function(id){if(savedEvents.includes(id))savedEvents=savedEvents.filter(x=>x!==id);else savedEvents.push(id);localStorage.setItem('savedEvents',JSON.stringify(savedEvents));const btn=document.getElementById('esave-'+id);if(btn)btn.textContent=savedEvents.includes(id)?'🔖 Saved':'🔖 Save';document.getElementById('stat-saved').textContent=savedEvents.length;};
+  function showEcTab(t){['all','deadlines','shows','training','saved'].forEach(id=>{document.getElementById('ectab-'+id).classList.toggle('active',id===t);});renderEvents(t==='all'?null:t);}
+  renderEvents();
+</script>
+</body>
+</html>

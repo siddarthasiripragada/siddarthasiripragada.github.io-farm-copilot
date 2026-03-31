@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peer Benchmark Tool — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .bench-score-card {
+      background:var(--forest); border-radius:var(--r-lg);
+      padding:24px 28px; color:var(--wheat);
+      display:flex; gap:24px; align-items:center; flex-wrap:wrap;
+      margin-bottom:22px; box-shadow:var(--shadow-lg);
+    }
+    .bsc-score { text-align:center; flex-shrink:0; }
+    .bsc-val   { font-family:'DM Serif Display',serif; font-size:64px; color:var(--wheat); letter-spacing:-3px; line-height:1; }
+    .bsc-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(244,236,218,.35); margin-top:4px; }
+    .bsc-grade { font-size:24px; margin-top:2px; }
+    .bsc-bars  { flex:1; min-width:200px; display:flex; flex-direction:column; gap:10px; }
+    .bsc-bar-row { }
+    .bsc-bar-label { display:flex; justify-content:space-between; font-size:12px; color:rgba(244,236,218,.65); margin-bottom:4px; }
+    .bsc-bar-track { height:7px; background:rgba(255,255,255,.1); border-radius:4px; overflow:hidden; }
+    .bsc-bar-fill  { height:100%; border-radius:4px; transition:width .6s ease; }
+    .bsc-desc { flex:1; min-width:200px; }
+    .bsc-desc h3 { font-family:'DM Serif Display',serif; font-size:17px; margin-bottom:8px; }
+    .bsc-desc p  { font-size:13px; color:rgba(244,236,218,.6); line-height:1.65; }
+
+    /* Benchmark metric cards */
+    .bench-metric {
+      background:white; border:1px solid var(--border);
+      border-radius:var(--r); padding:16px 18px;
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .bm-label  { font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.5px; text-transform:uppercase; color:var(--muted); }
+    .bm-your   { font-family:'DM Serif Display',serif; font-size:24px; color:var(--forest); letter-spacing:-.5px; }
+    .bm-avg    { font-size:12px; color:var(--muted); }
+    .bm-delta  { font-family:'IBM Plex Mono',monospace; font-size:11px; margin-top:2px; }
+    .bm-delta.above { color:var(--green); }
+    .bm-delta.below { color:var(--red); }
+    .bm-delta.equal { color:var(--muted); }
+    .bm-bar-wrap { height:5px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:8px; }
+    .bm-bar-fill { height:100%; border-radius:3px; transition:width .5s; }
+
+    /* Percentile badge */
+    .percentile-badge {
+      font-family:'IBM Plex Mono',monospace; font-size:9.5px;
+      padding:3px 9px; border-radius:8px; margin-top:auto;
+    }
+    .p-top    { background:rgba(74,200,120,.12); color:#1e8449; }
+    .p-mid    { background:rgba(184,114,14,.1);   color:#8a5800; }
+    .p-bottom { background:rgba(192,57,43,.1);    color:var(--red); }
+
+    @media(max-width:900px) {
+      .bench-inputs { grid-template-columns:1fr; }
+      .bench-metrics { grid-template-columns:repeat(2,1fr); }
+    }
+    @media(max-width:520px) {
+      .bench-metrics { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">📊 Peer Benchmark Tool</div>
+          <div class="page-subtitle" id="pb-sub">Compare your farm performance against similar Canadian operations</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <button class="btn btn-secondary btn-sm" onclick="runBenchmark()">↻ Update Benchmark</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Score card -->
+      <div class="bench-score-card anim-fade-up" id="score-card" style="display:none;">
+        <div class="bsc-score">
+          <div class="bsc-val" id="bsc-score">74</div>
+          <div class="bsc-grade" id="bsc-grade">🥈</div>
+          <div class="bsc-label">Benchmark Score</div>
+        </div>
+        <div class="bsc-bars" id="bsc-bars"></div>
+        <div class="bsc-desc">
+          <h3 id="bsc-title">Above Average — Your farm is performing well</h3>
+          <p id="bsc-desc-text">Based on Farm Management Canada data for your province, farm type, and size. Compare your inputs, margins, and efficiency against similar operations.</p>
+        </div>
+      </div>
+
+      <!-- Inputs -->
+      <div class="card mb-24 anim-fade-up">
+        <div class="card-header">
+          <span class="card-title">⚙️ Enter Your Farm Data</span>
+          <button class="btn btn-primary btn-sm" onclick="runBenchmark()">Calculate Benchmark →</button>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;" class="bench-inputs">
+            <div class="form-group">
+              <label class="form-label">Total Cultivated Acres</label>
+              <input class="form-input form-mono" id="bi-acres" type="number" placeholder="480" oninput="runBenchmark()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Gross Revenue (CAD)</label>
+              <input class="form-input form-mono" id="bi-revenue" type="number" placeholder="420000" oninput="runBenchmark()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Input Costs (CAD)</label>
+              <span class="form-hint">Seed, fertilizer, fuel, chemicals, labour</span>
+              <input class="form-input form-mono" id="bi-inputs" type="number" placeholder="280000" oninput="runBenchmark()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Labour Cost (CAD)</label>
+              <input class="form-input form-mono" id="bi-labour" type="number" placeholder="48000" oninput="runBenchmark()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fertilizer Cost (CAD)</label>
+              <input class="form-input form-mono" id="bi-fert" type="number" placeholder="95000" oninput="runBenchmark()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fuel Cost (CAD)</label>
+              <input class="form-input form-mono" id="bi-fuel" type="number" placeholder="38000" oninput="runBenchmark()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Debt-to-Asset Ratio (%)</label>
+              <input class="form-input form-mono" id="bi-debt" type="number" placeholder="32" min="0" max="100" oninput="runBenchmark()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Yield — Primary Crop (bu/acre)</label>
+              <input class="form-input form-mono" id="bi-yield" type="number" placeholder="44" oninput="runBenchmark()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Full-Time Equivalent Staff</label>
+              <input class="form-input form-mono" id="bi-fte" type="number" placeholder="2.5" step="0.5" oninput="runBenchmark()">
+            </div>
+          </div>
+        </div>
+        <div class="card-footer" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);">
+          Your data is stored locally only — never uploaded. Benchmarks based on Farm Management Canada 2024–2025 data.
+        </div>
+      </div>
+
+      <!-- Benchmark metrics -->
+      <div id="metrics-section" style="display:none;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;">Performance vs. Peer Average</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;" class="bench-metrics" id="bench-metrics"></div>
+
+        <!-- Chart -->
+        <div class="card mb-24">
+          <div class="card-header"><span class="card-title">📈 Benchmark Radar — Your Farm vs. Peer Average</span></div>
+          <div class="card-body" style="padding:16px 20px;max-width:500px;margin:0 auto;">
+            <canvas id="radar-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">💡 Personalized Improvement Opportunities</span></div>
+          <div class="card-body" id="recommendations" style="display:flex;flex-direction:column;gap:12px;"></div>
+          <div class="card-footer">
+            <a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI Copilot to build an action plan →</a>
+            <a href="calculator.html" class="btn btn-ghost btn-sm" style="margin-left:8px;">ROI Calculator →</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('peer-benchmark');
+  document.getElementById('pb-sub').textContent = `Compare against ${profile.farmType} operations in ${profile.province}`;
+
+  // Peer averages by farm type (Farm Management Canada 2025 data estimates)
+  const PEERS = {
+    'Grain & Oilseeds': { revPerAcre:900, inputPct:66, labourPct:11, fertPct:22, fuelPct:9, dtar:28, yieldBu:44, revenuePerFTE:200000 },
+    'Dairy':            { revPerAcre:3200, inputPct:72, labourPct:18, fertPct:12, fuelPct:7, dtar:35, yieldBu:null, revenuePerFTE:380000 },
+    'Livestock':        { revPerAcre:420, inputPct:70, labourPct:16, fertPct:8, fuelPct:12, dtar:30, yieldBu:null, revenuePerFTE:220000 },
+    'Vegetables':       { revPerAcre:5200, inputPct:68, labourPct:28, fertPct:15, fuelPct:6, dtar:22, yieldBu:null, revenuePerFTE:160000 },
+    'default':          { revPerAcre:1100, inputPct:67, labourPct:14, fertPct:18, fuelPct:9, dtar:28, yieldBu:40, revenuePerFTE:210000 },
+  };
+
+  let radarChart;
+
+  function runBenchmark() {
+    const acres   = parseFloat(document.getElementById('bi-acres').value)   || 0;
+    const revenue = parseFloat(document.getElementById('bi-revenue').value) || 0;
+    const inputs  = parseFloat(document.getElementById('bi-inputs').value)  || 0;
+    const labour  = parseFloat(document.getElementById('bi-labour').value)  || 0;
+    const fert    = parseFloat(document.getElementById('bi-fert').value)    || 0;
+    const fuel    = parseFloat(document.getElementById('bi-fuel').value)    || 0;
+    const debt    = parseFloat(document.getElementById('bi-debt').value)    || 0;
+    const yield_  = parseFloat(document.getElementById('bi-yield').value)   || 0;
+    const fte     = parseFloat(document.getElementById('bi-fte').value)     || 1;
+
+    if (!acres || !revenue) return;
+
+    const peer  = PEERS[profile.farmType] || PEERS['default'];
+    const yours = {
+      revPerAcre:     revenue / acres,
+      inputPct:       (inputs / revenue) * 100,
+      labourPct:      (labour / revenue) * 100,
+      fertPct:        (fert   / revenue) * 100,
+      fuelPct:        (fuel   / revenue) * 100,
+      dtar:           debt,
+      yieldBu:        yield_,
+      revenuePerFTE:  revenue / fte,
+    };
+
+    // Score 0-100
+    let score = 50;
+    if (yours.revPerAcre  > peer.revPerAcre)    score += 10;
+    if (yours.inputPct    < peer.inputPct)       score += 12;
+    if (yours.labourPct   < peer.labourPct)      score += 8;
+    if (yours.dtar        < peer.dtar)           score += 10;
+    if (yours.yieldBu     > (peer.yieldBu||0))  score += 10;
+    if (yours.revenuePerFTE > peer.revenuePerFTE) score += 10;
+    score = Math.min(99, Math.max(20, score));
+
+    const grade = score >= 80 ? '🥇' : score >= 65 ? '🥈' : '🥉';
+    const title = score >= 80 ? 'Top Performer — Excellent efficiency for your farm type'
+                : score >= 65 ? 'Above Average — Strong performance with room to optimize'
+                : 'Below Average — Key areas need attention';
+
+    document.getElementById('bsc-score').textContent    = score;
+    document.getElementById('bsc-grade').textContent    = grade;
+    document.getElementById('bsc-title').textContent    = title;
+    document.getElementById('bsc-desc-text').textContent = `Benchmarked against ${profile.farmType} farms in Canada using Farm Management Canada 2025 data. Your percentile rank: approximately ${score}th.`;
+
+    const bars = [
+      { label:'Revenue Efficiency', pct: Math.min(100, (yours.revPerAcre/peer.revPerAcre)*80), color:'#4ac878' },
+      { label:'Input Cost Control',  pct: Math.min(100, ((peer.inputPct/yours.inputPct)*80)||40), color:'#d49a3a' },
+      { label:'Financial Strength',  pct: Math.min(100, ((1-(yours.dtar/100))*80)||40), color:'#5dade2' },
+    ];
+    document.getElementById('bsc-bars').innerHTML = bars.map(b => `
+      <div class="bsc-bar-row">
+        <div class="bsc-bar-label"><span>${b.label}</span><span>${Math.round(b.pct)}%</span></div>
+        <div class="bsc-bar-track"><div class="bsc-bar-fill" style="width:${b.pct}%;background:${b.color};"></div></div>
+      </div>
+    `).join('');
+
+    document.getElementById('score-card').style.display = 'flex';
+
+    // Metrics
+    const fmt = (v, pref='$', suf='') => (pref + Math.round(v).toLocaleString() + suf);
+    const METRICS = [
+      { label:'Revenue / Acre', yours:yours.revPerAcre, peer:peer.revPerAcre, fmt:v=>fmt(v), higher:true, unit:'$/acre' },
+      { label:'Input Cost Ratio', yours:yours.inputPct, peer:peer.inputPct, fmt:v=>v.toFixed(1)+'%', higher:false, unit:'% of revenue' },
+      { label:'Labour % of Revenue', yours:yours.labourPct, peer:peer.labourPct, fmt:v=>v.toFixed(1)+'%', higher:false, unit:'% of revenue' },
+      { label:'Debt-to-Asset Ratio', yours:yours.dtar, peer:peer.dtar, fmt:v=>v.toFixed(0)+'%', higher:false, unit:'%' },
+      { label:'Revenue per FTE', yours:yours.revenuePerFTE, peer:peer.revenuePerFTE, fmt:v=>fmt(v,'$'), higher:true, unit:'$/FTE' },
+      { label:'Fertilizer % Revenue', yours:yours.fertPct, peer:peer.fertPct, fmt:v=>v.toFixed(1)+'%', higher:false, unit:'%' },
+      ...(yield_ ? [{ label:'Crop Yield', yours:yours.yieldBu, peer:peer.yieldBu||40, fmt:v=>v.toFixed(0)+' bu', higher:true, unit:'bu/acre' }] : []),
+      { label:'Net Margin %', yours:((revenue-inputs)/revenue*100), peer:100-peer.inputPct, fmt:v=>v.toFixed(1)+'%', higher:true, unit:'% of revenue' },
+    ];
+
+    document.getElementById('bench-metrics').innerHTML = METRICS.map(m => {
+      const isAbove = m.higher ? m.yours > m.peer : m.yours < m.peer;
+      const diff    = Math.abs(((m.yours - m.peer) / m.peer) * 100).toFixed(0);
+      const pctile  = isAbove ? 'p-top' : diff > 20 ? 'p-bottom' : 'p-mid';
+      const pctText = isAbove ? 'Top 40%' : diff > 20 ? 'Bottom 40%' : 'Middle 40%';
+      const fillPct = Math.min(100, Math.max(5, (m.yours / (m.peer * 1.5)) * 100));
+      const color   = isAbove ? '#4ac878' : diff > 20 ? '#c0392b' : '#d49a3a';
+      return `
+        <div class="bench-metric">
+          <div class="bm-label">${m.label}</div>
+          <div class="bm-your">${m.fmt(m.yours)}</div>
+          <div class="bm-avg">Peer avg: ${m.fmt(m.peer)}</div>
+          <div class="bm-delta ${isAbove?'above':'below'}">${isAbove?'▲':'▼'} ${diff}% vs peers</div>
+          <div class="bm-bar-wrap"><div class="bm-bar-fill" style="width:${fillPct}%;background:${color};"></div></div>
+          <span class="percentile-badge ${pctile}">${pctText}</span>
+        </div>
+      `;
+    }).join('');
+
+    // Radar chart
+    const labels = ['Revenue/Acre','Input Control','Labour Eff.','Low Debt','Yield','Margin'];
+    const myData = [
+      Math.min(100,(yours.revPerAcre/peer.revPerAcre)*70),
+      Math.min(100,(peer.inputPct/yours.inputPct)*70),
+      Math.min(100,(peer.labourPct/yours.labourPct)*70),
+      Math.min(100,(1-(yours.dtar/100))*100),
+      yield_ ? Math.min(100,(yours.yieldBu/(peer.yieldBu||40))*70) : 60,
+      Math.min(100,((revenue-inputs)/revenue*100)*2),
+    ];
+    const avgData = [70,70,70,70,70,70];
+    if (radarChart) radarChart.destroy();
+    radarChart = new Chart(document.getElementById('radar-chart'), {
+      type:'radar',
+      data:{
+        labels,
+        datasets:[
+          { label:'Your Farm', data:myData, borderColor:'#d49a3a', backgroundColor:'rgba(212,154,58,.15)', borderWidth:2, pointBackgroundColor:'#d49a3a' },
+          { label:'Peer Average', data:avgData, borderColor:'rgba(27,53,40,.4)', backgroundColor:'rgba(27,53,40,.05)', borderWidth:2, borderDash:[5,3] },
+        ],
+      },
+      options:{
+        responsive:true,
+        scales:{ r:{ beginAtZero:true, max:100, ticks:{stepSize:20,font:{family:'IBM Plex Mono',size:9}}, pointLabels:{font:{family:'Sora',size:12}} } },
+        plugins:{ legend:{ labels:{ font:{ family:'Sora', size:12 } } } },
+      },
+    });
+
+    // Recommendations
+    const recs = [];
+    if (yours.inputPct > peer.inputPct + 5)    recs.push({ icon:'🌿', title:'Reduce input costs', desc:`Your input cost ratio is ${yours.inputPct.toFixed(0)}% vs peer average of ${peer.inputPct}%. Precision fertilizer application and bulk purchasing could save $${Math.round((yours.inputPct - peer.inputPct)/100 * revenue).toLocaleString()}/yr.`, action:'Ask AI Copilot', href:'copilot.html' });
+    if (yours.dtar > peer.dtar + 5)            recs.push({ icon:'🏦', title:'Improve debt position', desc:`Your debt-to-asset ratio of ${yours.dtar}% exceeds the peer average of ${peer.dtar}%. Explore AgriInvest to build equity or speak with FCC about restructuring.`, action:'View Funding', href:'funding.html' });
+    if (yours.revPerAcre < peer.revPerAcre)    recs.push({ icon:'📈', title:'Improve revenue per acre', desc:`Your revenue per acre ($${Math.round(yours.revPerAcre)}) is below the peer average ($${Math.round(peer.revPerAcre)}). Diversifying crops or accessing premium markets through AgriMarketing can help.`, action:'Explore Programs', href:'funding.html' });
+    if (yours.labourPct > peer.labourPct + 3)  recs.push({ icon:'🤖', title:'Labour efficiency opportunity', desc:`Labour is ${yours.labourPct.toFixed(0)}% of revenue vs peer average of ${peer.labourPct}%. Automation investments may have strong ROI — model it in the ROI Calculator.`, action:'ROI Calculator', href:'calculator.html' });
+    if (!recs.length) recs.push({ icon:'⭐', title:'Strong across-the-board performance', desc:'Your farm is performing at or above peer benchmarks in most key areas. Focus on maintaining input discipline and exploring market diversification to further improve margins.', action:'Ask AI Copilot', href:'copilot.html' });
+
+    document.getElementById('recommendations').innerHTML = recs.map(r => `
+      <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
+        <div style="font-size:22px;flex-shrink:0;">${r.icon}</div>
+        <div>
+          <div style="font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:4px;">${r.title}</div>
+          <div style="font-size:12.5px;color:var(--muted);line-height:1.6;">${r.desc}</div>
+        </div>
+        <a href="${r.href}" class="btn btn-ghost btn-sm" style="margin-left:auto;flex-shrink:0;">${r.action} →</a>
+      </div>
+    `).join('');
+
+    document.getElementById('metrics-section').style.display = '';
+  }
+</script>
+</body>
+</html>

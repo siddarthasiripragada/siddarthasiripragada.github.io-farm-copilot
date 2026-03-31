@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equipment Share Board — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    .eq-tab-bar { display:flex; gap:4px; margin-bottom:22px; flex-wrap:wrap; }
+    .eq-tab { padding:9px 18px; border-radius:20px; border:1.5px solid var(--border); background:white; font-family:'Sora',sans-serif; font-size:13px; color:var(--muted); cursor:pointer; transition:all .15s; }
+    .eq-tab.active { background:var(--forest); color:var(--wheat); border-color:var(--forest); }
+    .eq-tab:hover:not(.active) { border-color:var(--sage); color:var(--forest); }
+
+    .eq-card {
+      background:white; border:1px solid var(--border);
+      border-radius:var(--r-lg); overflow:hidden;
+      box-shadow:var(--shadow-sm); margin-bottom:14px;
+      transition:box-shadow .15s;
+    }
+    .eq-card:hover { box-shadow:var(--shadow); }
+    .eq-card-header {
+      display:flex; align-items:flex-start; gap:14px;
+      padding:16px 20px; border-bottom:1px solid var(--border);
+      background:var(--cream);
+    }
+    .eq-icon { font-size:36px; flex-shrink:0; }
+    .eq-title { font-family:'DM Serif Display',serif; font-size:16px; color:var(--forest); margin-bottom:3px; }
+    .eq-owner { font-size:12.5px; color:var(--muted); }
+    .eq-rate  { margin-left:auto; text-align:right; flex-shrink:0; }
+    .eq-rate-val { font-family:'DM Serif Display',serif; font-size:20px; color:var(--forest); }
+    .eq-rate-per { font-size:11px; color:var(--muted); }
+    .eq-body  { padding:14px 20px; }
+    .eq-specs { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+    .eq-spec  { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:3px 9px; border-radius:5px; background:var(--cream); border:1px solid var(--border); color:var(--forest); }
+    .eq-desc  { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:12px; }
+    .eq-avail { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+    .eq-slot  { font-size:11.5px; padding:4px 10px; border-radius:5px; border:1px solid var(--border); }
+    .eq-slot.free { background:rgba(74,200,120,.1); border-color:rgba(74,200,120,.25); color:#1e8449; }
+    .eq-slot.busy { background:rgba(192,57,43,.07); border-color:rgba(192,57,43,.18); color:var(--red); }
+    .eq-footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:center; }
+
+    /* Post form */
+    .eq-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .eq-form-grid .full { grid-column:1/-1; }
+
+    /* Cost savings banner */
+    .savings-banner {
+      background:linear-gradient(135deg, rgba(74,200,120,.12) 0%, rgba(27,53,40,.15) 100%);
+      border:1px solid rgba(74,200,120,.2); border-radius:var(--r-lg);
+      padding:20px 24px; display:flex; gap:20px; align-items:center; flex-wrap:wrap;
+      margin-bottom:22px;
+    }
+    .sb-icon { font-size:40px; flex-shrink:0; }
+    .sb-text h3 { font-family:'DM Serif Display',serif; font-size:17px; color:var(--forest); margin-bottom:5px; }
+    .sb-text p  { font-size:13px; color:var(--muted); line-height:1.6; }
+    .sb-stat { background:white; border:1px solid var(--border); border-radius:var(--r-sm); padding:12px 18px; text-align:center; flex-shrink:0; }
+    .sb-stat-val { font-family:'DM Serif Display',serif; font-size:24px; color:var(--forest); }
+    .sb-stat-lbl { font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+
+    @media(max-width:900px) { .eq-form-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">🚜 Equipment Share Board</div>
+          <div class="page-subtitle" id="eq-sub">Borrow or rent farm equipment from your neighbours — reduce capital costs</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <button class="btn btn-primary btn-sm" onclick="showEqTab('post')">+ List Equipment</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Savings banner -->
+      <div class="savings-banner anim-fade-up">
+        <div class="sb-icon">🤝</div>
+        <div class="sb-text">
+          <h3>Share the cost, keep the capacity</h3>
+          <p>A used combine costs $400K–$900K. Shared among 3 farms with complementary harvest windows, that's $130K–$300K each — plus reduced maintenance and storage burden. Equipment sharing is growing fastest among new entrants and small-acreage operations.</p>
+        </div>
+        <div class="sb-stat">
+          <div class="sb-stat-val">68%</div>
+          <div class="sb-stat-lbl">Cost reduction (shared vs. owned)</div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up anim-delay-1">
+        <div class="stat-card">
+          <div class="stat-label">Active Listings</div>
+          <div class="stat-value" id="eq-count">9</div>
+          <div class="stat-change">Near your area</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Rental Rate</div>
+          <div class="stat-value">$280/day</div>
+          <div class="stat-change neutral">Major equipment</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Ownership Savings</div>
+          <div class="stat-value">68%</div>
+          <div class="stat-change">vs. individual purchase</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">New Farmer Benefit</div>
+          <div class="stat-value">$120K+</div>
+          <div class="stat-change">Avg capital deferred</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="eq-tab-bar anim-fade-up anim-delay-1">
+        <button class="eq-tab active" id="eqtab-browse" onclick="showEqTab('browse')">🔍 Browse Equipment</button>
+        <button class="eq-tab" id="eqtab-post"   onclick="showEqTab('post')">📝 List My Equipment</button>
+        <button class="eq-tab" id="eqtab-guide"  onclick="showEqTab('guide')">📋 Sharing Agreement Guide</button>
+      </div>
+
+      <!-- ── BROWSE ── -->
+      <div id="eqview-browse">
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+          <input class="filter-search" id="eq-search" placeholder="Search equipment type, brand…" style="flex:1;min-width:200px;" oninput="renderEquip()">
+          <select class="filter-select" id="eq-prov" onchange="renderEquip()">
+            <option value="">All Provinces</option>
+            <option>Alberta</option><option>British Columbia</option>
+            <option>Manitoba</option><option>Ontario</option>
+            <option>Saskatchewan</option>
+          </select>
+          <select class="filter-select" id="eq-cat" onchange="renderEquip()">
+            <option value="">All Categories</option>
+            <option>Combines</option><option>Tractors</option>
+            <option>Planters</option><option>Sprayers</option><option>Other</option>
+          </select>
+        </div>
+        <div id="eq-list"></div>
+      </div>
+
+      <!-- ── POST ── -->
+      <div id="eqview-post" style="display:none;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">📝 List Your Equipment</span></div>
+          <div class="card-body">
+            <div class="eq-form-grid">
+              <div class="form-group">
+                <label class="form-label">Equipment Type *</label>
+                <input class="form-input" id="ep-type" placeholder="e.g. John Deere S780 Combine">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Category</label>
+                <select class="form-input" id="ep-cat">
+                  <option>Combines</option><option>Tractors</option>
+                  <option>Planters</option><option>Sprayers</option>
+                  <option>Tillage</option><option>Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Year / Condition</label>
+                <input class="form-input" id="ep-year" placeholder="2019 · Excellent condition">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Province</label>
+                <select class="form-input" id="ep-prov">
+                  <option value="">Select…</option>
+                  <option>Alberta</option><option>British Columbia</option>
+                  <option>Manitoba</option><option>Ontario</option><option>Saskatchewan</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Daily Rate (CAD)</label>
+                <input class="form-input form-mono" id="ep-rate" type="number" placeholder="350">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Minimum Rental Period</label>
+                <select class="form-input" id="ep-min">
+                  <option>Half-day</option><option>1 day</option>
+                  <option>3 days</option><option>1 week</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Description *</label>
+                <span class="form-hint">Key specs, hours, attachments included, delivery available?</span>
+                <textarea class="form-input" id="ep-desc" rows="3" style="resize:vertical;"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Contact</label>
+                <input class="form-input" id="ep-contact" placeholder="Email or phone">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Available From</label>
+                <input class="form-input" id="ep-from" type="date">
+              </div>
+              <div class="full" style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" onclick="showEqTab('browse')">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="submitEquip()">List Equipment →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GUIDE ── -->
+      <div id="eqview-guide" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header"><span class="card-title">📋 Equipment Sharing Agreement — Key Elements</span></div>
+          <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="background:var(--cream);border-radius:var(--r-sm);padding:16px;">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Essentials to Include</div>
+              <div style="font-size:13px;color:var(--text);display:flex;flex-direction:column;gap:8px;line-height:1.55;">
+                <div>✅ Equipment description, make, model, year, serial number</div>
+                <div>✅ Rental rate and payment schedule</div>
+                <div>✅ Pickup/return responsibilities and delivery costs</div>
+                <div>✅ Insurance — who covers during rental?</div>
+                <div>✅ Damage liability threshold before deposit is claimed</div>
+                <div>✅ Fuel: full-to-full policy or separate billing</div>
+                <div>✅ Hours/acre limits per rental period</div>
+                <div>✅ Cancellation notice period</div>
+              </div>
+            </div>
+            <div style="background:var(--cream);border-radius:var(--r-sm);padding:16px;">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Common Pitfalls to Avoid</div>
+              <div style="font-size:13px;color:var(--text);display:flex;flex-direction:column;gap:8px;line-height:1.55;">
+                <div>⚠️ Unclear who covers breakdowns during use</div>
+                <div>⚠️ No written confirmation of pre-rental condition</div>
+                <div>⚠️ Missing harvest schedule conflicts clause</div>
+                <div>⚠️ No emergency access override for owner's own harvest</div>
+                <div>⚠️ Ambiguous end-of-season cleaning standards</div>
+                <div>⚠️ No dispute resolution process specified</div>
+                <div>⚠️ Verbal-only agreement — always use written contracts</div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI to draft a sharing agreement →</a>
+            <a href="https://www.fcc-fac.ca" target="_blank" class="btn btn-ghost btn-sm" style="margin-left:8px;">FCC Equipment Guides →</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('equipment-share');
+  document.getElementById('eq-sub').textContent = `Community equipment sharing · ${profile.province}`;
+
+  function showEqTab(t) {
+    ['browse','post','guide'].forEach(id => {
+      document.getElementById('eqview-' + id).style.display = id === t ? '' : 'none';
+      const btn = document.getElementById('eqtab-' + id);
+      if (btn) btn.classList.toggle('active', id === t);
+    });
+  }
+
+  const EQUIP = [
+    { id:1, icon:'🚜', title:'John Deere S780 Combine + Header', owner:'Thompson Farm', prov:'Saskatchewan', cat:'Combines', rate:'$850/day', specs:['2021','1,420 hrs','40-ft header','GPS guidance'], desc:'Well-maintained combine available post-harvest for custom hiring. Delivery within 100km. Requires fuel deposit.', slots:[['May 1–20','free'],['Jun 1–30','free'],['Aug 1–Sep 30','busy']] },
+    { id:2, icon:'🚛', title:'Case IH 9250 Tractor 400HP', owner:'Prairie Holdings', prov:'Alberta', cat:'Tractors', rate:'$480/day', specs:['2019','2,100 hrs','Powershift','Front weights'], desc:'High-horsepower tractor ideal for heavy tillage or large equipment pulls. Delivery available. Full insurance included in rate.', slots:[['Apr 15–May 30','free'],['Jun','busy'],['Sep–Oct','free']] },
+    { id:3, icon:'🌱', title:'White 8722 Planter 24-Row', owner:'Meadowview Farms', prov:'Ontario', cat:'Planters', rate:'$320/day', specs:['2020','Central fill','Row clutches','Monitor incl.'], desc:'24-row corn and soybean planter. Calibrated and ready for spring. Variable rate capable. Available for 2–3 week blocks.', slots:[['May 1–10','free'],['May 11–25','busy'],['May 26+','free']] },
+    { id:4, icon:'💧', title:'Apache AS1240 Sprayer 120ft', owner:'Northern AG Co.', prov:'Manitoba', cat:'Sprayers', rate:'$380/day', specs:['2018','1,240 gal','Boom leveling','GPS boom control'], desc:'Large-tank sprayer for in-crop and pre-plant applications. Full operator manual included. Must be returned clean.', slots:[['Apr 20–May 20','free'],['Jun','busy'],['Aug–Sep','free']] },
+    { id:5, icon:'🔧', title:'Versatile 610 Disc Harrow 60ft', owner:'Ridgeline Farm', prov:'Saskatchewan', cat:'Tillage', rate:'$220/day', specs:['2017','60ft','Hydraulic fold','Tandem axle'], desc:'Large-working-width disc for seedbed prep. Pulls with 350HP+ tractor. Available late fall after harvest completion.', slots:[['Oct–Nov','free'],['Apr–May','free']] },
+    { id:6, icon:'🚜', title:'New Holland T9.700 Tractor', owner:'Sunrise Farms', prov:'Alberta', cat:'Tractors', rate:'$520/day', specs:['2022','700HP','PowerBoost','Active Suspension'], desc:'Premium high-horsepower tractor. GPS-ready. All-wheel drive. Available for seeding and fall tillage windows.', slots:[['May 1–30','free'],['Sep 1–Oct 15','free']] },
+  ];
+  let userEquip = JSON.parse(localStorage.getItem('equipListings') || '[]');
+
+  function renderEquip() {
+    const search = document.getElementById('eq-search').value.toLowerCase();
+    const prov   = document.getElementById('eq-prov').value;
+    const cat    = document.getElementById('eq-cat').value;
+    const all    = [...EQUIP, ...userEquip];
+    const list   = all.filter(e =>
+      (!search || e.title.toLowerCase().includes(search) || e.desc.toLowerCase().includes(search)) &&
+      (!prov   || e.prov === prov) &&
+      (!cat    || e.cat  === cat)
+    );
+    document.getElementById('eq-count').textContent = list.length;
+    const el = document.getElementById('eq-list');
+    if (!list.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">No equipment matches your filters.</div>'; return; }
+    el.innerHTML = list.map(e => `
+      <div class="eq-card">
+        <div class="eq-card-header">
+          <div class="eq-icon">${e.icon}</div>
+          <div>
+            <div class="eq-title">${e.title}</div>
+            <div class="eq-owner">🏡 ${e.owner} · 📍 ${e.prov}</div>
+          </div>
+          <div class="eq-rate">
+            <div class="eq-rate-val">${e.rate}</div>
+            <div class="eq-rate-per">rental rate</div>
+          </div>
+        </div>
+        <div class="eq-body">
+          <div class="eq-specs">${e.specs.map(s => `<span class="eq-spec">${s}</span>`).join('')}</div>
+          <div class="eq-desc">${e.desc}</div>
+          ${e.slots ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Availability</div>
+          <div class="eq-avail">${e.slots.map(([label,type]) => `<span class="eq-slot ${type}">${label}</span>`).join('')}</div>` : ''}
+        </div>
+        <div class="eq-footer">
+          <button class="btn btn-primary btn-sm" onclick="alert('Contact feature coming soon. Use AI Copilot to draft your rental inquiry.')">Request Booking →</button>
+          <button class="btn btn-ghost btn-sm" onclick="alert('Saved to your equipment watchlist.')">Save</button>
+          <a href="copilot.html" class="btn btn-ghost btn-sm">Ask AI →</a>
+        </div>
+      </div>
+    `).join('');
+  }
+  renderEquip();
+
+  window.submitEquip = function() {
+    const type = document.getElementById('ep-type').value.trim();
+    const prov = document.getElementById('ep-prov').value;
+    if (!type || !prov) { alert('Please fill in required fields.'); return; }
+    userEquip.push({
+      id:Date.now(), icon:'🚜', title:type, owner:'My Farm', prov,
+      cat: document.getElementById('ep-cat').value,
+      rate:'$' + (document.getElementById('ep-rate').value||'—') + '/day',
+      specs:[document.getElementById('ep-year').value||''].filter(Boolean),
+      desc:document.getElementById('ep-desc').value, slots:[],
+    });
+    localStorage.setItem('equipListings', JSON.stringify(userEquip));
+    showEqTab('browse'); renderEquip();
+    alert('✓ Equipment listed!');
+  };
+</script>
+</body>
+</html>

@@ -203,6 +203,240 @@
       }
     }
 
+    /* ══════════════════════════════════════════════
+       NEW FEATURE MODULES
+    ══════════════════════════════════════════════ */
+
+    /* ── Section divider label ─────────────────── */
+    .section-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); margin: 28px 0 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* ── 1. INPUT COST TRACKER ─────────────────── */
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .input-card {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .input-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--amber);
+    }
+    .input-card.alert-high::before { background: #c0392b; }
+    .input-card.alert-mid::before  { background: #e67e22; }
+    .input-card.ok::before         { background: #27ae60; }
+    .input-name  { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .5px; color: var(--muted); text-transform: uppercase; margin-bottom: 5px; }
+    .input-price { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--forest); letter-spacing: -.3px; }
+    .input-unit  { font-size: 10px; color: var(--muted); }
+    .input-delta {
+      font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+      margin-top: 4px; display: flex; align-items: center; gap: 4px;
+    }
+    .input-delta.up   { color: #c0392b; }
+    .input-delta.down { color: #27ae60; }
+    .input-bar-wrap { margin-top: 8px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .input-bar-fill { height: 100%; border-radius: 2px; transition: width .4s; }
+    .input-bar-fill.hi  { background: #c0392b; }
+    .input-bar-fill.mid { background: #e67e22; }
+    .input-bar-fill.lo  { background: #27ae60; }
+
+    /* ── 2. TRADE & TARIFF RISK RADAR ─────────── */
+    .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .trade-left { display: flex; flex-direction: column; gap: 10px; }
+    .tariff-row {
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+    }
+    .tariff-row-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 7px;
+    }
+    .tariff-commodity { font-size: 13px; font-weight: 500; color: var(--forest); }
+    .tariff-pct {
+      font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+      padding: 2px 8px; border-radius: 10px;
+    }
+    .tariff-pct.high { background: rgba(192,57,43,.12); color: #c0392b; }
+    .tariff-pct.mid  { background: rgba(230,126,34,.12); color: #c87941; }
+    .tariff-pct.low  { background: rgba(39,174,96,.12);  color: #1e8449; }
+    .tariff-bar-wrap { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .tariff-bar      { height: 100%; border-radius: 3px; }
+    .tariff-bar.high { background: #c0392b; }
+    .tariff-bar.mid  { background: #e67e22; }
+    .tariff-bar.low  { background: #27ae60; }
+    .tariff-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    .trade-right {
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .app-tracker { }
+    .app-tracker-label { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .app-tracker-val   { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--forest); letter-spacing: -.3px; }
+    .app-tracker-sub   { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .app-bar-wrap { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+    .app-bar { height: 100%; background: linear-gradient(90deg, var(--sage), var(--amber-lt)); border-radius: 3px; }
+
+    /* ── 3. MARGIN PRESSURE CARD ───────────────── */
+    .margin-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .margin-crop {
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; text-align: center;
+    }
+    .margin-crop-name { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .margin-donut-wrap { position: relative; width: 72px; height: 72px; margin: 0 auto 10px; }
+    .margin-donut-wrap canvas { width: 72px !important; height: 72px !important; }
+    .margin-donut-label {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .margin-donut-val  { font-family: 'DM Serif Display', serif; font-size: 15px; color: var(--forest); line-height: 1; }
+    .margin-donut-unit { font-size: 8px; color: var(--muted); }
+    .margin-status { font-size: 11.5px; font-weight: 500; }
+    .margin-status.green  { color: #27ae60; }
+    .margin-status.yellow { color: #e67e22; }
+    .margin-status.red    { color: #c0392b; }
+    .margin-detail { font-size: 10.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+    /* ── 4. SUCCESSION PLANNING ─────────────────── */
+    .succession-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 14px; }
+    .succession-score-card {
+      background: var(--forest);
+      border-radius: 12px; padding: 22px 20px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; gap: 10px;
+    }
+    .succ-ring-wrap { position: relative; width: 100px; height: 100px; }
+    .succ-ring-wrap canvas { width: 100px !important; height: 100px !important; }
+    .succ-ring-label {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .succ-ring-val   { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--wheat); line-height: 1; }
+    .succ-ring-unit  { font-size: 9px; color: rgba(244,236,218,.45); letter-spacing: 1px; text-transform: uppercase; }
+    .succ-score-label { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; color: rgba(244,236,218,.4); }
+    .succ-score-status { font-size: 12.5px; color: var(--amber-lt); }
+    .succession-detail {
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px;
+    }
+    .succ-checklist { display: flex; flex-direction: column; gap: 9px; }
+    .succ-check-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12.5px; color: var(--forest); padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .succ-check-row:last-child { border-bottom: none; }
+    .succ-check-icon { font-size: 14px; flex-shrink: 0; width: 20px; text-align: center; }
+    .succ-check-status {
+      margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+      padding: 2px 7px; border-radius: 6px; white-space: nowrap;
+    }
+    .succ-check-status.done    { background: rgba(39,174,96,.12);  color: #1e8449; }
+    .succ-check-status.pending { background: rgba(230,126,34,.12); color: #c87941; }
+    .succ-check-status.todo    { background: rgba(0,0,0,.05);      color: var(--muted); }
+
+    /* ── 5. COMMUNITY HUB ──────────────────────── */
+    .community-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+    .event-list { display: flex; flex-direction: column; gap: 10px; }
+    .event-row {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .event-row:last-child { border-bottom: none; }
+    .event-date-box {
+      flex-shrink: 0; width: 44px; height: 44px;
+      background: var(--forest); border-radius: 8px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 1px;
+    }
+    .event-date-day   { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--wheat); line-height: 1; }
+    .event-date-month { font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 1px; text-transform: uppercase; color: var(--amber-lt); }
+    .event-info { flex: 1; }
+    .event-title { font-size: 13px; font-weight: 500; color: var(--forest); margin-bottom: 2px; }
+    .event-meta  { font-size: 11px; color: var(--muted); }
+    .event-tag   { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; padding: 2px 7px; border-radius: 5px; margin-top: 4px; }
+    .event-tag.workshop  { background: rgba(27,53,40,.08); color: var(--sage); }
+    .event-tag.market    { background: rgba(184,114,14,.1); color: #8a5800; }
+    .event-tag.webinar   { background: rgba(41,128,185,.1); color: #1a5276; }
+    .event-tag.mentorship { background: rgba(142,68,173,.1); color: #7d3c98; }
+
+    .mentor-panel { background: var(--cream); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+    .mentor-header { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+    .mentor-card {
+      background: white; border: 1px solid var(--border); border-radius: 9px;
+      padding: 12px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .mentor-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--forest); display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .mentor-name   { font-size: 13px; font-weight: 500; color: var(--forest); }
+    .mentor-sub    { font-size: 11px; color: var(--muted); }
+    .mentor-match  { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #27ae60; background: rgba(39,174,96,.1); padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
+
+    /* ── 6. CARBON & SUSTAINABILITY ─────────────── */
+    .carbon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .carbon-score-card {
+      background: linear-gradient(135deg, #1a2e24, #1B3528);
+      border-radius: 12px; padding: 22px 20px; color: var(--wheat);
+    }
+    .carbon-score-top {
+      display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px;
+    }
+    .carbon-grade {
+      font-family: 'DM Serif Display', serif; font-size: 52px;
+      color: #4ac878; line-height: 1; letter-spacing: -2px;
+    }
+    .carbon-grade-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(244,236,218,.4); margin-bottom: 3px; }
+    .carbon-grade-desc  { font-size: 12px; color: rgba(244,236,218,.65); max-width: 120px; line-height: 1.45; }
+    .carbon-emissions { display: flex; flex-direction: column; gap: 8px; }
+    .carbon-row { display: flex; align-items: center; gap: 10px; }
+    .carbon-row-label { font-size: 11.5px; color: rgba(244,236,218,.65); flex: 1; }
+    .carbon-row-bar   { flex: 2; height: 5px; background: rgba(255,255,255,.1); border-radius: 3px; overflow: hidden; }
+    .carbon-row-fill  { height: 100%; border-radius: 3px; }
+    .carbon-row-val   { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(244,236,218,.5); width: 54px; text-align: right; white-space: nowrap; }
+    .carbon-tips { background: var(--cream); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+    .carbon-tip-row {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+    }
+    .carbon-tip-row:last-child { border-bottom: none; }
+    .carbon-tip-icon { font-size: 16px; flex-shrink: 0; width: 22px; }
+    .carbon-tip-text { font-size: 12.5px; color: var(--forest); flex: 1; line-height: 1.45; }
+    .carbon-tip-saving { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #27ae60; background: rgba(39,174,96,.1); padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
+
+    /* ── Responsive overrides ──────────────────── */
+    @media (max-width: 900px) {
+      .input-grid       { grid-template-columns: repeat(3,1fr); }
+      .trade-grid       { grid-template-columns: 1fr; }
+      .margin-grid      { grid-template-columns: 1fr; }
+      .succession-grid  { grid-template-columns: 1fr; }
+      .community-grid   { grid-template-columns: 1fr; }
+      .carbon-grid      { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .input-grid { grid-template-columns: repeat(2,1fr); }
+    }
+
   </style>
 </head>
 <body>
@@ -255,7 +489,8 @@
             <a href="copilot.html"      class="welcome-btn wb-primary">✦ AI Copilot</a>
             <a href="funding.html"      class="welcome-btn wb-secondary">◈ Funding</a>
             <a href="weather.html"      class="welcome-btn wb-secondary">🌤 Weather</a>
-            <a href="risk-monitor.html" class="welcome-btn wb-risk">🛡 Risk Monitor <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:1px 5px;background:rgba(192,57,43,0.4);border-radius:8px;margin-left:2px;">6</span></a>
+            <a href="risk-monitor.html" class="welcome-btn wb-risk">🛡 Risk <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:1px 5px;background:rgba(192,57,43,0.4);border-radius:8px;margin-left:2px;">6</span></a>
+            <a href="wellness.html"     class="welcome-btn" style="background:rgba(74,200,120,.18);color:#4ac878;border:1px solid rgba(74,200,120,.25);">🧠 Wellness</a>
             <button class="welcome-btn wb-demo" onclick="activateDemoMode()">🎭 Demo</button>
           </div>
         </div>
@@ -546,6 +781,409 @@
           </div>
         </div>
 
+        <!-- ══════════════════════════════════════════
+             NEW FEATURE MODULES
+        ═══════════════════════════════════════════ -->
+
+        <!-- ── 1. INPUT COST TRACKER ──────────────── -->
+        <div class="section-label">📦 Input Cost Tracker — 2026</div>
+        <div class="card mb-24 anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">🌿 Fertilizer &amp; Fuel Prices</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">vs. 5-yr avg · Mar 2026</span>
+          </div>
+          <div class="card-body" style="padding:12px 20px 6px;">
+            <div class="input-grid">
+              <!-- Urea N -->
+              <div class="input-card alert-high">
+                <div class="input-name">Urea (N)</div>
+                <div class="input-price">$848</div>
+                <div class="input-unit">/ tonne CAD</div>
+                <div class="input-delta up">▲ +28% vs avg</div>
+                <div class="input-bar-wrap"><div class="input-bar-fill hi" style="width:85%;"></div></div>
+              </div>
+              <!-- MAP P -->
+              <div class="input-card alert-mid">
+                <div class="input-name">MAP (P)</div>
+                <div class="input-price">$692</div>
+                <div class="input-unit">/ tonne CAD</div>
+                <div class="input-delta up">▲ +16% vs avg</div>
+                <div class="input-bar-wrap"><div class="input-bar-fill mid" style="width:66%;"></div></div>
+              </div>
+              <!-- Potash K -->
+              <div class="input-card ok">
+                <div class="input-name">Potash (K)</div>
+                <div class="input-price">$441</div>
+                <div class="input-unit">/ tonne CAD</div>
+                <div class="input-delta down">▼ −4% vs avg</div>
+                <div class="input-bar-wrap"><div class="input-bar-fill lo" style="width:40%;"></div></div>
+              </div>
+              <!-- Diesel -->
+              <div class="input-card alert-high">
+                <div class="input-name">Diesel</div>
+                <div class="input-price">$1.84</div>
+                <div class="input-unit">/ litre CAD</div>
+                <div class="input-delta up">▲ +22% vs avg</div>
+                <div class="input-bar-wrap"><div class="input-bar-fill hi" style="width:78%;"></div></div>
+              </div>
+              <!-- Seed Corn -->
+              <div class="input-card alert-mid">
+                <div class="input-name">Seed (corn)</div>
+                <div class="input-price">$362</div>
+                <div class="input-unit">/ unit</div>
+                <div class="input-delta up">▲ +11% vs avg</div>
+                <div class="input-bar-wrap"><div class="input-bar-fill mid" style="width:57%;"></div></div>
+              </div>
+            </div>
+            <p style="font-size:11.5px;color:var(--muted);margin:14px 0 6px;line-height:1.55;">
+              ⚡ <strong>2026 Alert:</strong> Middle East conflict has driven urea &amp; diesel to near-record highs. Consider locking in fertilizer purchases early or exploring AAFC's Fertilizer Emissions Reduction support. Your AI Copilot can model the margin impact.
+            </p>
+          </div>
+          <div class="card-footer" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);">Source: Industry reference prices · Confirm with local supplier</span>
+            <a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI Copilot about input costs →</a>
+          </div>
+        </div>
+
+        <!-- ── 2. TRADE & TARIFF RISK RADAR ─────── -->
+        <div class="section-label">🌐 Trade &amp; Tariff Risk Radar</div>
+        <div class="card mb-24 anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">🇨🇦 US Tariff Exposure &amp; Market Diversification</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">Updated Mar 2026</span>
+          </div>
+          <div class="card-body" style="padding:14px 20px;">
+            <div class="trade-grid">
+              <div class="trade-left">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Commodity Tariff Exposure</div>
+                <!-- Canola -->
+                <div class="tariff-row">
+                  <div class="tariff-row-top">
+                    <span class="tariff-commodity">🌻 Canola</span>
+                    <span class="tariff-pct high">25% US tariff</span>
+                  </div>
+                  <div class="tariff-bar-wrap"><div class="tariff-bar high" style="width:75%;"></div></div>
+                  <div class="tariff-note">Advance Payments: $500K interest-free available for canola → <a href="funding.html" style="color:var(--amber);">Apply now</a></div>
+                </div>
+                <!-- Beef -->
+                <div class="tariff-row">
+                  <div class="tariff-row-top">
+                    <span class="tariff-commodity">🐄 Beef</span>
+                    <span class="tariff-pct mid">10% US tariff</span>
+                  </div>
+                  <div class="tariff-bar-wrap"><div class="tariff-bar mid" style="width:40%;"></div></div>
+                  <div class="tariff-note">Livestock Price Insurance (LPI) available in AB, SK, MB, BC</div>
+                </div>
+                <!-- Pork -->
+                <div class="tariff-row">
+                  <div class="tariff-row-top">
+                    <span class="tariff-commodity">🐖 Pork</span>
+                    <span class="tariff-pct mid">10% US tariff</span>
+                  </div>
+                  <div class="tariff-bar-wrap"><div class="tariff-bar mid" style="width:40%;"></div></div>
+                  <div class="tariff-note">African Swine Fever biosecurity protocols active — see Risk Monitor</div>
+                </div>
+                <!-- Grains -->
+                <div class="tariff-row">
+                  <div class="tariff-row-top">
+                    <span class="tariff-commodity">🌾 Grain / Wheat</span>
+                    <span class="tariff-pct low">Exempt</span>
+                  </div>
+                  <div class="tariff-bar-wrap"><div class="tariff-bar low" style="width:8%;"></div></div>
+                  <div class="tariff-note">CUSMA protected — minimal direct exposure</div>
+                </div>
+              </div>
+
+              <div class="trade-right">
+                <!-- APP tracker -->
+                <div class="app-tracker">
+                  <div class="app-tracker-label">Advance Payments Program</div>
+                  <div class="app-tracker-val">$500K</div>
+                  <div class="app-tracker-sub">Interest-free limit for canola (2025 &amp; 2026)</div>
+                  <div class="app-bar-wrap"><div class="app-bar" style="width:62%;"></div></div>
+                  <div style="font-size:10.5px;color:var(--muted);margin-top:5px;">Non-canola: $250K limit · Verify at AAFC.gc.ca</div>
+                </div>
+                <div style="border-top:1px solid var(--border); padding-top:14px;">
+                  <div class="app-tracker-label">Diversification Score</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                    <span style="font-size:12px;background:rgba(39,174,96,.08);color:#1e8449;border:1px solid rgba(39,174,96,.2);padding:4px 10px;border-radius:6px;">🇯🇵 Japan</span>
+                    <span style="font-size:12px;background:rgba(39,174,96,.08);color:#1e8449;border:1px solid rgba(39,174,96,.2);padding:4px 10px;border-radius:6px;">🇲🇽 Mexico</span>
+                    <span style="font-size:12px;background:rgba(41,128,185,.08);color:#1a5276;border:1px solid rgba(41,128,185,.2);padding:4px 10px;border-radius:6px;">🇵🇭 Philippines</span>
+                    <span style="font-size:12px;background:rgba(184,114,14,.08);color:#8a5800;border:1px solid rgba(184,114,14,.2);padding:4px 10px;border-radius:6px;">+ AgriMarketing</span>
+                  </div>
+                  <p style="font-size:11px;color:var(--muted);margin-top:9px;line-height:1.55;">AgriMarketing Diversification Stream (Feb 2026) supports expanding into non-US markets. Up to $500K per applicant — rolling deadline.</p>
+                  <a href="funding.html" class="btn btn-primary btn-sm" style="margin-top:10px;display:inline-block;">Explore AgriMarketing →</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 3. MARGIN PRESSURE CALCULATOR ─────── -->
+        <div class="section-label">📊 Margin Pressure — Spring 2026</div>
+        <div class="card mb-24 anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">💰 Crop Margin Snapshot</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">Estimated net margin / acre</span>
+          </div>
+          <div class="card-body" style="padding:14px 20px;">
+            <div class="margin-grid" id="margin-grid"></div>
+            <div style="background:rgba(230,126,34,.06);border:1px solid rgba(230,126,34,.18);border-radius:8px;padding:12px 16px;margin-top:14px;font-size:12.5px;color:var(--forest);line-height:1.6;">
+              ⚠️ <strong>Margin squeeze alert:</strong> Rising fertilizer &amp; fuel costs are compressing margins across most crop types in 2026. Canola producers eligible for the $500K APP interest-free advance — a critical cash flow tool. Run your full ROI model in the <a href="calculator.html" style="color:var(--amber);">ROI Calculator →</a>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="calculator.html" class="btn btn-secondary btn-sm">Full ROI Calculator →</a>
+            <a href="copilot.html" class="btn btn-secondary btn-sm" style="margin-left:8px;">Ask AI about break-even →</a>
+          </div>
+        </div>
+
+        <!-- ── 4. SUCCESSION & LAND PLANNING ──────── -->
+        <div class="section-label">🏡 Succession &amp; Land Planning</div>
+        <div class="card mb-24 anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">🌱 Farm Transition Readiness</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">$50B+ in Canadian farm assets changing hands this decade</span>
+          </div>
+          <div class="card-body" style="padding:14px 20px;">
+            <div class="succession-grid">
+              <div class="succession-score-card">
+                <div class="succ-ring-wrap">
+                  <canvas id="succ-ring-canvas"></canvas>
+                  <div class="succ-ring-label">
+                    <div class="succ-ring-val">42</div>
+                    <div class="succ-ring-unit">/ 100</div>
+                  </div>
+                </div>
+                <div class="succ-score-label">Readiness Score</div>
+                <div class="succ-score-status">⚠ Partially Prepared</div>
+                <div style="font-size:11px;color:rgba(244,236,218,.45);margin-top:4px;text-align:center;line-height:1.5;max-width:140px;">Complete the items at right to raise your score</div>
+              </div>
+
+              <div class="succession-detail">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Succession Checklist</div>
+                <div class="succ-checklist">
+                  <div class="succ-check-row">
+                    <span class="succ-check-icon">✅</span>
+                    Farm registered &amp; in good standing
+                    <span class="succ-check-status done">Done</span>
+                  </div>
+                  <div class="succ-check-row">
+                    <span class="succ-check-icon">✅</span>
+                    AgriStability enrolled
+                    <span class="succ-check-status done">Done</span>
+                  </div>
+                  <div class="succ-check-row">
+                    <span class="succ-check-icon">⏳</span>
+                    Farm business plan documented
+                    <span class="succ-check-status pending">In Progress</span>
+                  </div>
+                  <div class="succ-check-row">
+                    <span class="succ-check-icon">⭕</span>
+                    Legal succession plan / will
+                    <span class="succ-check-status todo">Not Started</span>
+                  </div>
+                  <div class="succ-check-row">
+                    <span class="succ-check-icon">⭕</span>
+                    Land valuation completed
+                    <span class="succ-check-status todo">Not Started</span>
+                  </div>
+                  <div class="succ-check-row">
+                    <span class="succ-check-icon">⭕</span>
+                    Identified next-generation candidate
+                    <span class="succ-check-status todo">Not Started</span>
+                  </div>
+                  <div class="succ-check-row">
+                    <span class="succ-check-icon">⭕</span>
+                    FCC financing review completed
+                    <span class="succ-check-status todo">Not Started</span>
+                  </div>
+                </div>
+                <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+                  <a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI about succession →</a>
+                  <a href="https://www.fcc-fac.ca/en/ag-knowledge/farm-succession" target="_blank" class="btn btn-ghost btn-sm">FCC Resources ↗</a>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:14px;background:#EDE4CB;border-radius:8px;padding:12px 16px;">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Average Canadian Farmland Value Trend (FCC 2026)</div>
+              <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                <div><div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--forest);">+8.3%</div><div style="font-size:11px;color:var(--muted);">National avg YoY</div></div>
+                <div><div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--forest);">+12.1%</div><div style="font-size:11px;color:var(--muted);">Saskatchewan</div></div>
+                <div><div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--forest);">+9.4%</div><div style="font-size:11px;color:var(--muted);">Alberta</div></div>
+                <div><div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--forest);">+7.2%</div><div style="font-size:11px;color:var(--muted);">Ontario</div></div>
+                <div><div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--forest);">+5.9%</div><div style="font-size:11px;color:var(--muted);">Quebec</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 5. COMMUNITY HUB ────────────────────── -->
+        <div class="section-label">🤝 Community &amp; Mentorship Hub</div>
+        <div class="card mb-24 anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">📅 Upcoming Events &amp; Mentorship Matches</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">Canadian agriculture community</span>
+          </div>
+          <div class="card-body" style="padding:14px 20px;">
+            <div class="community-grid">
+              <div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Upcoming in Your Region</div>
+                <div class="event-list">
+                  <div class="event-row">
+                    <div class="event-date-box"><div class="event-date-day">28</div><div class="event-date-month">Mar</div></div>
+                    <div class="event-info">
+                      <div class="event-title">AgriStability Filing Workshop — Virtual</div>
+                      <div class="event-meta">AAFC · Free · 1:00 PM ET</div>
+                      <span class="event-tag workshop">Workshop</span>
+                    </div>
+                  </div>
+                  <div class="event-row">
+                    <div class="event-date-box"><div class="event-date-day">3</div><div class="event-date-month">Apr</div></div>
+                    <div class="event-info">
+                      <div class="event-title">Ontario Grain Farmers Spring Forum</div>
+                      <div class="event-meta">Guelph, ON · In-person</div>
+                      <span class="event-tag market">Market</span>
+                    </div>
+                  </div>
+                  <div class="event-row">
+                    <div class="event-date-box"><div class="event-date-day">10</div><div class="event-date-month">Apr</div></div>
+                    <div class="event-info">
+                      <div class="event-title">New Farmer Entrant Webinar — EFAO</div>
+                      <div class="event-meta">Virtual · Free · Succession focus</div>
+                      <span class="event-tag webinar">Webinar</span>
+                    </div>
+                  </div>
+                  <div class="event-row">
+                    <div class="event-date-box"><div class="event-date-day">17</div><div class="event-date-month">Apr</div></div>
+                    <div class="event-info">
+                      <div class="event-title">Prairie Farmer Peer Circle — Virtual</div>
+                      <div class="event-meta">Young Agrarians network · AB/SK/MB</div>
+                      <span class="event-tag mentorship">Mentorship</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mentor-panel">
+                <div class="mentor-header">Matched Mentors Near You</div>
+                <div class="mentor-card">
+                  <div class="mentor-avatar">👨‍🌾</div>
+                  <div>
+                    <div class="mentor-name">Tom R., Saskatchewan</div>
+                    <div class="mentor-sub">30yr grain &amp; canola · CAP advisor</div>
+                  </div>
+                  <div class="mentor-match">94% match</div>
+                </div>
+                <div class="mentor-card">
+                  <div class="mentor-avatar">👩‍🌾</div>
+                  <div>
+                    <div class="mentor-name">Marie L., Quebec</div>
+                    <div class="mentor-sub">Dairy transition specialist</div>
+                  </div>
+                  <div class="mentor-match">87% match</div>
+                </div>
+                <div class="mentor-card">
+                  <div class="mentor-avatar">🧑‍🌾</div>
+                  <div>
+                    <div class="mentor-name">Jeet S., Alberta</div>
+                    <div class="mentor-sub">New farmer · Tech adoption lead</div>
+                  </div>
+                  <div class="mentor-match">81% match</div>
+                </div>
+                <a href="copilot.html" class="btn btn-secondary btn-sm" style="width:100%;text-align:center;margin-top:6px;">Connect via AI Copilot →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 6. CARBON & SUSTAINABILITY ─────────── -->
+        <div class="section-label">🌱 Carbon &amp; Sustainability Tracker</div>
+        <div class="card mb-24 anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">♻️ Farm Emissions &amp; Sustainability Score</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">AAFC 2026-27 priority — Methane &amp; Fertilizer Reduction</span>
+          </div>
+          <div class="card-body" style="padding:14px 20px;">
+            <div class="carbon-grid">
+              <div class="carbon-score-card">
+                <div class="carbon-score-top">
+                  <div>
+                    <div class="carbon-grade-label">Sustainability Grade</div>
+                    <div class="carbon-grade">B+</div>
+                    <div class="carbon-grade-desc">Above average for your farm type &amp; size</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;color:rgba(244,236,218,.35);margin-bottom:6px;">EST. EMISSIONS</div>
+                    <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--wheat);letter-spacing:-.5px;">148</div>
+                    <div style="font-size:10px;color:rgba(244,236,218,.4);">tCO₂e / year</div>
+                  </div>
+                </div>
+                <div class="carbon-emissions">
+                  <div class="carbon-row">
+                    <div class="carbon-row-label">Fertilizer (N₂O)</div>
+                    <div class="carbon-row-bar"><div class="carbon-row-fill" style="width:72%;background:#e67e22;"></div></div>
+                    <div class="carbon-row-val">58 tCO₂e</div>
+                  </div>
+                  <div class="carbon-row">
+                    <div class="carbon-row-label">Diesel &amp; fuel</div>
+                    <div class="carbon-row-bar"><div class="carbon-row-fill" style="width:48%;background:#f39c12;"></div></div>
+                    <div class="carbon-row-val">38 tCO₂e</div>
+                  </div>
+                  <div class="carbon-row">
+                    <div class="carbon-row-label">Livestock (CH₄)</div>
+                    <div class="carbon-row-bar"><div class="carbon-row-fill" style="width:36%;background:#3498db;"></div></div>
+                    <div class="carbon-row-val">29 tCO₂e</div>
+                  </div>
+                  <div class="carbon-row">
+                    <div class="carbon-row-label">Soil &amp; residue</div>
+                    <div class="carbon-row-bar"><div class="carbon-row-fill" style="width:22%;background:#27ae60;"></div></div>
+                    <div class="carbon-row-val">18 tCO₂e</div>
+                  </div>
+                  <div class="carbon-row">
+                    <div class="carbon-row-label">Other</div>
+                    <div class="carbon-row-bar"><div class="carbon-row-fill" style="width:8%;background:#95a5a6;"></div></div>
+                    <div class="carbon-row-val">5 tCO₂e</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="carbon-tips">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Reduction Opportunities</div>
+                <div class="carbon-tip-row">
+                  <div class="carbon-tip-icon">🌿</div>
+                  <div class="carbon-tip-text">Switch to precision fertilizer application — reduce N₂O by targeting nutrient placement</div>
+                  <div class="carbon-tip-saving">−12 tCO₂e</div>
+                </div>
+                <div class="carbon-tip-row">
+                  <div class="carbon-tip-icon">🐄</div>
+                  <div class="carbon-tip-text">Enroll in AAFC Agricultural Methane Reduction Challenge prototype program</div>
+                  <div class="carbon-tip-saving">−8 tCO₂e</div>
+                </div>
+                <div class="carbon-tip-row">
+                  <div class="carbon-tip-icon">⛽</div>
+                  <div class="carbon-tip-text">Optimize equipment routes &amp; adopt biodiesel blend for field machinery</div>
+                  <div class="carbon-tip-saving">−6 tCO₂e</div>
+                </div>
+                <div class="carbon-tip-row">
+                  <div class="carbon-tip-icon">🌱</div>
+                  <div class="carbon-tip-text">Cover cropping &amp; reduced tillage improves soil carbon sequestration</div>
+                  <div class="carbon-tip-saving">−5 tCO₂e</div>
+                </div>
+                <div class="carbon-tip-row">
+                  <div class="carbon-tip-icon">💧</div>
+                  <div class="carbon-tip-text">Apply for Resilient Agricultural Landscape Program (ON) — wetland restoration</div>
+                  <div class="carbon-tip-saving">Funding ↗</div>
+                </div>
+                <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+                  <a href="funding.html" class="btn btn-secondary btn-sm">Find Green Funding →</a>
+                  <a href="copilot.html" class="btn btn-ghost btn-sm">Ask AI Copilot →</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -570,6 +1208,7 @@
   </div>
 
   <script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
   <script>
     const profile = Profile.requireOrRedirect();
     if (profile) {
@@ -704,6 +1343,56 @@
           </div>
           <span class="match-score ${p.match>=85?'high':p.match>=65?'med':'low'}">${p.match}%</span>
         </div>`).join('');
+
+      // ── MARGIN PRESSURE DONUTS ────────────────────────
+      const MARGINS = [
+        { crop:'🌾 Canola',  revenue:641, cost:498, margin:143, status:'green',  label:'Positive' },
+        { crop:'🌾 Wheat',   revenue:302, cost:278, margin:24,  status:'yellow', label:'Tight' },
+        { crop:'🌽 Corn',    revenue:238, cost:229, margin:9,   status:'red',    label:'At-Risk' },
+        { crop:'🫘 Soybean', revenue:498, cost:431, margin:67,  status:'green',  label:'Positive' },
+        { crop:'🌾 Barley',  revenue:241, cost:218, margin:23,  status:'yellow', label:'Tight' },
+        { crop:'🐄 Cattle',  revenue:212, cost:188, margin:24,  status:'yellow', label:'Tight' },
+      ];
+      document.getElementById('margin-grid').innerHTML = MARGINS.map((m, i) => `
+        <div class="margin-crop">
+          <div class="margin-crop-name">${m.crop}</div>
+          <div class="margin-donut-wrap">
+            <canvas id="mdnt-${i}" width="72" height="72"></canvas>
+            <div class="margin-donut-label">
+              <div class="margin-donut-val">$${m.margin}</div>
+              <div class="margin-donut-unit">/tonne</div>
+            </div>
+          </div>
+          <div class="margin-status ${m.status}">${m.status === 'green' ? '✓' : m.status === 'yellow' ? '⚠' : '✗'} ${m.label}</div>
+          <div class="margin-detail">Rev $${m.revenue} · Cost $${m.cost}</div>
+        </div>
+      `).join('');
+
+      MARGINS.forEach((m, i) => {
+        const ctx = document.getElementById('mdnt-' + i);
+        if (!ctx) return;
+        const color = m.status === 'green' ? '#27ae60' : m.status === 'yellow' ? '#e67e22' : '#c0392b';
+        const pct = Math.min(100, Math.round((m.margin / m.revenue) * 100));
+        new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            datasets: [{ data: [pct, 100 - pct], backgroundColor: [color, '#e8e0d0'], borderWidth: 0 }]
+          },
+          options: { cutout: '76%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { duration: 600 } }
+        });
+      });
+
+      // ── SUCCESSION RING ──────────────────────────────
+      const succCtx = document.getElementById('succ-ring-canvas');
+      if (succCtx) {
+        new Chart(succCtx, {
+          type: 'doughnut',
+          data: {
+            datasets: [{ data: [42, 58], backgroundColor: ['#d4963a', 'rgba(255,255,255,0.08)'], borderWidth: 0 }]
+          },
+          options: { cutout: '80%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { duration: 800 } }
+        });
+      }
 
       // Feedback
       let feedbackRating = 0;

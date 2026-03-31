@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Newcomer Farmer Hub — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    .tab-bar{display:flex;gap:4px;padding:0 0 20px;border-bottom:1px solid var(--border);margin-bottom:22px;flex-wrap:wrap;}
+    .pg-tab{padding:9px 18px;border-radius:20px;border:1.5px solid var(--border);background:white;font-family:'Sora',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;}
+    .pg-tab.active{background:var(--forest);color:var(--wheat);border-color:var(--forest);}
+    .pg-tab:hover:not(.active){border-color:var(--sage);color:var(--forest);}
+
+    /* Welcome hero */
+    .nc-hero{background:linear-gradient(135deg,#1a3a2a,var(--forest));border-radius:var(--r-lg);padding:26px 30px;color:var(--wheat);margin-bottom:22px;box-shadow:var(--shadow-lg);display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+    .nc-hero-icon{font-size:52px;flex-shrink:0;}
+    .nc-hero h2{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:7px;}
+    .nc-hero p{font-size:13px;color:rgba(244,236,218,.65);line-height:1.7;max-width:580px;}
+
+    /* Language selector */
+    .lang-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
+    .lang-btn{background:white;border:1.5px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;}
+    .lang-btn.active{border-color:var(--forest);background:var(--cream);}
+    .lang-btn:hover{border-color:var(--sage);}
+    .lang-flag{font-size:24px;display:block;margin-bottom:5px;}
+    .lang-name{font-size:11.5px;color:var(--text);}
+
+    /* Guide steps */
+    .guide-step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--border);}
+    .guide-step:last-child{border-bottom:none;}
+    .gs-num{width:34px;height:34px;border-radius:50%;background:var(--forest);color:var(--wheat);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:15px;flex-shrink:0;margin-top:2px;}
+    .gs-icon{font-size:20px;flex-shrink:0;width:34px;text-align:center;margin-top:6px;}
+    .gs-body h4{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;}
+    .gs-body p{font-size:12.5px;color:var(--muted);line-height:1.6;}
+    .gs-link{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);margin-top:5px;display:inline-block;}
+
+    /* Glossary */
+    .glossary-search{width:100%;padding:11px 16px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Sora',sans-serif;font-size:13.5px;margin-bottom:14px;outline:none;transition:border-color .15s;}
+    .glossary-search:focus{border-color:var(--sage);}
+    .glossary-item{padding:12px 0;border-bottom:1px solid var(--border);}
+    .glossary-item:last-child{border-bottom:none;}
+    .glossary-term{font-size:14px;font-weight:600;color:var(--forest);margin-bottom:4px;}
+    .glossary-def{font-size:13px;color:var(--muted);line-height:1.6;}
+    .glossary-trans{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);margin-top:3px;}
+
+    /* Pathway card */
+    .pathway-card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow-sm);transition:all .15s;}
+    .pathway-card:hover{box-shadow:var(--shadow);}
+    .pc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--forest);margin-bottom:5px;}
+    .pc-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+    .pc-steps{display:flex;gap:6px;flex-wrap:wrap;}
+    .pc-step{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 9px;border-radius:5px;background:var(--cream);border:1px solid var(--border);color:var(--forest);}
+
+    /* Peer circle */
+    .circle-card{background:var(--cream);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
+    .cc-flag{font-size:26px;flex-shrink:0;}
+    .cc-name{font-size:13.5px;font-weight:600;color:var(--text);}
+    .cc-desc{font-size:12px;color:var(--muted);margin-top:2px;}
+    .cc-members{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
+
+    @media(max-width:900px){.lang-grid{grid-template-columns:repeat(3,1fr);}}
+    @media(max-width:480px){.lang-grid{grid-template-columns:repeat(2,1fr);}}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">🌍 Newcomer Farmer Hub</div>
+          <div class="page-subtitle" id="nc-sub">Orientation, pathways, and community for newcomers entering Canadian agriculture</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <a href="labour.html" class="btn btn-secondary btn-sm">Labour Exchange →</a>
+        </div>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <!-- Hero -->
+      <div class="nc-hero anim-fade-up">
+        <div class="nc-hero-icon">🌍</div>
+        <div>
+          <h2>Welcome to Canadian Agriculture</h2>
+          <p>Canada welcomes over 1.45 million immigrants over the next three years, and agriculture is one of the fastest paths to permanent residency. This hub provides orientation resources, immigration pathways, peer connections, and essential Canadian farm terminology — in multiple languages.</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up anim-delay-1">
+        <div class="stat-card"><div class="stat-label">Immigrants Planned</div><div class="stat-value">1.45M</div><div class="stat-change">Over 3 years — Canada</div></div>
+        <div class="stat-card"><div class="stat-label">Ag Worker Shortage</div><div class="stat-value">123K</div><div class="stat-change neg">By 2030 — AAFC</div></div>
+        <div class="stat-card"><div class="stat-label">Languages Supported</div><div class="stat-value">6</div><div class="stat-change">Glossary &amp; resources</div></div>
+        <div class="stat-card"><div class="stat-label">Peer Circles</div><div class="stat-value">8</div><div class="stat-change">By language/region</div></div>
+      </div>
+
+      <!-- Language selector -->
+      <div class="lang-grid anim-fade-up anim-delay-1">
+        <div class="lang-btn active" onclick="setLang('en')" id="lang-en"><span class="lang-flag">🇨🇦</span><span class="lang-name">English</span></div>
+        <div class="lang-btn" onclick="setLang('fr')" id="lang-fr"><span class="lang-flag">🇫🇷</span><span class="lang-name">Français</span></div>
+        <div class="lang-btn" onclick="setLang('pa')" id="lang-pa"><span class="lang-flag">🇮🇳</span><span class="lang-name">ਪੰਜਾਬੀ</span></div>
+        <div class="lang-btn" onclick="setLang('es')" id="lang-es"><span class="lang-flag">🇲🇽</span><span class="lang-name">Español</span></div>
+        <div class="lang-btn" onclick="setLang('tl')" id="lang-tl"><span class="lang-flag">🇵🇭</span><span class="lang-name">Filipino</span></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar anim-fade-up anim-delay-1">
+        <button class="pg-tab active" id="nctab-guide"    onclick="showNcTab('guide')">📖 Orientation Guide</button>
+        <button class="pg-tab"        id="nctab-pathways" onclick="showNcTab('pathways')">🛤 Career Pathways</button>
+        <button class="pg-tab"        id="nctab-glossary" onclick="showNcTab('glossary')">📚 Farm Glossary</button>
+        <button class="pg-tab"        id="nctab-circles"  onclick="showNcTab('circles')">🤝 Peer Circles</button>
+        <button class="pg-tab"        id="nctab-rights"   onclick="showNcTab('rights')">⚖️ Worker Rights</button>
+      </div>
+
+      <!-- ORIENTATION GUIDE -->
+      <div id="ncview-guide">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header"><span class="card-title" id="guide-title">📖 Canadian Farm Orientation — 10 Steps</span></div>
+            <div class="card-body" style="padding:8px 20px;" id="guide-steps"></div>
+          </div>
+          <div>
+            <div class="card mb-16">
+              <div class="card-header"><span class="card-title">🏛️ Key Organizations for Newcomers</span></div>
+              <div class="card-body" style="font-size:13px;color:var(--text);line-height:1.9;display:flex;flex-direction:column;gap:6px;">
+                <div>🌾 <strong>CAHRC</strong> — Free newcomer training programs<br><span style="font-size:11.5px;color:var(--muted);">cahrc-ccrha.ca · 1-800-795-9995</span></div>
+                <div>👷 <strong>ESDC</strong> — Work permits, TFW rights<br><span style="font-size:11.5px;color:var(--muted);">canada.ca/en/employment-social-development</span></div>
+                <div>🌍 <strong>IRCC</strong> — Immigration and residency<br><span style="font-size:11.5px;color:var(--muted);">canada.ca/en/immigration-refugees-citizenship</span></div>
+                <div>🌱 <strong>Young Agrarians</strong> — New farmer peer network<br><span style="font-size:11.5px;color:var(--muted);">youngagrarians.org</span></div>
+                <div>📞 <strong>AAFC Info Line</strong> — Federal ag programs<br><span style="font-size:11.5px;color:var(--muted);">1-855-773-0241</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">💬 Language Support</span></div>
+              <div class="card-body" style="font-size:13px;color:var(--muted);line-height:1.8;display:flex;flex-direction:column;gap:4px;">
+                <div>🇨🇦 Service Canada: 1-800-622-6232 (bilingual)</div>
+                <div>🌍 IRCC Phone: 1-888-242-2100 (multi-language)</div>
+                <div>🏛️ AAFC Helpline: 1-855-773-0241</div>
+                <div>📱 Google Translate works with all government farm forms</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATHWAYS -->
+      <div id="ncview-pathways" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header"><span class="card-title">🛤 Immigration → Agriculture Career Pathways</span></div>
+          <div class="card-body" id="pathway-list" style="padding:8px 20px;"></div>
+          <div class="card-footer">
+            <a href="https://www.canada.ca/en/immigration-refugees-citizenship.html" target="_blank" class="btn btn-secondary btn-sm">IRCC Portal →</a>
+            <a href="copilot.html" class="btn btn-ghost btn-sm" style="margin-left:8px;">Ask AI Copilot →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- GLOSSARY -->
+      <div id="ncview-glossary" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header"><span class="card-title">📚 Canadian Farm Glossary</span><span id="glossary-lang-label" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">English</span></div>
+          <div class="card-body">
+            <input class="glossary-search" id="glossary-search" placeholder="Search farm terms…" oninput="renderGlossary()">
+            <div id="glossary-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PEER CIRCLES -->
+      <div id="ncview-circles" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🤝 Join a Peer Circle</span></div>
+            <div class="card-body" style="padding:8px 16px;" id="circle-list"></div>
+            <div class="card-footer"><a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI to connect me with my circle →</a></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">📅 Newcomer Events</span></div>
+            <div class="card-body" style="padding:4px 4px;">
+              <div style="display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;"><div style="background:var(--forest);border-radius:6px;padding:5px 10px;text-align:center;flex-shrink:0;"><div style="font-family:'DM Serif Display',serif;font-size:15px;color:var(--wheat);">3</div><div style="font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--amber-lt);">Apr</div></div><div><div style="font-size:13px;font-weight:500;color:var(--text);">Newcomer Farmer Welcome Webinar</div><div style="font-size:11.5px;color:var(--muted);">CAHRC · Virtual · Free · English + French</div></div></div>
+              <div style="display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;"><div style="background:var(--forest);border-radius:6px;padding:5px 10px;text-align:center;flex-shrink:0;"><div style="font-family:'DM Serif Display',serif;font-size:15px;color:var(--wheat);">10</div><div style="font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--amber-lt);">Apr</div></div><div><div style="font-size:13px;font-weight:500;color:var(--text);">TFW Rights & Protections Information Session</div><div style="font-size:11.5px;color:var(--muted);">ESDC · Virtual · Tagalog + Punjabi available</div></div></div>
+              <div style="display:flex;gap:12px;padding:12px 16px;align-items:center;"><div style="background:var(--forest);border-radius:6px;padding:5px 10px;text-align:center;flex-shrink:0;"><div style="font-family:'DM Serif Display',serif;font-size:15px;color:var(--wheat);">1</div><div style="font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--amber-lt);">May</div></div><div><div style="font-size:13px;font-weight:500;color:var(--text);">Punjabi Farmer Peer Circle — Virtual</div><div style="font-size:11.5px;color:var(--muted);">Young Agrarians · BC + AB farmers</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORKER RIGHTS -->
+      <div id="ncview-rights" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header"><span class="card-title">⚖️ Your Rights as a Farm Worker in Canada</span></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+              <div style="background:rgba(74,200,120,.06);border:1px solid rgba(74,200,120,.2);border-radius:var(--r-sm);padding:14px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--sage);margin-bottom:7px;">Your Rights — Federal Law</div><div style="font-size:13px;color:var(--text);line-height:1.8;"><div>✅ Right to be paid at least provincial minimum wage</div><div>✅ Right to a written employment contract (TFW)</div><div>✅ Right to safe working conditions (OHS)</div><div>✅ Right to medical care if injured at work (WCB)</div><div>✅ Right to keep your passport — employer cannot hold it</div><div>✅ Right to contact ESDC without employer permission</div><div>✅ No fees can be charged by recruiters or employers</div></div></div>
+              <div style="background:rgba(192,57,43,.06);border:1px solid rgba(192,57,43,.18);border-radius:var(--r-sm);padding:14px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:7px;">If Your Rights Are Violated</div><div style="font-size:13px;color:var(--text);line-height:1.8;"><div>📞 Call the Migrant Worker Support Network: 1-888-440-4443</div><div>📞 ESDC TFW Tipline: 1-800-367-5693</div><div>📞 Provincial Labour Standards offices</div><div>⚠️ You cannot be deported for reporting a violation</div></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">🏠 Housing Standards</span></div>
+            <div class="card-body" style="font-size:13px;color:var(--text);line-height:1.8;display:flex;flex-direction:column;gap:6px;">
+              <div>🏠 Employer-provided housing must meet provincial building codes</div>
+              <div>🔥 Functioning heat — min 18°C indoor temperature</div>
+              <div>💧 Potable running water and functioning bathroom facilities</div>
+              <div>🛏 Minimum space per person as defined by provincial standards</div>
+              <div>🚪 You must be able to leave the property during non-work hours</div>
+              <div>💰 Housing deduction from wages cannot exceed provincial maximum</div>
+              <div>🔒 Your employer cannot lock you in your housing</div>
+              <div style="margin-top:8px;padding:10px;background:var(--cream);border-radius:8px;font-size:12px;color:var(--muted);">If housing conditions are unsafe, contact ESDC or your provincial ag ministry. You have the right to leave without losing your work permit.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="js/data.js"></script>
+<script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('newcomers');
+  document.getElementById('nc-sub').textContent = `Newcomer resources for ${profile.province} · ${profile.farmType}`;
+
+  let activeLang = 'en';
+  function setLang(lang) {
+    activeLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('lang-'+lang).classList.add('active');
+    if(document.getElementById('ncview-glossary').style.display!=='none') renderGlossary();
+  }
+
+  function showNcTab(t) {
+    ['guide','pathways','glossary','circles','rights'].forEach(id=>{
+      document.getElementById('ncview-'+id).style.display=id===t?'':'none';
+      document.getElementById('nctab-'+id).classList.toggle('active',id===t);
+    });
+    if(t==='pathways') renderPathways();
+    if(t==='glossary') renderGlossary();
+    if(t==='circles')  renderCircles();
+  }
+
+  const GUIDE_STEPS = [
+    {num:1,icon:'📋',title:'Get a Social Insurance Number (SIN)',body:'Apply at a Service Canada Centre with your work permit. Free and takes 20 minutes. You need this to work legally and pay taxes.',link:'canada.ca/sin'},
+    {num:2,icon:'🏦',title:'Open a Canadian Bank Account',body:'Bring your passport, work permit, and SIN. Most major banks offer newcomer accounts with no fees for 1 year. RBC, TD, and Scotiabank all have newcomer programs.',link:'canada.ca/newcomers'},
+    {num:3,icon:'🏠',title:'Understand Your Housing Rights',body:'If your employer provides housing, it must meet provincial minimum standards. You have the right to leave during non-working hours and cannot be charged excessive rent deductions.',link:'labour.html'},
+    {num:4,icon:'💰',title:'Learn About Canadian Wages and Pay',body:'Minimum wage varies by province ($14–$17.40/hr in 2026). Your employer must provide a pay stub showing hours worked, deductions, and net pay.',link:'labour.html'},
+    {num:5,icon:'🌾',title:'Understand Canadian Farm Seasons',body:'Canada has four distinct seasons. Planting is spring (April–May), harvest is fall (August–October). Work schedules, crop types, and hazards change dramatically by season.',link:'training.html'},
+    {num:6,icon:'🛡',title:'Know Your Safety Rights',body:'You have the right to refuse unsafe work. Report injuries to your employer and Workplace Safety & Insurance Board (WSIB/WCB) immediately. Safety training is required before you start.',link:'farm-safety.html'},
+    {num:7,icon:'📞',title:'Save Key Emergency Numbers',body:'911 for emergencies. ESDC TFW Tipline: 1-800-367-5693. Migrant Worker Support: 1-888-440-4443. CFIA Animal Disease: 1-800-442-2342.',link:'farm-safety.html'},
+    {num:8,icon:'🌍',title:'Connect with Your Community',body:'Join a newcomer peer circle to meet other farmers from your country. Young Agrarians, CAHRC, and provincial farm organizations all run newcomer programs.',link:'#'},
+    {num:9,icon:'🎓',title:'Complete Free CAHRC Training',body:'CAHRC offers free online orientation courses in multiple languages covering Canadian farm culture, food safety, and employment standards. Certificate included.',link:'training.html'},
+    {num:10,icon:'🇨🇦',title:'Explore Permanent Residency Pathways',body:'Many agricultural work experience programs lead to permanent residency through the Rural and Northern Immigration Pilot, Atlantic Immigration Program, or Express Entry. Talk to an immigration consultant.',link:'https://www.canada.ca/en/immigration-refugees-citizenship.html'},
+  ];
+  document.getElementById('guide-steps').innerHTML = GUIDE_STEPS.map(s=>`
+    <div class="guide-step">
+      <div class="gs-num">${s.num}</div>
+      <div class="gs-body">
+        <h4>${s.icon} ${s.title}</h4>
+        <p>${s.body}</p>
+        <a href="${s.link}" class="gs-link">${s.link.startsWith('http')?'Learn more ↗':'Go to resource →'}</a>
+      </div>
+    </div>`).join('');
+
+  const PATHWAYS = [
+    {icon:'🌾',title:'TFW → Permanent Residency via Rural Immigration Pilot',desc:'The Rural and Northern Immigration Pilot (RNIP) offers communities the ability to recommend foreign workers for permanent residency. Many rural Canadian farming communities participate. You need 1 year of work experience in that community.',steps:['Get TFW work permit','Work for 1 year in eligible rural community','Get community recommendation','Apply for PR through RNIP']},
+    {icon:'🇨🇦',title:'Atlantic Immigration Program (AIP)',desc:'For farms in New Brunswick, Nova Scotia, PEI, or Newfoundland. Employers can designate you for permanent residency after demonstrating you meet requirements. Fast-tracked processing.',steps:['Get job offer from AIP-designated employer','Employer submits endorsement','Submit PR application','Receive permanent residency in 6–12 months']},
+    {icon:'⭐',title:'Express Entry — TEER Agriculture Occupations',desc:'Agriculture occupations in NOC TEER categories 2 and 3 qualify for Express Entry. Farm supervisor, specialized livestock worker, and irrigation specialist roles. Requires IELTS and education assessment.',steps:['Create Express Entry profile','Achieve minimum CRS score','Receive ITA','Submit full PR application']},
+    {icon:'🌱',title:'Seasonal → Full-Time → PR Path',desc:'Start with SAWP seasonal worker program (Mexico/Caribbean). Build Canadian work experience. Apply for the Agricultural Stream TFW (year-round). Then pursue PR through RNIP or provincial nominee programs.',steps:['SAWP seasonal permit (up to 8 months)','Agricultural Stream TFW (year-round)','Build 2+ years Canadian experience','Provincial Nominee Program (PNP) application']},
+  ];
+
+  function renderPathways() {
+    document.getElementById('pathway-list').innerHTML = PATHWAYS.map(p=>`
+      <div class="pathway-card">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;">
+          <div style="font-size:28px;flex-shrink:0;">${p.icon}</div>
+          <div><div class="pc-title">${p.title}</div><div class="pc-desc">${p.desc}</div></div>
+        </div>
+        <div class="pc-steps">${p.steps.map((s,i)=>`<span class="pc-step">${i+1}. ${s}</span>`).join('')}</div>
+      </div>`).join('');
+  }
+
+  const GLOSSARY_TERMS = [
+    {term:'AgriStability',def:'Canada\'s income stabilization program. Pays farmers when their income drops more than 30% below their reference margin.',fr:'AgriStabilité',pa:'ਆਗਰੀ ਸਟੈਬਿਲਿਟੀ',es:'AgriEstabilidad'},
+    {term:'Crop rotation',def:'Planting different crops in the same field each year to improve soil health and reduce pests.',fr:'Rotation des cultures',pa:'ਫ਼ਸਲ ਤਬਦੀਲੀ',es:'Rotación de cultivos'},
+    {term:'LMIA',def:'Labour Market Impact Assessment. A government check required before hiring a foreign worker.',fr:'EIMT (Étude d\'impact sur le marché du travail)',pa:'ਐਲਐਮਆਈਏ',es:'Evaluación de Impacto en el Mercado Laboral'},
+    {term:'PTO',def:'Power Take-Off. The spinning shaft on a tractor that powers attached equipment. Extremely dangerous if unguarded.',fr:'Prise de force (PDF)',pa:'ਪੀਟੀਓ — ਟਰੈਕਟਰ ਦਾ ਸ਼ਾਫ਼ਟ',es:'Toma de fuerza (TdF)'},
+    {term:'Canola',def:'An oilseed crop. One of Canada\'s most important exports. The plant has yellow flowers and produces small seeds pressed for cooking oil.',fr:'Canola',pa:'ਕੈਨੋਲਾ',es:'Canola (colza canadiense)'},
+    {term:'SAWP',def:'Seasonal Agricultural Worker Program. Allows farmers to hire workers from Mexico and Caribbean countries for up to 8 months.',fr:'PTAS (Programme des travailleurs agricoles saisonniers)',pa:'ਸਾਜ਼ਨਲ ਐਗਰੀਕਲਚਰਲ ਵਰਕਰ ਪ੍ਰੋਗਰਾਮ',es:'Programa de Trabajadores Agrícolas de Temporada'},
+    {term:'Seeding',def:'Planting seeds in the ground. Spring seeding usually happens April–May depending on province and crop.',fr:'Ensemencement',pa:'ਬਿਜਾਈ',es:'Siembra'},
+    {term:'Combine harvester',def:'A large machine that cuts, separates, and cleans grain crops. Very expensive — often $400K–$900K.',fr:'Moissonneuse-batteuse',pa:'ਕੰਬਾਈਨ ਹਾਰਵੈਸਟਰ',es:'Cosechadora combinada'},
+    {term:'Growing Degree Days (GDD)',def:'A measure of heat accumulation used to predict crop development and optimal harvest timing.',fr:'Degrés-jours de croissance',pa:'ਗਰੋਇੰਗ ਡਿਗਰੀ ਦੇਜ਼',es:'Grados-días de crecimiento'},
+    {term:'Herd',def:'A group of cattle. In dairy, a "herd" refers to all the cows on one farm.',fr:'Troupeau',pa:'ਝੁੰਡ',es:'Manada / rebaño'},
+    {term:'SIN',def:'Social Insurance Number. A 9-digit number required to work in Canada legally, file taxes, and access government benefits.',fr:'NAS (Numéro d\'assurance sociale)',pa:'ਸੋਸ਼ਲ ਇੰਸ਼ੋਰੈਂਸ ਨੰਬਰ (SIN)',es:'Número de Seguro Social (SIN)'},
+    {term:'WCB / WSIB',def:'Workers\' Compensation Board. Pays benefits if you\'re injured at work. You must report injuries immediately.',fr:'CNESST (Québec) / WSIB (Ontario)',pa:'ਵਰਕਰਜ਼ ਕੰਪਨਸੇਸ਼ਨ ਬੋਰਡ',es:'Junta de Compensación al Trabajador'},
+  ];
+
+  function renderGlossary() {
+    const search = (document.getElementById('glossary-search')?.value||'').toLowerCase();
+    const labels = {en:'English',fr:'Français',pa:'ਪੰਜਾਬੀ',es:'Español',tl:'Filipino'};
+    document.getElementById('glossary-lang-label').textContent = labels[activeLang]||'English';
+    const list = GLOSSARY_TERMS.filter(t=>!search||t.term.toLowerCase().includes(search)||t.def.toLowerCase().includes(search));
+    document.getElementById('glossary-list').innerHTML = list.map(t=>{
+      const trans = activeLang==='fr'?t.fr:activeLang==='pa'?t.pa:activeLang==='es'?t.es:'';
+      return `<div class="glossary-item">
+        <div class="glossary-term">${t.term}${trans?` — <span style="color:var(--amber);font-size:13px;">${trans}</span>`:''}</div>
+        <div class="glossary-def">${t.def}</div>
+      </div>`;
+    }).join('');
+  }
+  renderGlossary();
+
+  const CIRCLES = [
+    {flag:'🇮🇳',name:'Punjabi Farmer Circle',desc:'BC & Alberta farmers from Punjab. Monthly virtual meetup.',members:'47 members',lang:'Punjabi / English'},
+    {flag:'🇲🇽',name:'Mexican Agricultural Workers',desc:'SAWP and TFW workers across Canada.',members:'132 members',lang:'Spanish / English'},
+    {flag:'🇵🇭',name:'Filipino Ag Community',desc:'Farm workers and supervisors across Ontario and BC.',members:'61 members',lang:'Tagalog / English'},
+    {flag:'🇭🇳',name:'Central American Farm Workers',desc:'Seasonal workers from Honduras, Guatemala, El Salvador.',members:'38 members',lang:'Spanish'},
+    {flag:'🇷🇴',name:'Eastern European Farmers',desc:'Farmers from Romania, Ukraine, Poland — Manitoba and SK.',members:'29 members',lang:'Romanian / Ukrainian / English'},
+    {flag:'🌍',name:'International New Farmer Circle',desc:'All newcomers welcome — general orientation and peer support.',members:'215 members',lang:'English (multilingual)'},
+  ];
+  function renderCircles() {
+    document.getElementById('circle-list').innerHTML = CIRCLES.map(c=>`
+      <div class="circle-card">
+        <div class="cc-flag">${c.flag}</div>
+        <div><div class="cc-name">${c.name}</div><div class="cc-desc">${c.desc}<br><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--muted);">Language: ${c.lang}</span></div></div>
+        <div class="cc-members">${c.members}</div>
+        <button class="btn btn-ghost btn-sm" style="flex-shrink:0;margin-left:8px;" onclick="alert('Circle connection coming soon. Use AI Copilot to connect.')">Join →</button>
+      </div>`).join('');
+  }
+</script>
+</body>
+</html>

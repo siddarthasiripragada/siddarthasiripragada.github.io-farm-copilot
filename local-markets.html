@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Food Market Finder — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    .tab-bar{display:flex;gap:4px;padding:0 0 20px;border-bottom:1px solid var(--border);margin-bottom:22px;flex-wrap:wrap;}
+    .pg-tab{padding:9px 18px;border-radius:20px;border:1.5px solid var(--border);background:white;font-family:'Sora',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;}
+    .pg-tab.active{background:var(--forest);color:var(--wheat);border-color:var(--forest);}
+    .pg-tab:hover:not(.active){border-color:var(--sage);color:var(--forest);}
+
+    /* Market card */
+    .market-card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);transition:all .18s;margin-bottom:14px;}
+    .market-card:hover{box-shadow:var(--shadow);transform:translateY(-2px);}
+    .mc-header{padding:16px 20px;background:var(--cream);border-bottom:1px solid var(--border);display:flex;gap:14px;align-items:flex-start;}
+    .mc-icon{font-size:32px;flex-shrink:0;}
+    .mc-name{font-family:'DM Serif Display',serif;font-size:16px;color:var(--forest);margin-bottom:3px;}
+    .mc-loc{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.5px;color:var(--muted);}
+    .mc-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+    .mc-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:5px;}
+    .mb-farmers{background:rgba(27,53,40,.08);color:var(--sage);}
+    .mb-organic{background:rgba(74,200,120,.12);color:#1e8449;}
+    .mb-wholesale{background:rgba(41,128,185,.1);color:#1a5276;}
+    .mb-csa{background:rgba(184,114,14,.1);color:#8a5800;}
+    .mb-online{background:rgba(142,68,173,.1);color:#7d3c98;}
+    .mc-right{margin-left:auto;text-align:right;flex-shrink:0;}
+    .mc-season{font-size:12px;color:var(--muted);}
+    .mc-status{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 9px;border-radius:8px;margin-top:4px;display:inline-block;}
+    .ms-open{background:rgba(74,200,120,.12);color:#1e8449;}
+    .ms-seasonal{background:rgba(184,114,14,.1);color:#8a5800;}
+    .ms-closed{background:rgba(192,57,43,.08);color:var(--red);}
+    .mc-body{padding:14px 20px;}
+    .mc-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+    .mc-details{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+    .mc-detail{font-size:12px;color:var(--muted);}
+    .mc-detail strong{color:var(--text);display:block;margin-bottom:2px;}
+    .mc-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;}
+
+    /* CSA card */
+    .csa-card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;box-shadow:var(--shadow-sm);margin-bottom:14px;transition:all .15s;}
+    .csa-card:hover{box-shadow:var(--shadow);}
+    .csa-header{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;}
+    .csa-icon{font-size:28px;flex-shrink:0;}
+    .csa-name{font-family:'DM Serif Display',serif;font-size:15px;color:var(--forest);}
+    .csa-farm{font-size:12px;color:var(--muted);margin-top:2px;}
+    .csa-price{margin-left:auto;text-align:right;flex-shrink:0;}
+    .csa-price-val{font-family:'DM Serif Display',serif;font-size:20px;color:var(--forest);}
+    .csa-price-per{font-size:11px;color:var(--muted);}
+
+    /* LFIF funding banner */
+    .lfif-banner{background:linear-gradient(135deg,#1a3d2c,var(--forest));border-radius:var(--r-lg);padding:22px 26px;color:var(--wheat);margin-bottom:22px;box-shadow:var(--shadow-lg);}
+    .lfif-banner h3{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:7px;}
+    .lfif-banner p{font-size:13px;color:rgba(244,236,218,.65);line-height:1.65;max-width:640px;}
+
+    /* List form */
+    .list-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .list-grid .full{grid-column:1/-1;}
+
+    @media(max-width:900px){.mc-details{grid-template-columns:1fr 1fr;}.list-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">🛒 Local Food Market Finder</div>
+          <div class="page-subtitle" id="lm-sub">Connect with farmers markets, food buyers, and CSA programs near you</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <button class="btn btn-primary btn-sm" onclick="showLmTab('list')">+ List My Market</button>
+        </div>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <!-- LFIF Banner -->
+      <div class="lfif-banner anim-fade-up">
+        <h3>💰 $30M Local Food Infrastructure Fund — Applications Open</h3>
+        <p>The federal LFIF supports food processing, cold storage, aggregation hubs, and distribution infrastructure for local food systems. Maximum grant: $250K per project. Designed for farms scaling into local retail and food service markets.</p>
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+          <a href="https://agriculture.canada.ca" target="_blank" class="btn btn-primary btn-sm">Apply at AAFC →</a>
+          <a href="copilot.html" class="btn btn-ghost btn-sm" style="border-color:rgba(255,255,255,.25);color:var(--wheat);">Ask AI Copilot →</a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up anim-delay-1">
+        <div class="stat-card"><div class="stat-label">Markets Listed</div><div class="stat-value" id="stat-markets">18</div><div class="stat-change">Canada-wide</div></div>
+        <div class="stat-card"><div class="stat-label">CSA Programs</div><div class="stat-value">12</div><div class="stat-change">Direct-to-consumer</div></div>
+        <div class="stat-card"><div class="stat-label">LFIF Funding</div><div class="stat-value">$30M</div><div class="stat-change">Federal pool available</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Premium</div><div class="stat-value">32%</div><div class="stat-change">vs commodity price</div></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar anim-fade-up anim-delay-1">
+        <button class="pg-tab active" id="lmtab-markets"  onclick="showLmTab('markets')">🛒 Farmers Markets</button>
+        <button class="pg-tab"        id="lmtab-buyers"   onclick="showLmTab('buyers')">🏪 Wholesale Buyers</button>
+        <button class="pg-tab"        id="lmtab-csa"      onclick="showLmTab('csa')">📦 CSA Programs</button>
+        <button class="pg-tab"        id="lmtab-list"     onclick="showLmTab('list')">➕ List My Market/Farm</button>
+        <button class="pg-tab"        id="lmtab-funding"  onclick="showLmTab('funding')">💰 LFIF &amp; CanadaGAP</button>
+      </div>
+
+      <!-- FARMERS MARKETS -->
+      <div id="lmview-markets">
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+          <input class="filter-search" id="mkt-search" placeholder="Search markets by name or city…" style="flex:1;min-width:200px;" oninput="renderMarkets()">
+          <select class="filter-select" id="mkt-prov" onchange="renderMarkets()">
+            <option value="">All Provinces</option>
+            <option>Alberta</option><option>British Columbia</option><option>Manitoba</option>
+            <option>Ontario</option><option>Quebec</option><option>Saskatchewan</option>
+          </select>
+          <select class="filter-select" id="mkt-type" onchange="renderMarkets()">
+            <option value="">All Types</option>
+            <option>Farmers Market</option><option>Online Market</option><option>Farm Gate</option>
+          </select>
+        </div>
+        <div id="market-list"></div>
+      </div>
+
+      <!-- WHOLESALE BUYERS -->
+      <div id="lmview-buyers" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header"><span class="card-title">🏪 Institutional &amp; Wholesale Buyers Seeking Local Producers</span></div>
+          <div class="card-body" style="padding:4px 4px;" id="buyer-list"></div>
+          <div class="card-footer">
+            <a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI to help write a buyer pitch →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- CSA -->
+      <div id="lmview-csa" style="display:none;">
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+          <input class="filter-search" id="csa-search" placeholder="Search CSA programs…" style="flex:1;min-width:200px;" oninput="renderCSA()">
+          <select class="filter-select" id="csa-prov" onchange="renderCSA()">
+            <option value="">All Provinces</option>
+            <option>Alberta</option><option>British Columbia</option>
+            <option>Ontario</option><option>Quebec</option>
+          </select>
+        </div>
+        <div id="csa-list"></div>
+      </div>
+
+      <!-- LIST MY MARKET -->
+      <div id="lmview-list" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header"><span class="card-title">➕ List Your Market or Farm</span></div>
+          <div class="card-body">
+            <div class="list-grid">
+              <div class="form-group"><label class="form-label">Listing Name *</label><input class="form-input" id="ll-name" placeholder="Sunrise Farmers Market or Smith Farm CSA"></div>
+              <div class="form-group"><label class="form-label">Type *</label><select class="form-input" id="ll-type"><option>Farmers Market</option><option>CSA Program</option><option>Farm Gate Sales</option><option>Online Market</option><option>Wholesale</option></select></div>
+              <div class="form-group"><label class="form-label">Province *</label><select class="form-input" id="ll-prov"><option value="">Select…</option><option>Alberta</option><option>British Columbia</option><option>Manitoba</option><option>New Brunswick</option><option>Nova Scotia</option><option>Ontario</option><option>Quebec</option><option>Saskatchewan</option></select></div>
+              <div class="form-group"><label class="form-label">City / Region</label><input class="form-input" id="ll-city" placeholder="e.g. Guelph, Wellington County"></div>
+              <div class="form-group"><label class="form-label">Season</label><select class="form-input" id="ll-season"><option>Year-round</option><option>May–October</option><option>June–September</option><option>Summer only</option></select></div>
+              <div class="form-group"><label class="form-label">Contact Email *</label><input class="form-input" id="ll-email" type="email"></div>
+              <div class="form-group full"><label class="form-label">Description</label><span class="form-hint">What do you sell? Who is it for? Any certifications (Organic, CanadaGAP)?</span><textarea class="form-input" id="ll-desc" rows="3" style="resize:vertical;"></textarea></div>
+              <div class="full" style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" onclick="showLmTab('markets')">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="submitListing()">Submit Listing →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FUNDING -->
+      <div id="lmview-funding" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header"><span class="card-title">💰 Local Food Infrastructure Fund (LFIF)</span><span class="badge badge-sage">$30M Pool</span></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:14px;">
+              <div style="font-size:13.5px;color:var(--text);line-height:1.7;">The $30M LFIF supports not-for-profit and for-profit organizations building local food infrastructure. Projects must demonstrate broad community benefit.</div>
+              <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text);line-height:1.7;">
+                <div>✅ Cold storage and refrigeration infrastructure</div>
+                <div>✅ Mobile processing units (slaughter, canning, packaging)</div>
+                <div>✅ Food aggregation and distribution hubs</div>
+                <div>✅ Online market platforms for local producers</div>
+                <div>✅ Community commercial kitchens</div>
+                <div>❌ Not eligible: primary farm production equipment</div>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <a href="https://agriculture.canada.ca" target="_blank" class="btn btn-primary btn-sm">Apply at AAFC.gc.ca →</a>
+                <a href="copilot.html" class="btn btn-ghost btn-sm">Ask AI for help →</a>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">🍎 CanadaGAP Certification Guide</span></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
+              <div style="font-size:13px;color:var(--muted);line-height:1.65;">CanadaGAP certification is required for fresh produce sold to major Canadian retailers (Loblaws, Sobeys, Metro). Annual audit cost: $800–$2,500.</div>
+              <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text);line-height:1.6;">
+                <div><strong>Step 1:</strong> Register at canadagap.ca — free account</div>
+                <div><strong>Step 2:</strong> Complete the Food Safety Manual template</div>
+                <div><strong>Step 3:</strong> Book an audit with an approved auditor (~$800)</div>
+                <div><strong>Step 4:</strong> Correct non-conformances within 30 days</div>
+                <div><strong>Step 5:</strong> Certificate valid 1 year — annual renewal required</div>
+              </div>
+              <a href="https://canadagap.ca" target="_blank" class="btn btn-secondary btn-sm">canadagap.ca →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="js/data.js"></script>
+<script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('local-markets');
+  document.getElementById('lm-sub').textContent = `Find local food markets and buyers · ${profile.province}`;
+
+  function showLmTab(t) {
+    ['markets','buyers','csa','list','funding'].forEach(id=>{
+      document.getElementById('lmview-'+id).style.display=id===t?'':'none';
+      document.getElementById('lmtab-'+id).classList.toggle('active',id===t);
+    });
+    if(t==='buyers') renderBuyers();
+    if(t==='csa')    renderCSA();
+  }
+
+  const MARKETS = [
+    {id:'m01',icon:'🛒',name:'St. Lawrence Market',loc:'Toronto, ON',prov:'Ontario',type:'Farmers Market',season:'Year-round',status:'open',desc:'One of Canada\'s oldest and largest farmers markets. 200+ vendors including produce, meat, dairy, and specialty foods.',details:{days:'Tue–Sun',hours:'8am–5pm',vendors:'200+',organic:'Yes'},tags:['mb-farmers','mb-organic'],url:'https://www.stlawrencemarket.com'},
+    {id:'m02',icon:'🌿',name:'Jean-Talon Market',loc:'Montreal, QC',prov:'Quebec',type:'Farmers Market',season:'May–Oct',status:'seasonal',desc:'Quebec\'s most celebrated public market. Local Quebec producers selling fresh produce, artisan foods, and Quebec-grown specialties.',details:{days:'Daily',hours:'7am–6pm',vendors:'300+',organic:'Partial'},tags:['mb-farmers','mb-organic'],url:'https://www.marchespublics-mtl.com'},
+    {id:'m03',icon:'🏔',name:'Granville Island Public Market',loc:'Vancouver, BC',prov:'British Columbia',type:'Farmers Market',season:'Year-round',status:'open',desc:'Year-round indoor market with BC farmers, artisan producers, and specialty food vendors. One of Canada\'s top visitor destinations.',details:{days:'Daily',hours:'9am–7pm',vendors:'50+',organic:'Yes'},tags:['mb-farmers','mb-organic'],url:'https://granvilleisland.com'},
+    {id:'m04',icon:'🌾',name:'Regina Farmers Market',loc:'Regina, SK',prov:'Saskatchewan',type:'Farmers Market',season:'May–Oct',status:'seasonal',desc:'Saskatchewan producers selling grain-fed beef, pork, poultry, eggs, and locally grown vegetables and honey.',details:{days:'Saturdays',hours:'9am–1pm',vendors:'80+',organic:'Partial'},tags:['mb-farmers'],url:'https://www.reginafarmersmarket.ca'},
+    {id:'m05',icon:'🌻',name:'City of Calgary Farmers Market',loc:'Calgary, AB',prov:'Alberta',type:'Farmers Market',season:'Year-round',status:'open',desc:'Alberta\'s largest permanent farmers market with year-round indoor vendors. Alberta beef, bison, pork, and specialty crops.',details:{days:'Fri–Sun',hours:'9am–5pm',vendors:'130+',organic:'Yes'},tags:['mb-farmers','mb-organic'],url:'https://www.calgaryfarmersmarket.ca'},
+    {id:'m06',icon:'💻',name:'Ontario Online Farmers Market',loc:'Ontario Province-wide',prov:'Ontario',type:'Online Market',season:'Year-round',status:'open',desc:'Connect directly with consumers across Ontario. Digital storefront for farm products with integrated delivery and pickup coordination.',details:{days:'Online 24/7',hours:'Always open',vendors:'400+',organic:'Yes'},tags:['mb-online','mb-organic'],url:'https://www.ontariofresh.ca'},
+  ];
+  let userMarkets = JSON.parse(localStorage.getItem('userMarkets')||'[]');
+
+  function renderMarkets(){
+    const search = document.getElementById('mkt-search').value.toLowerCase();
+    const prov   = document.getElementById('mkt-prov').value;
+    const type   = document.getElementById('mkt-type').value;
+    const list   = [...MARKETS,...userMarkets].filter(m=>
+      (!search||m.name.toLowerCase().includes(search)||m.loc.toLowerCase().includes(search))&&
+      (!prov||m.prov===prov)&&(!type||m.type===type));
+    document.getElementById('stat-markets').textContent=list.length;
+    document.getElementById('market-list').innerHTML = list.map(m=>`
+      <div class="market-card">
+        <div class="mc-header">
+          <div class="mc-icon">${m.icon}</div>
+          <div>
+            <div class="mc-name">${m.name}</div>
+            <div class="mc-loc">📍 ${m.loc} · ${m.type}</div>
+            <div class="mc-badges">${m.tags.map(t=>`<span class="mc-badge ${t}">${t==='mb-farmers'?'Farmers Market':t==='mb-organic'?'Organic':'Online'}</span>`).join('')}</div>
+          </div>
+          <div class="mc-right">
+            <div class="mc-season">${m.season}</div>
+            <span class="mc-status ${m.status==='open'?'ms-open':m.status==='seasonal'?'ms-seasonal':'ms-closed'}">${m.status==='open'?'✓ Open year-round':m.status==='seasonal'?'Seasonal':'Closed'}</span>
+          </div>
+        </div>
+        <div class="mc-body">
+          <div class="mc-desc">${m.desc}</div>
+          ${m.details?`<div class="mc-details"><div class="mc-detail"><strong>Market Days</strong>${m.details.days}</div><div class="mc-detail"><strong>Hours</strong>${m.details.hours}</div><div class="mc-detail"><strong>Vendors</strong>${m.details.vendors}</div></div>`:''}
+        </div>
+        <div class="mc-footer">
+          <a href="${m.url||'#'}" target="_blank" class="btn btn-primary btn-sm">Visit Market →</a>
+          <a href="copilot.html" class="btn btn-ghost btn-sm">Ask AI to prep for this market</a>
+        </div>
+      </div>`).join('');
+  }
+  renderMarkets();
+
+  const BUYERS = [
+    {icon:'🏪',name:'Loblaws / PC Fresh',type:'Retail Chain',seeking:'Apples, potatoes, squash, leafy greens — Ontario, BC, QC suppliers preferred',cert:'CanadaGAP required',contact:'Visit freshlocal@loblaw.ca'},
+    {icon:'🏨',name:'Fairmont Hotels Canada',type:'Hospitality',seeking:'Premium produce, heritage breeds, artisan dairy — year-round supply',cert:'Food safety plan required',contact:'localfood@fairmont.com'},
+    {icon:'🏫',name:'Toronto District School Board',type:'Institutional',seeking:'Seasonal vegetables, fruit, eggs for school meal programs — Ontario producers',cert:'CanadaGAP or equivalent',contact:'nutrition@tdsb.on.ca'},
+    {icon:'🌿',name:'Whole Foods Market Canada',type:'Specialty Retail',seeking:'Certified organic, local specialty products, artisan cheesemakers',cert:'Organic certification or certified natural',contact:'canadabuyingteam@wholefoods.com'},
+    {icon:'🚐',name:'Local Food Hubs (Province-run)',type:'Aggregator',seeking:'Mixed produce lots for redistribution to restaurants, schools, food banks',cert:'Basic food safety plan',contact:'Contact your provincial ag ministry'},
+  ];
+  function renderBuyers(){
+    document.getElementById('buyer-list').innerHTML=BUYERS.map(b=>`
+      <div style="display:flex;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border);align-items:flex-start;">
+        <div style="font-size:28px;flex-shrink:0;">${b.icon}</div>
+        <div style="flex:1;">
+          <div style="font-family:'DM Serif Display',serif;font-size:15px;color:var(--forest);margin-bottom:2px;">${b.name}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;">${b.type}</div>
+          <div style="font-size:13px;color:var(--text);margin-bottom:4px;"><strong>Seeking:</strong> ${b.seeking}</div>
+          <div style="font-size:12.5px;color:var(--muted);">📋 ${b.cert} · 📧 ${b.contact}</div>
+        </div>
+        <a href="copilot.html" class="btn btn-ghost btn-sm" style="flex-shrink:0;">Draft pitch →</a>
+      </div>`).join('');
+  }
+
+  const CSA_LIST = [
+    {icon:'📦',name:'Full-Season Veggie Box',farm:'Roots Down Farm',prov:'Ontario',price:'$42/wk',duration:'20 weeks',desc:'Mixed organic vegetables, May–September. Pickup in Toronto or Guelph. 30 shares available.',spots:'8 left'},
+    {icon:'🥩',name:'Quarterly Beef Share',farm:'Prairie Heritage Cattle',prov:'Alberta',price:'$380/quarter',duration:'4x per year',desc:'Pasture-raised, grain-finished beef. Quarter or half carcass. Processing and vacuum packing included.',spots:'3 left'},
+    {icon:'🍎',name:'Fall Apple & Cider Box',farm:'Okanagan Heritage Orchards',prov:'British Columbia',price:'$28/wk',duration:'8 weeks',desc:'Mixed apples, pears, and fresh cider. Varieties change weekly. BC-grown, no-spray.',spots:'12 left'},
+    {icon:'🧀',name:'Monthly Dairy Share',farm:'Meadowbrook Dairy',prov:'Ontario',price:'$65/month',duration:'Year-round',desc:'Milk, yogurt, butter, and seasonal cheese. Monthly delivery to 30+ pickup points in Southern Ontario.',spots:'Available'},
+  ];
+  let userCSA=JSON.parse(localStorage.getItem('userCSA')||'[]');
+  function renderCSA(){
+    const search=document.getElementById('csa-search').value.toLowerCase();
+    const prov=document.getElementById('csa-prov').value;
+    const list=[...CSA_LIST,...userCSA].filter(c=>(!search||c.name.toLowerCase().includes(search)||c.farm.toLowerCase().includes(search))&&(!prov||c.prov===prov));
+    document.getElementById('csa-list').innerHTML=list.map(c=>`
+      <div class="csa-card">
+        <div class="csa-header">
+          <div class="csa-icon">${c.icon}</div>
+          <div><div class="csa-name">${c.name}</div><div class="csa-farm">🏡 ${c.farm} · ${c.prov}</div></div>
+          <div class="csa-price"><div class="csa-price-val">${c.price}</div><div class="csa-price-per">${c.duration}</div></div>
+        </div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px;">${c.desc}</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn btn-primary btn-sm" onclick="alert('Contact feature coming soon. Use AI Copilot to draft your inquiry.')">Join CSA →</button>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 9px;border-radius:8px;background:rgba(74,200,120,.1);color:#1e8449;">${c.spots} spots</span>
+        </div>
+      </div>`).join('');
+  }
+
+  window.submitListing=function(){
+    const name=document.getElementById('ll-name').value.trim();
+    const prov=document.getElementById('ll-prov').value;
+    if(!name||!prov){alert('Please fill in required fields.');return;}
+    userMarkets.push({id:'u-'+Date.now(),icon:'🌱',name,loc:document.getElementById('ll-city').value+', '+prov,prov,type:document.getElementById('ll-type').value,season:document.getElementById('ll-season').value,status:'open',desc:document.getElementById('ll-desc').value,details:null,tags:[],url:'#'});
+    localStorage.setItem('userMarkets',JSON.stringify(userMarkets));
+    showLmTab('markets');renderMarkets();
+    alert('✓ Listing submitted!');
+  };
+</script>
+</body>
+</html>

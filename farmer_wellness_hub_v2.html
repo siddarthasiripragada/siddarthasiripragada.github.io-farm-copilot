@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Wellness Hub — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    /* Crisis banner — always pinned at top of content */
+    .crisis-bar {
+      background: linear-gradient(135deg, #1a2e24 0%, #1B3528 100%);
+      border: 1.5px solid rgba(74,200,120,.25);
+      border-radius: var(--r-lg);
+      padding: 20px 26px;
+      display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.12);
+    }
+    .crisis-icon { font-size: 32px; flex-shrink: 0; }
+    .crisis-text { flex: 1; min-width: 200px; }
+    .crisis-text h3 { font-family:'DM Serif Display',serif; font-size:16px; color:var(--wheat); margin-bottom:4px; }
+    .crisis-text p  { font-size:12.5px; color:rgba(244,236,218,.6); line-height:1.55; }
+    .crisis-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:11px 20px; background:#4ac878; color:#0d2015;
+      border-radius:var(--r-sm); font-family:'Sora',sans-serif;
+      font-size:13px; font-weight:700; text-decoration:none;
+      transition:background .14s; white-space:nowrap; flex-shrink:0;
+    }
+    .crisis-btn:hover { background:#5dd98a; }
+    .crisis-btn2 {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:11px 20px; background:rgba(255,255,255,.1); color:var(--wheat);
+      border:1.5px solid rgba(255,255,255,.15);
+      border-radius:var(--r-sm); font-family:'Sora',sans-serif;
+      font-size:13px; font-weight:500; text-decoration:none;
+      transition:background .14s; white-space:nowrap; flex-shrink:0;
+    }
+    .crisis-btn2:hover { background:rgba(255,255,255,.18); }
+
+    /* Mood check-in */
+    .mood-wrap { display:flex; gap:10px; flex-wrap:wrap; }
+    .mood-btn {
+      flex:1; min-width:100px;
+      padding:16px 10px; border-radius:12px;
+      border:2px solid var(--border); background:white;
+      cursor:pointer; text-align:center;
+      transition:all .18s; font-family:'Sora',sans-serif;
+    }
+    .mood-btn:hover { border-color:var(--sage); background:var(--sage-pale); transform:translateY(-2px); }
+    .mood-btn.selected { border-color:var(--forest); background:var(--cream); box-shadow:0 4px 12px rgba(27,53,40,.12); }
+    .mood-emoji { font-size:28px; display:block; margin-bottom:6px; }
+    .mood-label { font-size:12px; color:var(--muted); }
+
+    /* Streak tracker */
+    .streak-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:12px; }
+    .streak-day {
+      aspect-ratio:1; border-radius:6px; border:1.5px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--faint);
+      flex-direction:column; gap:2px;
+    }
+    .streak-day.done  { background:var(--sage-pale); border-color:var(--sage); }
+    .streak-day.today { border-color:var(--amber); }
+    .streak-day .s-dot { width:8px; height:8px; border-radius:50%; background:var(--sage); }
+    .streak-day .s-label { font-size:8px; color:var(--muted); }
+
+    /* Resource cards */
+    .resource-card {
+      background:white; border:1px solid var(--border);
+      border-radius:var(--r-lg); padding:18px; display:flex;
+      flex-direction:column; gap:8px; transition:all .15s;
+      text-decoration:none; color:inherit;
+      box-shadow:var(--shadow-sm);
+    }
+    .resource-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); border-color:var(--border-md); }
+    .rc-icon  { font-size:26px; }
+    .rc-title { font-family:'DM Serif Display',serif; font-size:15px; color:var(--forest); }
+    .rc-desc  { font-size:12.5px; color:var(--muted); line-height:1.5; flex:1; }
+    .rc-cta   { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.5px; color:var(--amber); margin-top:4px; }
+
+    /* Stat cards override for forest bg */
+    .wellness-stat {
+      background: var(--forest);
+      border-radius:var(--r-lg); padding:20px 22px;
+      color:var(--wheat);
+    }
+    .ws-val   { font-family:'DM Serif Display',serif; font-size:36px; color:var(--wheat); letter-spacing:-1px; line-height:1; }
+    .ws-label { font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(244,236,218,.4); margin-bottom:6px; }
+    .ws-desc  { font-size:12px; color:rgba(244,236,218,.55); margin-top:6px; line-height:1.5; }
+
+    /* Journal textarea */
+    .journal-ta {
+      width:100%; min-height:110px; padding:13px 16px;
+      border:1.5px solid var(--border); border-radius:var(--r-sm);
+      font-family:'Sora',sans-serif; font-size:13.5px; color:var(--text);
+      background:white; resize:vertical; outline:none; line-height:1.7;
+      transition:border-color .15s;
+    }
+    .journal-ta:focus { border-color:var(--sage); }
+
+    /* Counsellor cards */
+    .counsellor-card {
+      background:white; border:1px solid var(--border);
+      border-radius:var(--r); padding:14px 16px;
+      display:flex; align-items:center; gap:13px;
+      margin-bottom:10px; transition:box-shadow .14s;
+    }
+    .counsellor-card:hover { box-shadow:var(--shadow); }
+    .counsellor-avatar {
+      width:42px; height:42px; border-radius:50%;
+      background:var(--forest); display:flex; align-items:center;
+      justify-content:center; font-size:18px; flex-shrink:0;
+    }
+    .counsellor-name { font-size:13.5px; font-weight:600; color:var(--text); }
+    .counsellor-sub  { font-size:11.5px; color:var(--muted); margin-top:2px; }
+    .counsellor-badge {
+      margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:9.5px;
+      padding:3px 9px; border-radius:8px; white-space:nowrap;
+      background:rgba(74,200,120,.1); color:#1e8449;
+    }
+
+    /* Tip card */
+    .tip-card {
+      background:var(--cream); border-left:3px solid var(--amber);
+      border-radius:var(--r-sm); padding:14px 18px;
+      font-size:13px; color:var(--text); line-height:1.65;
+      margin-bottom:12px;
+    }
+    .tip-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--amber); margin-bottom:6px; }
+
+
+    /* Weekly trend */
+    .trend-wrap { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; align-items:end; min-height:180px; margin-top:10px; }
+    .trend-col { display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .trend-bar-wrap {
+      width:100%; height:120px; border-radius:10px; background:linear-gradient(180deg, rgba(27,53,40,.04) 0%, rgba(27,53,40,.08) 100%);
+      display:flex; align-items:flex-end; justify-content:center; padding:6px;
+    }
+    .trend-bar {
+      width:100%; max-width:32px; border-radius:8px 8px 4px 4px; background:linear-gradient(180deg, var(--sage) 0%, var(--forest) 100%);
+      min-height:10px; transition:height .2s ease;
+    }
+    .trend-label { font-size:10px; color:var(--faint); font-family:'IBM Plex Mono',monospace; }
+    .trend-score { font-size:11px; color:var(--muted); }
+
+    /* Stress trigger chips */
+    .chip-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .chip-btn {
+      border:1.5px solid var(--border); border-radius:999px; padding:8px 12px;
+      background:white; font-size:12px; color:var(--text); cursor:pointer; transition:all .15s;
+    }
+    .chip-btn:hover { border-color:var(--sage); background:var(--sage-pale); }
+    .chip-btn.active { background:var(--forest); color:var(--wheat); border-color:var(--forest); }
+    .mini-note {
+      margin-top:10px; font-size:12px; color:var(--muted); line-height:1.6;
+      background:var(--cream); border-radius:10px; padding:10px 12px;
+    }
+
+    /* Province panel */
+    .province-panel {
+      background:linear-gradient(135deg, rgba(74,200,120,.08) 0%, rgba(27,53,40,.03) 100%);
+      border:1px solid rgba(74,200,120,.18); border-radius:var(--r); padding:14px;
+      margin-bottom:12px;
+    }
+    .province-row { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
+    .province-tag {
+      font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px;
+      text-transform:uppercase; color:var(--forest);
+    }
+    .province-links { display:grid; gap:8px; margin-top:12px; }
+    .province-link {
+      display:block; text-decoration:none; color:inherit; background:white; border:1px solid var(--border);
+      border-radius:12px; padding:12px; transition:all .15s;
+    }
+    .province-link:hover { transform:translateY(-1px); box-shadow:var(--shadow-sm); border-color:var(--border-md); }
+    .province-link-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:3px; }
+    .province-link-desc { font-size:11.5px; color:var(--muted); line-height:1.5; }
+
+    @media(max-width:900px) {
+      .resource-grid  { grid-template-columns:repeat(2,1fr); }
+      .stats-wellness { grid-template-columns:repeat(2,1fr); }
+      .wellness-layout { grid-template-columns:1fr; }
+    }
+    @media(max-width:520px) {
+      .mood-btn { min-width:80px; }
+      .resource-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">🧠 Farmer Wellness Hub</div>
+          <div class="page-subtitle" id="w-sub">Mental health resources and daily check-in — you are not alone</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <a href="tel:18666327601" class="btn btn-primary btn-sm">📞 Crisis Line</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Crisis bar -->
+      <div class="crisis-bar anim-fade-up">
+        <div class="crisis-icon">🌿</div>
+        <div class="crisis-text">
+          <h3>National Farmer Crisis Line — Free &amp; Confidential, 24/7</h3>
+          <p>Over 50% of Canadian farmers experience anxiety at clinical levels. 25% reported suicidal thoughts. Help is available — trained counsellors who understand farm life.</p>
+        </div>
+        <a href="tel:18666327601" class="crisis-btn">📞 1-866-FARMS01</a>
+        <a href="https://do-more.ca/farmersupport" target="_blank" class="crisis-btn2">Online Chat →</a>
+      </div>
+
+      <!-- Stats row -->
+      <div class="planner-stats anim-fade-up anim-delay-1">
+        <div class="wellness-stat">
+          <div class="ws-label">Canadian Farmers</div>
+          <div class="ws-val">50%+</div>
+          <div class="ws-desc">Experience anxiety at clinical levels — 10× higher than general labour force</div>
+        </div>
+        <div class="wellness-stat">
+          <div class="ws-label">Crisis Line Calls Answered</div>
+          <div class="ws-val">24/7</div>
+          <div class="ws-desc">1-866-FARMS01 — ag-literate counsellors, free of charge, no wait list</div>
+        </div>
+        <div class="wellness-stat">
+          <div class="ws-label">Gov Funding (2026)</div>
+          <div class="ws-val">$300K</div>
+          <div class="ws-desc">Federal renewal of farmer wellness counselling — January 2026 AAFC announcement</div>
+        </div>
+        <div class="wellness-stat">
+          <div class="ws-label">Your Check-In Streak</div>
+          <div class="ws-val" id="streak-val">0 days</div>
+          <div class="ws-desc">Daily check-ins help track your mental wellbeing over time</div>
+        </div>
+      </div>
+
+      <!-- Main layout -->
+      <div class="grid-2 mb-24 anim-fade-up anim-delay-1" style="grid-template-columns:1fr 320px;" class="wellness-layout">
+
+        <!-- Left: Check-in + journal -->
+        <div>
+          <!-- Daily check-in -->
+          <div class="card mb-24">
+            <div class="card-header">
+              <span class="card-title">😊 Daily Mood Check-In</span>
+              <span class="badge badge-sage" id="checkin-badge">Not done today</span>
+            </div>
+            <div class="card-body">
+              <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">How are you feeling today? Tracking your mood over time helps you spot patterns — and it's just for you.</p>
+              <div class="mood-wrap" id="mood-wrap">
+                <button class="mood-btn" onclick="setMood('great','😄')" data-mood="great">
+                  <span class="mood-emoji">😄</span><span class="mood-label">Great</span>
+                </button>
+                <button class="mood-btn" onclick="setMood('good','🙂')" data-mood="good">
+                  <span class="mood-emoji">🙂</span><span class="mood-label">Good</span>
+                </button>
+                <button class="mood-btn" onclick="setMood('okay','😐')" data-mood="okay">
+                  <span class="mood-emoji">😐</span><span class="mood-label">Okay</span>
+                </button>
+                <button class="mood-btn" onclick="setMood('low','😔')" data-mood="low">
+                  <span class="mood-emoji">😔</span><span class="mood-label">Low</span>
+                </button>
+                <button class="mood-btn" onclick="setMood('struggling','😞')" data-mood="struggling">
+                  <span class="mood-emoji">😞</span><span class="mood-label">Struggling</span>
+                </button>
+              </div>
+              <div id="mood-response" style="display:none;margin-top:16px;"></div>
+            </div>
+            <div class="card-footer">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);">Stored locally on your device only — never shared</span>
+            </div>
+          </div>
+
+          <!-- 30-day streak -->
+          <div class="card mb-24">
+            <div class="card-header">
+              <span class="card-title">📅 30-Day Wellness Streak</span>
+              <span class="badge badge-amber" id="streak-badge">0 / 30</span>
+            </div>
+            <div class="card-body">
+              <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;">Days you completed your check-in — consistency helps build self-awareness.</p>
+              <div class="streak-grid" id="streak-grid"></div>
+            </div>
+          </div>
+
+
+          <!-- 7-day mood trend -->
+          <div class="card mb-24">
+            <div class="card-header">
+              <span class="card-title">📈 7-Day Mood Trend</span>
+              <span class="badge badge-sage" id="trend-summary-badge">Building baseline</span>
+            </div>
+            <div class="card-body">
+              <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.6;">A simple weekly trend helps you spot whether stress is building, steady, or easing.</p>
+              <div class="trend-wrap" id="trend-wrap"></div>
+              <div class="mini-note" id="trend-insight">Complete a few daily check-ins to unlock your weekly insight.</div>
+            </div>
+          </div>
+
+          <!-- Stress trigger tracker -->
+          <div class="card mb-24">
+            <div class="card-header">
+              <span class="card-title">🏷️ Farm Pressure Tracker</span>
+              <span class="badge badge-amber" id="trigger-count-badge">0 selected today</span>
+            </div>
+            <div class="card-body">
+              <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Tag what is driving pressure today. This stays on your device and helps explain patterns behind low or difficult days.</p>
+              <div class="chip-grid" id="trigger-grid"></div>
+              <div class="mini-note" id="trigger-insight">Select a few stress drivers to build a private trend history.</div>
+            </div>
+          </div>
+
+          <!-- Journal -->
+          <div class="card mb-24">
+            <div class="card-header">
+              <span class="card-title">📓 Farm Journal</span>
+              <button class="btn btn-ghost btn-sm" onclick="saveJournal()">Save</button>
+            </div>
+            <div class="card-body">
+              <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Write freely — about your day, a worry, a win, or just what's on your mind. Journaling reduces stress and improves decision clarity.</p>
+              <textarea class="journal-ta" id="journal-ta" placeholder="What's on your mind today? (This stays private on your device)"></textarea>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+                <span style="font-size:11.5px;color:var(--faint);" id="journal-saved"></span>
+                <button class="btn btn-secondary btn-sm" onclick="saveJournal()">Save Entry</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wellness tips -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">💡 Farmer Wellness Tips</span></div>
+            <div class="card-body">
+              <div class="tip-card">
+                <div class="tip-label">Financial Stress</div>
+                Separate your farm's financial situation from your self-worth. Bad years happen — they don't define you as a farmer or a person. Talk to your bank about AgriStability before skipping a payment.
+              </div>
+              <div class="tip-card">
+                <div class="tip-label">Isolation</div>
+                Schedule one non-farm social event per week, even a phone call. Rural isolation is a measurable health risk. The Young Agrarians peer network runs virtual circles for farmers across Canada.
+              </div>
+              <div class="tip-card">
+                <div class="tip-label">Physical Health</div>
+                Farm injuries peak during planting and harvest. Take 15-minute breaks every 2 hours of equipment operation. Fatigue and stress are leading causes of farm accidents.
+              </div>
+              <div class="tip-card">
+                <div class="tip-label">Asking for Help</div>
+                Seeking support is a sign of strength, not weakness. The 1-866-FARMS01 line is staffed by counsellors who grew up on farms. They understand production losses, succession stress, and rural identity.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Resources + counsellors -->
+        <div>
+          <!-- Quick resources -->
+          <div class="card mb-16">
+            <div class="card-header"><span class="card-title">📞 Crisis &amp; Support Lines</span></div>
+            <div class="card-body" style="padding:8px 16px;">
+              <div class="counsellor-card" style="background:rgba(74,200,120,.05);border-color:rgba(74,200,120,.2);">
+                <div class="counsellor-avatar" style="background:#1e5e35;">📞</div>
+                <div>
+                  <div class="counsellor-name">National Farmer Crisis Line</div>
+                  <div class="counsellor-sub">1-866-FARMS01 · 24/7 · Free · Bilingual</div>
+                </div>
+                <div class="counsellor-badge">Farmers only</div>
+              </div>
+              <div class="counsellor-card">
+                <div class="counsellor-avatar" style="background:#2c4a8f;">🇨🇦</div>
+                <div>
+                  <div class="counsellor-name">988 Suicide Crisis Helpline</div>
+                  <div class="counsellor-sub">Call or text 988 · 24/7 · All Canadians</div>
+                </div>
+              </div>
+              <div class="counsellor-card">
+                <div class="counsellor-avatar" style="background:#5a3e8c;">💬</div>
+                <div>
+                  <div class="counsellor-name">Crisis Text Line Canada</div>
+                  <div class="counsellor-sub">Text HOME to 686868 · 24/7</div>
+                </div>
+              </div>
+              <div class="counsellor-card">
+                <div class="counsellor-avatar" style="background:#8c3e3e;">🤝</div>
+                <div>
+                  <div class="counsellor-name">Do More Agriculture</div>
+                  <div class="counsellor-sub">do-more.ca · Ag mental health community</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Province specific help -->
+          <div class="card mb-16">
+            <div class="card-header">
+              <span class="card-title">🗺️ Province-Specific Support</span>
+            </div>
+            <div class="card-body">
+              <div class="province-panel">
+                <div class="province-row">
+                  <div>
+                    <div class="province-tag">Personalized for</div>
+                    <div style="font-size:16px;font-weight:700;color:var(--forest);margin-top:4px;" id="province-title">Your province</div>
+                  </div>
+                  <div class="badge badge-sage" id="province-badge">Local match</div>
+                </div>
+                <div style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6;" id="province-copy">Local programs, farm counselling, and provincial support lines matched to your profile.</div>
+              </div>
+              <div class="province-links" id="province-links"></div>
+            </div>
+          </div>
+
+          <!-- Ag-literate counsellors -->
+          <div class="card mb-16">
+            <div class="card-header">
+              <span class="card-title">🌿 Ag-Literate Counsellors</span>
+            </div>
+            <div class="card-body" style="padding:8px 16px;">
+              <p style="font-size:12px;color:var(--muted);padding:6px 0 10px;line-height:1.5;">These counsellors understand farm life — production loss, succession stress, rural identity.</p>
+              <div class="counsellor-card">
+                <div class="counsellor-avatar">👩‍⚕️</div>
+                <div>
+                  <div class="counsellor-name">Prairie Region Ag Counselling</div>
+                  <div class="counsellor-sub">AB · SK · MB — telehealth available</div>
+                </div>
+                <div class="counsellor-badge">Free intake</div>
+              </div>
+              <div class="counsellor-card">
+                <div class="counsellor-avatar">🧑‍⚕️</div>
+                <div>
+                  <div class="counsellor-name">OMAFRA Farm Wellness Program</div>
+                  <div class="counsellor-sub">Ontario — 1-877-424-1300</div>
+                </div>
+                <div class="counsellor-badge">OHIP covered</div>
+              </div>
+              <div class="counsellor-card">
+                <div class="counsellor-avatar">👨‍⚕️</div>
+                <div>
+                  <div class="counsellor-name">BC AgriStress Helpline</div>
+                  <div class="counsellor-sub">1-800-667-3137 · BC farmers</div>
+                </div>
+                <div class="counsellor-badge">Available</div>
+              </div>
+              <a href="copilot.html" class="btn btn-secondary btn-sm" style="width:100%;text-align:center;margin-top:10px;display:block;">Ask AI Copilot for local resources →</a>
+            </div>
+          </div>
+
+          <!-- Self-assessment -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">📋 Quick Self-Assessment</span></div>
+            <div class="card-body">
+              <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.55;">Answer honestly — this is for your awareness only, stored locally.</p>
+              <div id="assess-list"></div>
+              <div id="assess-result" style="display:none;margin-top:14px;padding:12px 14px;border-radius:8px;font-size:13px;line-height:1.6;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resources grid -->
+      <div class="card anim-fade-up anim-delay-2">
+        <div class="card-header">
+          <span class="card-title">📚 Wellness Resources for Canadian Farmers</span>
+        </div>
+        <div class="card-body">
+          <div id="resource-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;" class="resource-grid"></div>
+        </div>
+        <div class="card-footer">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);">Resources updated March 2026 · Federal wellness investment renewed Jan 2026 · AAFC</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('wellness');
+  document.getElementById('w-sub').textContent = `Wellness support for ${profile.farmType} operators · ${profile.province}`;
+
+  // ── Mood check-in ────────────────────────────────────
+  const today = new Date().toISOString().slice(0,10);
+  const wellnessLog = JSON.parse(localStorage.getItem('wellnessLog') || '{}');
+
+  const MOOD_SCORE = { struggling:1, low:2, okay:3, good:4, great:5 };
+  const SCORE_LABEL = { 1:'Struggling', 2:'Low', 3:'Okay', 4:'Good', 5:'Great' };
+  const triggerKey = 'stressTriggers-' + today;
+  const triggerHistory = JSON.parse(localStorage.getItem('stressTriggerHistory') || '{}');
+  const todayTriggers = new Set(JSON.parse(localStorage.getItem(triggerKey) || '[]'));
+
+
+  function setMood(mood, emoji) {
+    wellnessLog[today] = { mood, emoji, ts: new Date().toISOString() };
+    localStorage.setItem('wellnessLog', JSON.stringify(wellnessLog));
+
+    document.querySelectorAll('.mood-btn').forEach(b => {
+      b.classList.toggle('selected', b.dataset.mood === mood);
+    });
+
+    const responses = {
+      great:      { cls:'badge-sage', msg:'Wonderful! Glad you\'re having a great day. Keep that energy going — and check in again tomorrow.' },
+      good:       { cls:'badge-sage', msg:'Good to hear. Consistency matters more than highs — steady days build strong seasons.' },
+      okay:       { cls:'badge-amber', msg:'That\'s okay too. If there\'s something weighing on you, the journal below is a good place to put it.' },
+      low:        { cls:'badge-red',  msg:'Thank you for being honest. If you\'re feeling low, please consider reaching out — 1-866-FARMS01 is free, confidential, and staffed by people who understand farming.' },
+      struggling: { cls:'badge-red',  msg:'We hear you. Please call 1-866-FARMS01 right now. It\'s free, confidential, and you won\'t be judged. You matter more than the harvest.' },
+    };
+    const r = responses[mood];
+    const el = document.getElementById('mood-response');
+    el.style.display = 'block';
+    el.innerHTML = `<div class="badge ${r.cls}" style="margin-bottom:8px;">${emoji} ${mood.charAt(0).toUpperCase()+mood.slice(1)} day logged</div><p style="font-size:13px;color:var(--text);line-height:1.65;">${r.msg}</p>`;
+    document.getElementById('checkin-badge').textContent = '✓ Done today';
+    document.getElementById('checkin-badge').className = 'badge badge-sage';
+    renderStreak();
+  renderTrend();
+    renderTrend();
+    renderTriggerInsight();
+  }
+
+  // Restore today's mood if already done
+  if (wellnessLog[today]) {
+    const m = wellnessLog[today];
+    document.querySelectorAll('.mood-btn').forEach(b => {
+      b.classList.toggle('selected', b.dataset.mood === m.mood);
+    });
+    document.getElementById('checkin-badge').textContent = '✓ Done today';
+    document.getElementById('checkin-badge').className = 'badge badge-sage';
+  }
+
+  // ── Streak grid ──────────────────────────────────────
+  function renderStreak() {
+    const grid = document.getElementById('streak-grid');
+    const days = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      days.push(d.toISOString().slice(0,10));
+    }
+    const count = days.filter(d => wellnessLog[d]).length;
+    document.getElementById('streak-val').textContent = count + ' days';
+    document.getElementById('streak-badge').textContent = count + ' / 30';
+
+    const DNAMES = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+    grid.innerHTML = days.map(d => {
+      const date = new Date(d + 'T12:00:00');
+      const done  = !!wellnessLog[d];
+      const isToday = d === today;
+      return `<div class="streak-day ${done?'done':''} ${isToday?'today':''}">
+        ${done ? '<div class="s-dot"></div>' : ''}
+        <div class="s-label">${DNAMES[date.getDay()]}</div>
+      </div>`;
+    }).join('');
+  }
+  renderStreak();
+  renderTrend();
+
+  // ── Journal ──────────────────────────────────────────
+  const journalKey = 'journal-' + today;
+  document.getElementById('journal-ta').value = localStorage.getItem(journalKey) || '';
+  window.saveJournal = function() {
+    localStorage.setItem(journalKey, document.getElementById('journal-ta').value);
+    document.getElementById('journal-saved').textContent = '✓ Saved ' + new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+  };
+  document.getElementById('journal-ta').addEventListener('input', () => {
+    document.getElementById('journal-saved').textContent = 'Unsaved changes…';
+  });
+
+  // ── Self-assessment ──────────────────────────────────
+  const ASSESS_Qs = [
+    'I have been feeling overwhelmed by farm debt or financial pressure',
+    'I have been losing sleep due to farm-related worries',
+    'I have been feeling isolated or disconnected from family / friends',
+    'I have been finding it hard to enjoy things I normally like',
+    'I have been feeling hopeless about the future of my farm',
+  ];
+  let assessAnswers = {};
+  document.getElementById('assess-list').innerHTML = ASSESS_Qs.map((q,i) => `
+    <div style="padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:13px;color:var(--text);margin-bottom:8px;">${q}</div>
+      <div style="display:flex;gap:8px;">
+        ${['Never','Sometimes','Often','Always'].map(a => `
+          <button onclick="setAssess(${i},'${a}')" id="aq-${i}-${a}"
+            style="flex:1;padding:6px 4px;border:1.5px solid var(--border);border-radius:6px;
+                   background:white;font-family:'Sora',sans-serif;font-size:11px;cursor:pointer;
+                   transition:all .14s;" class="assess-opt" data-qi="${i}" data-val="${a}">
+            ${a}
+          </button>`).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  window.setAssess = function(i, val) {
+    assessAnswers[i] = val;
+    document.querySelectorAll(`[data-qi="${i}"]`).forEach(b => {
+      const active = b.dataset.val === val;
+      b.style.background    = active ? 'var(--forest)' : 'white';
+      b.style.color         = active ? 'var(--wheat)'  : '';
+      b.style.borderColor   = active ? 'var(--forest)' : 'var(--border)';
+    });
+    if (Object.keys(assessAnswers).length === ASSESS_Qs.length) showAssessResult();
+  };
+
+  function showAssessResult() {
+    const weight = { Never:0, Sometimes:1, Often:2, Always:3 };
+    const score  = Object.values(assessAnswers).reduce((s,v) => s + weight[v], 0);
+    const el     = document.getElementById('assess-result');
+    el.style.display = 'block';
+    if (score <= 3) {
+      el.style.background = 'rgba(74,200,120,.08)'; el.style.border = '1px solid rgba(74,200,120,.2)';
+      el.innerHTML = '✅ <strong>You appear to be coping well.</strong> Keep checking in regularly — seasons change, and so do stress levels.';
+    } else if (score <= 8) {
+      el.style.background = 'rgba(184,114,14,.08)'; el.style.border = '1px solid rgba(184,114,14,.2)';
+      el.innerHTML = '⚠️ <strong>Moderate stress indicators detected.</strong> Consider reaching out to a peer or professional. Even one conversation can help. <a href="tel:18666327601" style="color:var(--amber);">1-866-FARMS01</a>';
+    } else {
+      el.style.background = 'rgba(192,57,43,.08)'; el.style.border = '1px solid rgba(192,57,43,.2)';
+      el.innerHTML = '🆘 <strong>High stress indicators detected.</strong> Please reach out today. <strong><a href="tel:18666327601" style="color:var(--red);">1-866-FARMS01</a></strong> is free, confidential, and available 24/7. You are not alone, and your farm needs <em>you</em> healthy first.';
+    }
+  }
+
+
+  // ── Stress trigger tracker ───────────────────────────
+  const TRIGGERS = ['Debt','Weather','Staffing','Equipment','Family','Livestock','Markets','Sleep','Paperwork','Isolation'];
+  document.getElementById('trigger-grid').innerHTML = TRIGGERS.map(t => `
+    <button class="chip-btn ${todayTriggers.has(t) ? 'active' : ''}" data-trigger="${t}" onclick="toggleTrigger('${t.replace("'", "\'")}')">${t}</button>
+  `).join('');
+
+  window.toggleTrigger = function(trigger) {
+    if (todayTriggers.has(trigger)) todayTriggers.delete(trigger);
+    else todayTriggers.add(trigger);
+
+    localStorage.setItem(triggerKey, JSON.stringify([...todayTriggers]));
+    triggerHistory[today] = [...todayTriggers];
+    localStorage.setItem('stressTriggerHistory', JSON.stringify(triggerHistory));
+
+    document.querySelectorAll('.chip-btn').forEach(btn => {
+      btn.classList.toggle('active', todayTriggers.has(btn.dataset.trigger));
+    });
+    renderTriggerInsight();
+  };
+
+  function renderTriggerInsight() {
+    const count = todayTriggers.size;
+    document.getElementById('trigger-count-badge').textContent = `${count} selected today`;
+
+    const last7 = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      last7.push(d.toISOString().slice(0,10));
+    }
+
+    const tally = {};
+    last7.forEach(d => (triggerHistory[d] || []).forEach(t => tally[t] = (tally[t] || 0) + 1));
+    const top = Object.entries(tally).sort((a,b) => b[1] - a[1]).slice(0,2).map(([name,count]) => `${name} (${count}d)`);
+
+    const mood = wellnessLog[today]?.mood;
+    let message = count
+      ? `Today's pressure mix: ${[...todayTriggers].join(', ')}.`
+      : 'Select a few stress drivers to build a private trend history.';
+
+    if (top.length) {
+      message += ` Most common this week: ${top.join(' · ')}.`;
+    }
+    if (mood === 'low' || mood === 'struggling') {
+      message += ' Since today looks hard, consider using the journal below or calling support now.';
+    }
+    document.getElementById('trigger-insight').textContent = message;
+  }
+  renderTriggerInsight();
+
+  // ── 7-day trend ──────────────────────────────────────
+  function renderTrend() {
+    const wrap = document.getElementById('trend-wrap');
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().slice(0,10));
+    }
+    const DNAMES = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+    const values = days.map(d => wellnessLog[d]?.mood ? MOOD_SCORE[wellnessLog[d].mood] : 0);
+    wrap.innerHTML = days.map((d, idx) => {
+      const val = values[idx];
+      const date = new Date(d + 'T12:00:00');
+      const height = val ? 18 + (val * 18) : 10;
+      return `
+        <div class="trend-col">
+          <div class="trend-bar-wrap">
+            <div class="trend-bar" style="height:${height}px;opacity:${val ? 1 : .18};"></div>
+          </div>
+          <div class="trend-score">${val ? SCORE_LABEL[val] : '—'}</div>
+          <div class="trend-label">${DNAMES[date.getDay()]}</div>
+        </div>
+      `;
+    }).join('');
+
+    const filled = values.filter(Boolean);
+    const avg = filled.length ? (filled.reduce((a,b)=>a+b,0) / filled.length) : 0;
+    const latest = filled.length ? filled[filled.length - 1] : 0;
+    let badge = 'Building baseline';
+    let insight = 'Complete a few daily check-ins to unlock your weekly insight.';
+    if (filled.length >= 3) {
+      if (avg >= 4) {
+        badge = 'Steady positive';
+        insight = 'Your weekly pattern looks stable overall. Keep protecting what is working — routines, rest, and one small personal break.';
+      } else if (avg >= 3) {
+        badge = 'Mixed week';
+        insight = 'Your week looks mixed. That usually means pressure is manageable but not light. Use your pressure tags to see what is driving it.';
+      } else {
+        badge = 'Higher strain';
+        insight = 'Your recent pattern suggests elevated strain. This is a good moment to reduce one nonessential task and reach out to someone today.';
+      }
+      if (latest <= 2) {
+        insight += ' Today appears tougher than your average week, so be extra proactive with support.';
+      }
+    }
+    document.getElementById('trend-summary-badge').textContent = badge;
+    document.getElementById('trend-insight').textContent = insight;
+  }
+
+  // ── Province-specific support ────────────────────────
+  const PROVINCE_SUPPORT = {
+    'Ontario': {
+      copy: 'Ontario operators often need a fast path to provincial farm wellness lines, business-risk planning, and rural counselling access.',
+      links: [
+        { title:'OMAFRA Farm Stress Line', desc:'Ontario-specific farm support and rural resource routing.', url:'https://www.ontario.ca/page/agricultural-information-contact-centre' },
+        { title:'FCC Ontario Wellness Resources', desc:'Financial stress, planning support, and producer wellbeing tools.', url:'https://www.fcc-fac.ca/en/tools-and-resources/wellness.html' },
+        { title:'Do More Agriculture', desc:'National farm mental health support with strong Ontario relevance.', url:'https://do-more.ca/farmersupport' }
+      ]
+    },
+    'Alberta': {
+      copy: 'Alberta producers often deal with drought, volatility, and isolation across long operating distances. Start with province-aware support.',
+      links: [
+        { title:'AgKnow Alberta Hub', desc:'Alberta agriculture learning and support pathways.', url:'https://agknow.ca' },
+        { title:'Alberta Mental Health Help Line', desc:'24/7 mental health line for Albertans.', url:'https://www.albertahealthservices.ca/amh/Page16759.aspx' },
+        { title:'Do More Agriculture', desc:'National farm mental health community and resources.', url:'https://do-more.ca/farmersupport' }
+      ]
+    },
+    'British Columbia': {
+      copy: 'BC farm operations face labour pressure, logistics complexity, and climate variability. Local support access should be immediate.',
+      links: [
+        { title:'BC AgriStress Support', desc:'BC resources and referral pathways for agricultural stress.', url:'https://www.bcafm.ca' },
+        { title:'Here2Talk / BC Mental Health Access', desc:'Fast counselling access and support referral options.', url:'https://here2talk.ca' },
+        { title:'Do More Agriculture', desc:'National support layer for farm mental health.', url:'https://do-more.ca/farmersupport' }
+      ]
+    },
+    'Saskatchewan': {
+      copy: 'Saskatchewan producers often balance weather exposure, large-acreage operating pressure, and seasonal workload spikes.',
+      links: [
+        { title:'Farm Stress Line Saskatchewan', desc:'Provincial farm and rural support pathways.', url:'https://www.saskatchewan.ca' },
+        { title:'Farm Credit Canada Wellness', desc:'Financial and wellbeing support tools for producers.', url:'https://www.fcc-fac.ca/en/tools-and-resources/wellness.html' },
+        { title:'Do More Agriculture', desc:'Farmer-first community and crisis support resources.', url:'https://do-more.ca/farmersupport' }
+      ]
+    },
+    'Manitoba': {
+      copy: 'Manitoba operators often benefit from quick access to rural counselling, farm business advisory support, and peer resources.',
+      links: [
+        { title:'Klinic Crisis Line Manitoba', desc:'Immediate support and mental health referral pathways.', url:'https://klinic.mb.ca/crisis-support/' },
+        { title:'FCC Wellness Resources', desc:'Financial pressure and producer wellness guidance.', url:'https://www.fcc-fac.ca/en/tools-and-resources/wellness.html' },
+        { title:'Do More Agriculture', desc:'National farm mental health programs and support.', url:'https://do-more.ca/farmersupport' }
+      ]
+    },
+    'Quebec': {
+      copy: 'Quebec producers benefit from bilingual support access, provincial referrals, and local counselling pathways.',
+      links: [
+        { title:'AQDR / Quebec Support Access', desc:'Provincial support navigation and bilingual access paths.', url:'https://www.quebec.ca/en/health/mental-health' },
+        { title:'FCC Wellness Resources', desc:'Farm financial and wellness support information.', url:'https://www.fcc-fac.ca/en/tools-and-resources/wellness.html' },
+        { title:'Do More Agriculture', desc:'National ag mental health support with bilingual pathways.', url:'https://do-more.ca/farmersupport' }
+      ]
+    },
+    'default': {
+      copy: 'Local programs, farm counselling, and provincial support lines matched to your profile.',
+      links: [
+        { title:'Do More Agriculture', desc:'National farm mental health support community.', url:'https://do-more.ca/farmersupport' },
+        { title:'Farm Credit Canada Wellness', desc:'Financial and emotional wellbeing resources for producers.', url:'https://www.fcc-fac.ca/en/tools-and-resources/wellness.html' },
+        { title:'988 Canada', desc:'24/7 immediate crisis support for all Canadians.', url:'https://988.ca' }
+      ]
+    }
+  };
+
+  function renderProvinceSupport() {
+    const province = (profile.province || '').trim();
+    const entry = PROVINCE_SUPPORT[province] || PROVINCE_SUPPORT.default;
+    document.getElementById('province-title').textContent = province || 'Canada-wide support';
+    document.getElementById('province-copy').textContent = entry.copy;
+    document.getElementById('province-badge').textContent = province ? `${province} match` : 'Canada-wide';
+    document.getElementById('province-links').innerHTML = entry.links.map(link => `
+      <a class="province-link" href="${link.url}" target="_blank" rel="noopener">
+        <div class="province-link-title">${link.title}</div>
+        <div class="province-link-desc">${link.desc}</div>
+      </a>
+    `).join('');
+  }
+  renderProvinceSupport();
+
+
+  // ── Resources grid ───────────────────────────────────
+  const RESOURCES = [
+    { icon:'🌾', title:'Do More Agriculture Foundation', desc:'Canada\'s leading farm mental health organization. Peer support programs, webinars, and farmer stories.', url:'https://do-more.ca', cta:'Visit do-more.ca' },
+    { icon:'🐄', title:'Farm Credit Canada Wellness', desc:'FCC offers free financial stress resources and connects farmers with agri-literate financial counsellors.', url:'https://www.fcc-fac.ca/en/tools-and-resources/wellness.html', cta:'FCC Wellness Portal' },
+    { icon:'📱', title:'Strongest Families Institute', desc:'Digital programs for stress, anxiety, and depression — delivered by phone and online for rural Canadians.', url:'https://strongestfamilies.com', cta:'Start a program' },
+    { icon:'👨‍🌾', title:'Young Agrarians Peer Circles', desc:'Monthly virtual gatherings for farmers across Canada. Share challenges, swap advice, and build community.', url:'https://youngagrarians.org', cta:'Find your circle' },
+    { icon:'🏛️', title:'AAFC Mental Health Initiative', desc:'Federal program providing counselling subsidies and resources for Canadian producers — renewed Jan 2026.', url:'https://agriculture.canada.ca', cta:'AAFC Portal' },
+    { icon:'📚', title:'AgriWellness Resource Library', desc:'Evidence-based guides on managing farm stress, financial anxiety, relationship strain, and seasonal depression.', url:'https://do-more.ca/resources', cta:'Browse resources' },
+  ];
+  document.getElementById('resource-grid').innerHTML = RESOURCES.map(r => `
+    <a href="${r.url}" target="_blank" class="resource-card">
+      <div class="rc-icon">${r.icon}</div>
+      <div class="rc-title">${r.title}</div>
+      <div class="rc-desc">${r.desc}</div>
+      <div class="rc-cta">${r.cta} ↗</div>
+    </a>
+  `).join('');
+</script>
+</body>
+</html>

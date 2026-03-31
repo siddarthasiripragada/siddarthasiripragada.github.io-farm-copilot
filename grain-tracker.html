@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grain Basis Tracker — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .basis-hero {
+      background: linear-gradient(135deg, var(--forest) 0%, #254d37 100%);
+      border-radius: var(--r-lg); padding: 24px 28px;
+      color: var(--wheat); margin-bottom: 22px;
+      display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;
+      box-shadow: var(--shadow-lg);
+    }
+    .bh-main { flex: 1; min-width: 200px; }
+    .bh-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(244,236,218,.4); margin-bottom:5px; }
+    .bh-price { font-family:'DM Serif Display',serif; font-size:48px; color:var(--wheat); letter-spacing:-2px; line-height:1; }
+    .bh-unit  { font-size:13px; color:rgba(244,236,218,.5); margin-bottom:8px; }
+    .bh-basis { font-family:'IBM Plex Mono',monospace; font-size:14px; }
+    .bh-basis.neg { color:#ff9999; }
+    .bh-basis.pos { color:#4ac878; }
+    .bh-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .bh-stat  { }
+    .bh-stat-val { font-family:'DM Serif Display',serif; font-size:22px; color:var(--wheat); }
+    .bh-stat-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:rgba(244,236,218,.35); text-transform:uppercase; }
+
+    /* Elevator table */
+    .elev-table { width:100%; border-collapse:collapse; }
+    .elev-table th {
+      font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase;
+      color:var(--muted); padding:10px 14px; text-align:left;
+      border-bottom:1.5px solid var(--border); background:var(--cream);
+    }
+    .elev-table td { padding:11px 14px; font-size:13px; border-bottom:1px solid var(--border); }
+    .elev-table tr:hover td { background:rgba(0,0,0,.02); }
+    .elev-table tr:last-child td { border-bottom:none; }
+    .basis-val { font-family:'IBM Plex Mono',monospace; font-weight:600; }
+    .basis-neg { color:var(--red); }
+    .basis-pos { color:var(--green); }
+    .basis-neu { color:var(--muted); }
+
+    /* Crop selector */
+    .crop-selector { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+    .crop-pill {
+      padding:8px 16px; border-radius:20px; border:1.5px solid var(--border);
+      background:white; font-family:'Sora',sans-serif; font-size:13px;
+      color:var(--muted); cursor:pointer; transition:all .15s;
+    }
+    .crop-pill.active { background:var(--forest); color:var(--wheat); border-color:var(--forest); }
+    .crop-pill:hover:not(.active) { border-color:var(--sage); color:var(--forest); }
+
+    /* Alert banner */
+    .market-alert {
+      background:rgba(230,126,34,.08); border:1px solid rgba(230,126,34,.22);
+      border-radius:var(--r-sm); padding:12px 16px;
+      font-size:13px; color:var(--text); line-height:1.6; margin-bottom:18px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+
+    @media(max-width:900px) {
+      .bh-stats { grid-template-columns:repeat(2,1fr); }
+      .basis-layout { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">📈 Local Grain Basis Tracker</div>
+          <div class="page-subtitle" id="gb-sub">Local elevator bids vs. futures — critical for your cash flow decisions</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <button class="btn btn-ghost btn-sm" onclick="refreshPrices()">↻ Refresh</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Tariff alert -->
+      <div class="market-alert anim-fade-up">
+        <span>⚠️</span>
+        <span><strong>2026 Market Alert:</strong> US 25% tariff on Canadian canola remains in effect. Basis levels are wider than historic averages. AgriMarketing Diversification Stream (up to $500K) can fund expansion into Japan, Mexico, and Philippines markets. <a href="funding.html" style="color:var(--amber);">Apply now →</a></span>
+      </div>
+
+      <!-- Hero price card -->
+      <div class="basis-hero anim-fade-up">
+        <div class="bh-main">
+          <div class="bh-label" id="bh-crop-label">Canola · Saskatchewan Average</div>
+          <div class="bh-price" id="bh-price">$641</div>
+          <div class="bh-unit">/ tonne CAD · local elevator bid</div>
+          <div class="bh-basis neg" id="bh-basis">Basis: −$52/t vs ICE Canola futures</div>
+        </div>
+        <div class="bh-stats">
+          <div class="bh-stat">
+            <div class="bh-stat-val" id="bh-futures">$693</div>
+            <div class="bh-stat-lbl">ICE Futures</div>
+          </div>
+          <div class="bh-stat">
+            <div class="bh-stat-val" id="bh-52whi">$721</div>
+            <div class="bh-stat-lbl">52-Wk High</div>
+          </div>
+          <div class="bh-stat">
+            <div class="bh-stat-val" id="bh-52wlo">$598</div>
+            <div class="bh-stat-lbl">52-Wk Low</div>
+          </div>
+          <div class="bh-stat">
+            <div class="bh-stat-val" id="bh-chg" style="color:#ff9999;">▼ −$12</div>
+            <div class="bh-stat-lbl">Wk Change</div>
+          </div>
+          <div class="bh-stat">
+            <div class="bh-stat-val" id="bh-basis-avg">−$48</div>
+            <div class="bh-stat-lbl">5-Yr Avg Basis</div>
+          </div>
+          <div class="bh-stat">
+            <div class="bh-stat-val" id="bh-updated">Mar 25</div>
+            <div class="bh-stat-lbl">Updated</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Crop selector -->
+      <div class="crop-selector anim-fade-up anim-delay-1">
+        <button class="crop-pill active" onclick="selectCrop('canola')"  id="pill-canola">🌻 Canola</button>
+        <button class="crop-pill" onclick="selectCrop('wheat')"   id="pill-wheat">🌾 Wheat (SRW)</button>
+        <button class="crop-pill" onclick="selectCrop('corn')"    id="pill-corn">🌽 Corn</button>
+        <button class="crop-pill" onclick="selectCrop('soy')"     id="pill-soy">🫘 Soybeans</button>
+        <button class="crop-pill" onclick="selectCrop('barley')"  id="pill-barley">🌾 Barley</button>
+        <button class="crop-pill" onclick="selectCrop('oats')"    id="pill-oats">🌾 Oats</button>
+      </div>
+
+      <div class="grid-2 mb-24 anim-fade-up anim-delay-1" style="grid-template-columns:1.4fr 1fr;" class="basis-layout">
+
+        <!-- Elevator bids by province -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" id="elev-title">🌻 Canola — Elevator Bids by Province</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">Reference prices · Mar 25, 2026</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table class="elev-table">
+              <thead>
+                <tr>
+                  <th>Elevator / Location</th>
+                  <th>Bid ($/t)</th>
+                  <th>Basis</th>
+                  <th>Grade</th>
+                </tr>
+              </thead>
+              <tbody id="elev-body"></tbody>
+            </table>
+          </div>
+          <div class="card-footer" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);">
+            Reference prices only · Verify directly with your elevator before contracting
+          </div>
+        </div>
+
+        <!-- Basis chart -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">📉 30-Day Basis Trend</span></div>
+          <div class="card-body" style="padding:14px 18px;">
+            <canvas id="basis-chart" height="200"></canvas>
+          </div>
+          <div class="card-footer">
+            <a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI about marketing strategy →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Marketing strategy tips -->
+      <div class="card anim-fade-up anim-delay-2">
+        <div class="card-header">
+          <span class="card-title">💡 Grain Marketing Strategy — Current Context</span>
+        </div>
+        <div class="card-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+          <div style="background:var(--cream);border-radius:var(--r-sm);padding:16px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Canola Strategy</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.6;">Basis is −$52/t vs 5-yr avg of −$48/t. US tariff pressure widening basis. Consider forward contracts for 30–40% of production to lock in current prices. Keep 60% unpriced for potential basis improvement if tariffs lift.</div>
+          </div>
+          <div style="background:var(--cream);border-radius:var(--r-sm);padding:16px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Advance Payments</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.6;">The $500K interest-free APP advance is a critical tool in 2026. Use it to bridge cash flow gaps without selling grain at currently wide basis levels. Applications open year-round. <a href="funding.html" style="color:var(--amber);">Apply →</a></div>
+          </div>
+          <div style="background:var(--cream);border-radius:var(--r-sm);padding:16px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Market Diversification</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.6;">Japan and Mexico are absorbing Canadian canola diverted from US markets. AgriMarketing (up to $500K) supports export development. Contact your provincial farm organization for market development introductions.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('grain-tracker');
+  document.getElementById('gb-sub').textContent = `Local basis levels for ${profile.province} · Updated daily`;
+
+  const CROPS = {
+    canola: {
+      name:'Canola', icon:'🌻', futures:693, basisAvg:-48,
+      whi:721, wlo:598, wkChg:-12, unit:'$/t CAD · ICE',
+      elevators: [
+        { name:'Richardson Pioneer — Saskatoon', bid:641, grade:'No.1 CAN' },
+        { name:'Viterra — Regina',               bid:638, grade:'No.1 CAN' },
+        { name:'Parrish & Heimbecker — Lethbridge', bid:635, grade:'No.1 CAN' },
+        { name:'Louis Dreyfus — Winnipeg',       bid:629, grade:'No.1 CAN' },
+        { name:'Cargill — Thunder Bay',          bid:645, grade:'No.1 CAN' },
+        { name:'InVicta — Swift Current',        bid:633, grade:'No.1 CAN' },
+      ],
+      basisTrend: [-38,-42,-44,-47,-49,-52,-54,-56,-52,-50,-48,-52,-55,-51,-49,-47,-48,-50,-53,-52,-51,-49,-47,-46,-48,-52,-54,-55,-53,-52],
+    },
+    wheat: {
+      name:'Wheat (SRW)', icon:'🌾', futures:248, basisAvg:-18,
+      whi:278, wlo:220, wkChg:+4, unit:'$/t CAD',
+      elevators: [
+        { name:'Richardson Pioneer — Saskatoon', bid:302, grade:'No.1 CWRS' },
+        { name:'Viterra — Regina',               bid:298, grade:'No.1 CWRS' },
+        { name:'Cargill — Lethbridge',           bid:295, grade:'No.1 CWRS' },
+        { name:'P&H — Winnipeg',                 bid:299, grade:'No.1 CWRS' },
+        { name:'Louis Dreyfus — Thunder Bay',    bid:306, grade:'No.1 CWRS' },
+        { name:'Agricore United — Calgary',      bid:293, grade:'No.1 CWRS' },
+      ],
+      basisTrend: [-22,-20,-18,-17,-19,-21,-20,-18,-16,-14,-16,-18,-22,-24,-21,-18,-16,-15,-17,-19,-18,-16,-14,-15,-18,-20,-21,-20,-19,-18],
+    },
+    corn: {
+      name:'Corn', icon:'🌽', futures:250, basisAvg:-22,
+      whi:268, wlo:220, wkChg:+1.8, unit:'$/t CAD',
+      elevators: [
+        { name:'Cargill — Chatham, ON',           bid:238, grade:'No.2 Yellow' },
+        { name:'Richardson — Blenheim, ON',        bid:235, grade:'No.2 Yellow' },
+        { name:'Parrish & Heimbecker — ON',        bid:237, grade:'No.2 Yellow' },
+        { name:'ADM — Windsor, ON',                bid:232, grade:'No.2 Yellow' },
+        { name:'Grain Farmers of Ontario — avg',   bid:236, grade:'No.2 Yellow' },
+      ],
+      basisTrend: [-18,-20,-22,-24,-25,-23,-21,-20,-22,-24,-26,-25,-23,-21,-20,-22,-24,-23,-21,-20,-19,-18,-20,-22,-24,-25,-23,-22,-21,-22],
+    },
+    soy: {
+      name:'Soybeans', icon:'🫘', futures:520, basisAvg:-28,
+      whi:558, wlo:468, wkChg:-5, unit:'$/t CAD',
+      elevators: [
+        { name:'ADM — Windsor, ON',                bid:498, grade:'No.1 CN' },
+        { name:'Cargill — Hamilton, ON',           bid:495, grade:'No.1 CN' },
+        { name:'Bunge — Hamilton, ON',             bid:492, grade:'No.1 CN' },
+        { name:'Parrish & Heimbecker — Strathroy', bid:496, grade:'No.1 CN' },
+        { name:'Ontario Soya Bean Growers avg',    bid:494, grade:'No.1 CN' },
+      ],
+      basisTrend: [-24,-26,-28,-30,-32,-30,-28,-26,-28,-30,-32,-34,-32,-30,-28,-26,-24,-22,-24,-26,-28,-30,-32,-30,-28,-26,-24,-22,-24,-22],
+    },
+    barley: {
+      name:'Barley', icon:'🌾', futures:258, basisAvg:-20,
+      whi:278, wlo:225, wkChg:+0.5, unit:'$/t CAD',
+      elevators: [
+        { name:'Richardson Pioneer — Lethbridge',  bid:241, grade:'No.1 Feed' },
+        { name:'Viterra — Calgary',                bid:238, grade:'No.1 Feed' },
+        { name:'Cargill — AB',                     bid:235, grade:'No.1 Feed' },
+        { name:'P&H — SK',                         bid:237, grade:'No.1 Feed' },
+      ],
+      basisTrend: [-18,-20,-22,-21,-19,-18,-20,-22,-24,-22,-20,-18,-16,-18,-20,-22,-24,-22,-20,-18,-17,-18,-20,-22,-21,-20,-19,-18,-17,-17],
+    },
+    oats: {
+      name:'Oats', icon:'🌾', futures:178, basisAvg:-12,
+      whi:195, wlo:158, wkChg:+2, unit:'$/t CAD',
+      elevators: [
+        { name:'Richardson Pioneer — SK',          bid:168, grade:'No.1 Milling' },
+        { name:'Quaker — Peterborough, ON',        bid:172, grade:'No.1 Milling' },
+        { name:'Viterra — AB',                     bid:165, grade:'No.1 Feed' },
+        { name:'P&H — MB',                         bid:169, grade:'No.1 Feed' },
+      ],
+      basisTrend: [-10,-12,-14,-13,-11,-10,-12,-14,-16,-14,-12,-10,-8,-10,-12,-14,-13,-12,-11,-10,-9,-10,-12,-14,-13,-12,-11,-10,-9,-10],
+    },
+  };
+
+  let activeCrop = 'canola';
+  let chart;
+
+  function selectCrop(key) {
+    activeCrop = key;
+    document.querySelectorAll('.crop-pill').forEach(p => p.classList.remove('active'));
+    document.getElementById('pill-' + key).classList.add('active');
+    renderCrop();
+  }
+
+  function renderCrop() {
+    const c = CROPS[activeCrop];
+    const localBid = c.elevators[0].bid;
+    const basis    = localBid - c.futures;
+
+    document.getElementById('bh-crop-label').textContent = c.name + ' · ' + profile.province + ' Average';
+    document.getElementById('bh-price').textContent      = '$' + localBid;
+    document.getElementById('bh-futures').textContent    = '$' + c.futures;
+    document.getElementById('bh-52whi').textContent      = '$' + c.whi;
+    document.getElementById('bh-52wlo').textContent      = '$' + c.wlo;
+    document.getElementById('bh-basis-avg').textContent  = c.basisAvg + '/t';
+    document.getElementById('bh-updated').textContent    = 'Mar 25';
+    const chgEl = document.getElementById('bh-chg');
+    chgEl.textContent = (c.wkChg >= 0 ? '▲ +$' : '▼ −$') + Math.abs(c.wkChg);
+    chgEl.style.color = c.wkChg >= 0 ? '#4ac878' : '#ff9999';
+    const bEl = document.getElementById('bh-basis');
+    bEl.textContent = 'Basis: ' + (basis >= 0 ? '+' : '') + basis + '/t vs futures';
+    bEl.className   = 'bh-basis ' + (basis >= 0 ? 'pos' : 'neg');
+
+    document.getElementById('elev-title').textContent = c.icon + ' ' + c.name + ' — Elevator Bids by Province';
+    document.getElementById('elev-body').innerHTML = c.elevators.map(e => {
+      const b   = e.bid - c.futures;
+      const cls = b >= 0 ? 'basis-pos' : b > -30 ? 'basis-neu' : 'basis-neg';
+      return `
+        <tr>
+          <td style="font-weight:500;color:var(--text);">${e.name}</td>
+          <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--forest);">$${e.bid}</td>
+          <td><span class="basis-val ${cls}">${b >= 0 ? '+' : ''}${b}</span></td>
+          <td style="font-size:11.5px;color:var(--muted);">${e.grade}</td>
+        </tr>
+      `;
+    }).join('');
+
+    // Chart
+    const labels = Array.from({length:30}, (_,i) => { const d = new Date(); d.setDate(d.getDate()-29+i); return d.toLocaleDateString('en-CA',{month:'short',day:'numeric'}); });
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('basis-chart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Basis ($/t)',
+          data: c.basisTrend,
+          borderColor: '#d49a3a',
+          backgroundColor: 'rgba(212,154,58,.1)',
+          borderWidth: 2, pointRadius: 2, tension: 0.4, fill: true,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+        scales: {
+          y: { grid: { color: 'rgba(0,0,0,.06)' }, ticks: { font: { family: 'IBM Plex Mono', size: 10 } } },
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { family: 'IBM Plex Mono', size: 9 } } },
+        }
+      }
+    });
+  }
+
+  function refreshPrices() { renderCrop(); }
+  renderCrop();
+</script>
+</body>
+</html>

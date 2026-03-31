@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compliance Tracker — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    /* Category pills */
+    .comp-cats { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+    .comp-cat  { padding:8px 16px; border-radius:20px; border:1.5px solid var(--border); background:white; font-family:'Sora',sans-serif; font-size:12.5px; color:var(--muted); cursor:pointer; transition:all .15s; }
+    .comp-cat.active { background:var(--forest); color:var(--wheat); border-color:var(--forest); }
+    .comp-cat:hover:not(.active) { border-color:var(--sage); color:var(--forest); }
+
+    /* Compliance item */
+    .comp-item {
+      background:white; border:1px solid var(--border);
+      border-radius:var(--r); padding:14px 18px;
+      margin-bottom:10px; display:flex; gap:14px; align-items:flex-start;
+      transition:box-shadow .14s; box-shadow:var(--shadow-sm);
+    }
+    .comp-item:hover { box-shadow:var(--shadow); }
+    .comp-check-box {
+      width:22px; height:22px; border-radius:5px;
+      border:2px solid var(--border); flex-shrink:0; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; transition:all .15s; margin-top:1px;
+    }
+    .comp-check-box.done { background:var(--sage); border-color:var(--sage); color:white; }
+    .comp-check-box.overdue { border-color:var(--red); }
+    .comp-body { flex:1; }
+    .comp-title { font-size:13.5px; font-weight:600; color:var(--text); margin-bottom:2px; }
+    .comp-title.done { color:var(--faint); text-decoration:line-through; }
+    .comp-meta  { font-size:12px; color:var(--muted); line-height:1.5; }
+    .comp-tags  { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+    .comp-tag   { font-family:'IBM Plex Mono',monospace; font-size:9.5px; padding:2px 8px; border-radius:5px; }
+    .ct-fed     { background:rgba(41,128,185,.1); color:#1a5276; }
+    .ct-prov    { background:rgba(27,53,40,.08); color:var(--sage); }
+    .ct-annual  { background:rgba(184,114,14,.1); color:#8a5800; }
+    .ct-ongoing { background:rgba(0,0,0,.05); color:var(--muted); }
+    .comp-deadline { flex-shrink:0; text-align:right; }
+    .cd-days  { font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 10px; border-radius:8px; white-space:nowrap; }
+    .cd-red   { background:rgba(192,57,43,.1);  color:var(--red); }
+    .cd-amber { background:rgba(184,114,14,.1); color:#8a5800; }
+    .cd-green { background:rgba(74,200,120,.1); color:#1e8449; }
+    .cd-grey  { background:var(--cream); color:var(--muted); }
+
+    /* Add custom requirement */
+    .add-comp-bar {
+      display:flex; gap:10px; padding:14px 16px;
+      border-top:1px solid var(--border); flex-wrap:wrap;
+    }
+
+    /* Status ring */
+    .comp-ring-wrap { position:relative; width:90px; height:90px; flex-shrink:0; }
+    .comp-ring-wrap canvas { width:90px!important; height:90px!important; }
+    .comp-ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .comp-ring-val { font-family:'DM Serif Display',serif; font-size:20px; color:var(--forest); line-height:1; }
+    .comp-ring-lbl { font-size:9px; color:var(--muted); }
+
+    @media(max-width:900px) {
+      .comp-layout { grid-template-columns:1fr; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">📋 Regulatory Compliance Tracker</div>
+          <div class="page-subtitle" id="ct-sub">Track pesticide licensing, nutrient management, and regulatory deadlines</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI About Regs →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up">
+        <div class="stat-card">
+          <div class="stat-label">Total Requirements</div>
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-change">Tracked for your profile</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Completed</div>
+          <div class="stat-value" id="stat-done">0</div>
+          <div class="stat-change">Up to date</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Due Soon</div>
+          <div class="stat-value" id="stat-soon">0</div>
+          <div class="stat-change neg">Within 60 days</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Compliance Score</div>
+          <div class="stat-value" id="stat-score">—</div>
+          <div class="stat-change neutral">Based on completions</div>
+        </div>
+      </div>
+
+      <div class="grid-2 anim-fade-up anim-delay-1 mb-24" style="grid-template-columns:1fr 300px;" class="comp-layout">
+
+        <!-- Left: compliance items -->
+        <div>
+          <!-- Category filter -->
+          <div class="comp-cats" id="comp-cats"></div>
+
+          <!-- Search -->
+          <input class="filter-search" id="comp-search" placeholder="Search requirements…" style="margin-bottom:14px;" oninput="renderItems()">
+
+          <!-- Items list -->
+          <div class="card">
+            <div id="comp-list" style="padding:8px 0;"></div>
+            <div class="add-comp-bar">
+              <input class="form-input" id="new-comp-title" placeholder="Add custom requirement…" style="flex:1;min-width:200px;" onkeydown="if(event.key==='Enter')addCustom()">
+              <input class="form-input" id="new-comp-date" type="date" style="width:150px;">
+              <button class="btn btn-secondary btn-sm" onclick="addCustom()">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: score + guidance -->
+        <div>
+          <!-- Compliance ring -->
+          <div class="card mb-16" style="text-align:center;padding:24px 20px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Compliance Score</div>
+            <div class="comp-ring-wrap" style="margin:0 auto 12px;">
+              <canvas id="comp-ring"></canvas>
+              <div class="comp-ring-inner">
+                <div class="comp-ring-val" id="ring-val">—</div>
+                <div class="comp-ring-lbl">/ 100</div>
+              </div>
+            </div>
+            <div id="ring-label" style="font-size:13px;color:var(--muted);line-height:1.5;"></div>
+          </div>
+
+          <!-- Key contacts -->
+          <div class="card mb-16">
+            <div class="card-header"><span class="card-title">📞 Key Regulatory Contacts</span></div>
+            <div class="card-body" style="font-size:12.5px;line-height:1.9;color:var(--muted);">
+              <div>🏛️ <strong>PMRA (pesticides):</strong> 1-800-267-6315</div>
+              <div>🌱 <strong>CFIA:</strong> 1-800-442-2342</div>
+              <div>🌾 <strong>OMAFRA (ON):</strong> 1-877-424-1300</div>
+              <div>🌿 <strong>BCMAL:</strong> 1-888-221-7141</div>
+              <div>🐄 <strong>AAFC:</strong> 1-855-773-0241</div>
+              <div>⚖️ <strong>Employment (labour):</strong> 1-800-367-5693</div>
+            </div>
+          </div>
+
+          <!-- Quick tips -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">💡 Compliance Tips</span></div>
+            <div class="card-body" style="font-size:12.5px;color:var(--muted);line-height:1.8;display:flex;flex-direction:column;gap:4px;">
+              <div>⏱ Pesticide applicator licences must be renewed every 5 years</div>
+              <div>📁 Keep pesticide application records for 2 years minimum</div>
+              <div>🌊 Nutrient management plans required on manure application</div>
+              <div>💧 Well water testing required annually in most provinces</div>
+              <div>🐄 CFIA premises ID required for all livestock operations</div>
+              <div>👷 Farm Safety Plans required under provincial OHS acts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('compliance');
+  document.getElementById('ct-sub').textContent = `Regulatory requirements for ${profile.farmType} · ${profile.province}`;
+
+  const REQ = [
+    // Pesticide
+    { id:'p1', cat:'Pesticide', title:'Pesticide Applicator Licence — Renewal', meta:'Required by PMRA for any commercial pesticide application. Province-specific exam required.', deadline:'2026-09-30', tags:['ct-fed','ct-annual'], authority:'PMRA · pmra-arla.gc.ca' },
+    { id:'p2', cat:'Pesticide', title:'Pesticide Application Records Maintained', meta:'Keep written logs of all pesticide applications — product, rate, date, location, operator. 2-year minimum retention required.', deadline:null, tags:['ct-fed','ct-ongoing'], authority:'PMRA' },
+    { id:'p3', cat:'Pesticide', title:'Pesticide Storage Facility Inspection', meta:'Locked, labelled, ventilated storage with spill containment. Provincial inspectors may conduct random checks.', deadline:null, tags:['ct-prov','ct-ongoing'], authority:'Provincial ag ministry' },
+    // Nutrient
+    { id:'n1', cat:'Nutrient Mgmt', title:'Nutrient Management Plan Filed', meta:'Required in ON (NMA), MB, QC, BC for operations above threshold. Must be prepared by certified professional or OMAFRA template.', deadline:'2026-05-01', tags:['ct-prov','ct-annual'], authority:'OMAFRA / provincial' },
+    { id:'n2', cat:'Nutrient Mgmt', title:'Manure Application Setbacks Documented', meta:'Minimum 30m from watercourses, wells, property lines. Keep application logs showing setback compliance.', deadline:null, tags:['ct-fed','ct-ongoing'], authority:'CCME Code of Practice' },
+    { id:'n3', cat:'Nutrient Mgmt', title:'Water Sample / Well Test Completed', meta:'Annual potable water test recommended for on-farm wells. Required for food safety certification (CanadaGAP, GLOBALG.A.P.).', deadline:'2026-06-30', tags:['ct-prov','ct-annual'], authority:'Provincial health authority' },
+    // Food Safety
+    { id:'f1', cat:'Food Safety', title:'CanadaGAP Audit (if applicable)', meta:'Required for fresh produce sold to major retailers. Annual audit by accredited body. If not selling retail, verify with your buyer.', deadline:'2026-07-15', tags:['ct-fed','ct-annual'], authority:'CanadaGAP · canadagap.ca' },
+    { id:'f2', cat:'Food Safety', title:'SFCA Licensing (if applicable)', meta:'Safe Food for Canadians Act licence required for food businesses importing, exporting, or interprovincially trading food.', deadline:'2026-01-01', tags:['ct-fed','ct-annual'], authority:'CFIA · inspection.gc.ca' },
+    // Animal ID
+    { id:'a1', cat:'Livestock', title:'CFIA Premises ID Registered', meta:'All livestock premises must be registered with your provincial CFIA Premises Identification program. Free registration.', deadline:null, tags:['ct-fed','ct-ongoing'], authority:'CFIA · 1-800-442-2342' },
+    { id:'a2', cat:'Livestock', title:'Livestock Traceability Tags Applied', meta:'Cattle: mandatory RFID ear tags before leaving premises. Sheep: mandatory tags within 60 days. Pigs: require PID before movement.', deadline:null, tags:['ct-fed','ct-ongoing'], authority:'CCIA / provincial' },
+    { id:'a3', cat:'Livestock', title:'Reportable Disease Declaration (if applicable)', meta:'You must immediately report any signs of reportable diseases (ASF, FMD, etc.) to CFIA. Failure to report is a criminal offence.', deadline:null, tags:['ct-fed','ct-ongoing'], authority:'CFIA Emergency: 1-800-442-2342' },
+    // Farm Safety
+    { id:'s1', cat:'Farm Safety', title:'Farm Safety Plan Documented', meta:'Required under provincial OHS acts in ON, AB, BC, SK for farms with employees. Must address equipment hazards, emergency procedures, WHMIS.', deadline:'2026-03-31', tags:['ct-prov','ct-annual'], authority:'Provincial OHS ministry' },
+    { id:'s2', cat:'Farm Safety', title:'WHMIS Training for Farm Staff', meta:'Workplace Hazardous Materials Information System training required for anyone handling hazardous products including pesticides and fuels.', deadline:null, tags:['ct-fed','ct-ongoing'], authority:'CCOHS' },
+    { id:'s3', cat:'Farm Safety', title:'First Aid Kit Inspection', meta:'Inspect and restock first aid kit. Must meet provincial OHS minimum requirements based on number of workers.', deadline:null, tags:['ct-prov','ct-ongoing'], authority:'Provincial OHS' },
+    // Environmental
+    { id:'e1', cat:'Environmental', title:'Environmental Farm Plan (EFP) Updated', meta:'Voluntary but recommended in all provinces. Required for many CAP and provincial cost-share programs. Valid for 5 years.', deadline:'2026-12-31', tags:['ct-prov','ct-annual'], authority:'Provincial farm org' },
+    { id:'e2', cat:'Environmental', title:'Carbon Reporting (if applicable)', meta:'Federal Clean Fuel Regulation may apply to on-farm fuel use above threshold. Check ECCC guidance for your operation size.', deadline:'2026-06-30', tags:['ct-fed','ct-annual'], authority:'ECCC · canada.ca' },
+  ];
+
+  const CATS = ['All', ...new Set(REQ.map(r => r.cat))];
+  let activeCat = 'All';
+  let done = JSON.parse(localStorage.getItem('compDone') || '[]');
+  let custom = JSON.parse(localStorage.getItem('compCustom') || '[]');
+
+  // Render category pills
+  document.getElementById('comp-cats').innerHTML = CATS.map(c => `
+    <button class="comp-cat ${c==='All'?'active':''}" id="ccat-${c.replace(/\s/g,'_')}" onclick="setCat('${c}')">${c}</button>
+  `).join('');
+
+  function setCat(cat) {
+    activeCat = cat;
+    document.querySelectorAll('.comp-cat').forEach(b => b.classList.remove('active'));
+    document.getElementById('ccat-' + cat.replace(/\s/g,'_')).classList.add('active');
+    renderItems();
+  }
+
+  function renderItems() {
+    const search = document.getElementById('comp-search').value.toLowerCase();
+    const all    = [...REQ, ...custom];
+    const list   = all.filter(r =>
+      (activeCat === 'All' || r.cat === activeCat) &&
+      (!search || r.title.toLowerCase().includes(search) || r.meta.toLowerCase().includes(search))
+    );
+
+    // Stats
+    const total = all.length;
+    const doneCount = all.filter(r => done.includes(r.id)).length;
+    const soon = all.filter(r => {
+      if (!r.deadline || done.includes(r.id)) return false;
+      const d = getDaysUntil(r.deadline);
+      return d !== null && d >= 0 && d <= 60;
+    }).length;
+    const score = total ? Math.round((doneCount / total) * 100) : 0;
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-done').textContent  = doneCount;
+    document.getElementById('stat-soon').textContent  = soon;
+    document.getElementById('stat-score').textContent = score + '%';
+
+    // Ring
+    const ringEl = document.getElementById('comp-ring');
+    if (ringEl._chart) ringEl._chart.destroy();
+    const color = score >= 80 ? '#4ac878' : score >= 50 ? '#d49a3a' : '#c0392b';
+    ringEl._chart = new Chart(ringEl, {
+      type:'doughnut',
+      data:{ datasets:[{ data:[score,100-score], backgroundColor:[color,'#e8e0d0'], borderWidth:0 }] },
+      options:{ cutout:'78%', plugins:{ legend:{display:false}, tooltip:{enabled:false} }, animation:{duration:600} },
+    });
+    document.getElementById('ring-val').textContent = score;
+    document.getElementById('ring-label').textContent = score >= 80 ? '✅ Strong compliance standing' : score >= 50 ? '⚠️ Some items need attention' : '🔴 Action required — review overdue items';
+
+    if (!list.length) {
+      document.getElementById('comp-list').innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">No requirements in this category.</div>';
+      return;
+    }
+
+    document.getElementById('comp-list').innerHTML = list.map(r => {
+      const isDone = done.includes(r.id);
+      const days   = r.deadline ? getDaysUntil(r.deadline) : null;
+      let daysHtml = '<span class="cd-days cd-grey">Ongoing</span>';
+      if (r.deadline && days !== null) {
+        if (isDone) daysHtml = '<span class="cd-days cd-green">✓ Done</span>';
+        else if (days < 0)  daysHtml = '<span class="cd-days cd-red">Overdue</span>';
+        else if (days <= 30) daysHtml = `<span class="cd-days cd-red">⚡ ${days}d</span>`;
+        else if (days <= 60) daysHtml = `<span class="cd-days cd-amber">⏱ ${days}d</span>`;
+        else daysHtml = `<span class="cd-days cd-green">${days}d</span>`;
+      }
+      return `
+        <div class="comp-item">
+          <div class="comp-check-box ${isDone?'done':''}${(!isDone&&days!==null&&days<0)?'overdue':''}" onclick="toggleComp('${r.id}')">${isDone?'✓':''}</div>
+          <div class="comp-body">
+            <div class="comp-title ${isDone?'done':''}">${r.title}</div>
+            <div class="comp-meta">${r.meta}</div>
+            <div class="comp-tags">
+              <span class="comp-tag ct-prov">${r.cat}</span>
+              ${(r.tags||[]).map(t => `<span class="comp-tag ${t}">${t==='ct-fed'?'Federal':t==='ct-prov'?'Provincial':t==='ct-annual'?'Annual':'Ongoing'}</span>`).join('')}
+            </div>
+            ${r.authority ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--faint);margin-top:5px;">${r.authority}</div>` : ''}
+          </div>
+          <div class="comp-deadline">
+            ${daysHtml}
+            ${r.deadline ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--faint);margin-top:4px;">${r.deadline}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function toggleComp(id) {
+    if (done.includes(id)) done = done.filter(x => x !== id);
+    else done.push(id);
+    localStorage.setItem('compDone', JSON.stringify(done));
+    renderItems();
+  }
+
+  function addCustom() {
+    const title = document.getElementById('new-comp-title').value.trim();
+    if (!title) return;
+    custom.push({ id:'c-'+Date.now(), cat:'Custom', title, meta:'Custom requirement added by you.', deadline: document.getElementById('new-comp-date').value || null, tags:[], authority:'' });
+    localStorage.setItem('compCustom', JSON.stringify(custom));
+    document.getElementById('new-comp-title').value = '';
+    document.getElementById('new-comp-date').value  = '';
+    renderItems();
+  }
+  window.addCustom = addCustom;
+  window.toggleComp = toggleComp;
+
+  renderItems();
+</script>
+</body>
+</html>

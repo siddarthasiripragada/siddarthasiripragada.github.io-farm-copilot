@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Labour Exchange Board — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    .tab-bar { display:flex; gap:4px; padding:0 0 20px; border-bottom:1px solid var(--border); margin-bottom:22px; flex-wrap:wrap; }
+    .lab-tab { padding:9px 18px; border-radius:20px; border:1.5px solid var(--border); background:white; font-family:'Sora',sans-serif; font-size:13px; color:var(--muted); cursor:pointer; transition:all .15s; }
+    .lab-tab.active { background:var(--forest); color:var(--wheat); border-color:var(--forest); }
+    .lab-tab:hover:not(.active) { border-color:var(--sage); color:var(--forest); }
+
+    .job-card {
+      background:white; border:1px solid var(--border);
+      border-radius:var(--r-lg); padding:18px 20px;
+      margin-bottom:14px; transition:box-shadow .15s;
+      box-shadow:var(--shadow-sm);
+    }
+    .job-card:hover { box-shadow:var(--shadow); }
+    .job-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:10px; }
+    .job-title  { font-family:'DM Serif Display',serif; font-size:16px; color:var(--forest); margin-bottom:3px; }
+    .job-farm   { font-size:12.5px; color:var(--muted); }
+    .job-meta   { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+    .job-tag    { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:3px 9px; border-radius:5px; }
+    .jt-type    { background:var(--cream); color:var(--forest); border:1px solid var(--border); }
+    .jt-pay     { background:rgba(184,114,14,.1); color:#8a5800; }
+    .jt-prov    { background:rgba(27,53,40,.07); color:var(--sage); }
+    .jt-urgent  { background:rgba(192,57,43,.1); color:var(--red); }
+    .job-desc   { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:12px; }
+    .job-actions { display:flex; gap:8px; align-items:center; }
+    .job-posted { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--faint); margin-left:auto; }
+
+    /* Post form */
+    .post-form { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .post-form .full { grid-column:1/-1; }
+
+    /* TFW guide steps */
+    .tfw-step {
+      display:flex; gap:14px; padding:14px 0;
+      border-bottom:1px solid var(--border);
+    }
+    .tfw-step:last-child { border-bottom:none; }
+    .tfw-num {
+      width:30px; height:30px; border-radius:50%;
+      background:var(--forest); color:var(--wheat);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'DM Serif Display',serif; font-size:14px; flex-shrink:0;
+    }
+    .tfw-body h4 { font-size:13.5px; font-weight:600; color:var(--text); margin-bottom:4px; }
+    .tfw-body p  { font-size:12.5px; color:var(--muted); line-height:1.55; }
+    .tfw-body a  { color:var(--amber); }
+
+    @media(max-width:900px) {
+      .lab-layout { grid-template-columns:1fr; }
+      .post-form  { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">👷 Labour Exchange Board</div>
+          <div class="page-subtitle" id="lab-sub">Find seasonal workers, post positions, and navigate the TFW program</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <button class="btn btn-primary btn-sm" onclick="showTab('post')">+ Post a Job</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Stats -->
+      <div class="planner-stats anim-fade-up">
+        <div class="stat-card">
+          <div class="stat-label">Worker Shortage by 2030</div>
+          <div class="stat-value">123K</div>
+          <div class="stat-change neg">AAFC Labour Strategy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Job Posts</div>
+          <div class="stat-value" id="stat-jobs">12</div>
+          <div class="stat-change">This region</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">TFW Program</div>
+          <div class="stat-value">$0</div>
+          <div class="stat-change">Employer cost to recruit</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg. Ag Wage (2026)</div>
+          <div class="stat-value">$22/hr</div>
+          <div class="stat-change neutral">National farm labour avg</div>
+        </div>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="tab-bar anim-fade-up anim-delay-1">
+        <button class="lab-tab active" id="tab-find" onclick="showTab('find')">🔍 Find Workers</button>
+        <button class="lab-tab" id="tab-post"  onclick="showTab('post')">📝 Post a Position</button>
+        <button class="lab-tab" id="tab-tfw"   onclick="showTab('tfw')">🌐 TFW Program Guide</button>
+        <button class="lab-tab" id="tab-wages" onclick="showTab('wages')">💰 Wage Reference</button>
+      </div>
+
+      <!-- ── FIND WORKERS ── -->
+      <div id="view-find" class="anim-fade-up anim-delay-1">
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+          <input class="filter-search" id="job-search" placeholder="Search by role, province, farm type…" style="flex:1;min-width:200px;" oninput="renderJobs()">
+          <select class="filter-select" id="job-prov" onchange="renderJobs()">
+            <option value="">All Provinces</option>
+            <option>Alberta</option><option>British Columbia</option>
+            <option>Manitoba</option><option>Ontario</option>
+            <option>Quebec</option><option>Saskatchewan</option>
+          </select>
+          <select class="filter-select" id="job-type" onchange="renderJobs()">
+            <option value="">All Types</option>
+            <option>Seasonal</option><option>Full-Time</option><option>Part-Time</option>
+          </select>
+        </div>
+        <div id="job-list"></div>
+      </div>
+
+      <!-- ── POST A POSITION ── -->
+      <div id="view-post" style="display:none;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">📝 Post a Farm Position</span></div>
+          <div class="card-body">
+            <div class="post-form" id="post-form">
+              <div class="form-group">
+                <label class="form-label">Job Title *</label>
+                <span class="form-hint">e.g. Seasonal Harvest Hand, Dairy Farm Worker</span>
+                <input class="form-input" id="pf-title" placeholder="Harvest Worker">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Farm / Operation Name</label>
+                <input class="form-input" id="pf-farm" placeholder="Smith Family Farm">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Province *</label>
+                <select class="form-input" id="pf-prov">
+                  <option value="">Select province…</option>
+                  <option>Alberta</option><option>British Columbia</option>
+                  <option>Manitoba</option><option>New Brunswick</option>
+                  <option>Newfoundland & Labrador</option><option>Nova Scotia</option>
+                  <option>Ontario</option><option>Prince Edward Island</option>
+                  <option>Quebec</option><option>Saskatchewan</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Employment Type *</label>
+                <select class="form-input" id="pf-type">
+                  <option>Seasonal</option><option>Full-Time</option><option>Part-Time</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Hourly Wage (CAD)</label>
+                <input class="form-input form-mono" id="pf-wage" type="number" placeholder="22" min="17" max="60">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Start Date</label>
+                <input class="form-input" id="pf-start" type="date">
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Position Description *</label>
+                <span class="form-hint">Include duties, housing available, language requirements, TFW-eligible yes/no</span>
+                <textarea class="form-input" id="pf-desc" rows="4" style="resize:vertical;" placeholder="Looking for a reliable seasonal worker for spring planting…"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Contact Email</label>
+                <input class="form-input" id="pf-email" type="email" placeholder="you@example.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Contact Phone</label>
+                <input class="form-input" id="pf-phone" placeholder="(555) 000-0000">
+              </div>
+              <div class="form-group full" style="display:flex;align-items:center;gap:10px;">
+                <input type="checkbox" id="pf-tfw" style="width:16px;height:16px;accent-color:var(--forest);">
+                <label for="pf-tfw" style="font-size:13px;color:var(--text);">Position is eligible for Temporary Foreign Workers (TFW) Program</label>
+              </div>
+              <div class="full" style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" onclick="showTab('find')">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="submitJob()">Post Position →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TFW GUIDE ── -->
+      <div id="view-tfw" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🌐 Temporary Foreign Workers — Step-by-Step Guide</span></div>
+            <div class="card-body" style="padding:8px 20px;">
+              <div class="tfw-step">
+                <div class="tfw-num">1</div>
+                <div class="tfw-body">
+                  <h4>Determine Your Stream</h4>
+                  <p>Agriculture uses the <strong>Seasonal Agricultural Worker Program (SAWP)</strong> for Mexico &amp; Caribbean, or the <strong>Agricultural Stream</strong> for other countries. SAWP is most common for harvest work.</p>
+                </div>
+              </div>
+              <div class="tfw-step">
+                <div class="tfw-num">2</div>
+                <div class="tfw-body">
+                  <h4>LMIA — Labour Market Impact Assessment</h4>
+                  <p>Apply to ESDC for an LMIA showing you've tried to hire Canadians first. Processing time: 10–20 business days. Current fee: $1,000 per worker position (Agriculture stream). <a href="https://www.canada.ca/en/employment-social-development/services/foreign-workers/agricultural.html" target="_blank">Apply at canada.ca →</a></p>
+                </div>
+              </div>
+              <div class="tfw-step">
+                <div class="tfw-num">3</div>
+                <div class="tfw-body">
+                  <h4>Recruit &amp; Hire Workers</h4>
+                  <p>Work with a <strong>licensed recruitment agency</strong> or hire directly via the SAWP program through your province. HUMA-registered agents are listed at canada.ca. Never pay a recruiter fee — it's illegal.</p>
+                </div>
+              </div>
+              <div class="tfw-step">
+                <div class="tfw-num">4</div>
+                <div class="tfw-body">
+                  <h4>Housing Requirement</h4>
+                  <p>You must provide or arrange suitable housing. ESDC inspectors verify housing before workers arrive. Required standards: minimum space, heat, potable water, smoke detectors. Budget $150–$300/month per worker deduction from wages.</p>
+                </div>
+              </div>
+              <div class="tfw-step">
+                <div class="tfw-num">5</div>
+                <div class="tfw-body">
+                  <h4>Compliance Obligations</h4>
+                  <p>Pay at least the LMIA-approved wage. Keep payroll records 6 years. Employers can be inspected at any time. Non-compliance: fines up to $1M and bans from the program.</p>
+                </div>
+              </div>
+              <div class="tfw-step">
+                <div class="tfw-num">6</div>
+                <div class="tfw-body">
+                  <h4>Support Resources</h4>
+                  <p>Contact <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="145555525739555552575477757a7570753a7775">[email&#160;protected]</a></strong> or call 1-855-773-0241 for TFW agriculture questions. Your provincial farm organization also provides free guidance.</p>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <a href="https://www.canada.ca/en/employment-social-development/services/foreign-workers/agricultural.html" target="_blank" class="btn btn-secondary btn-sm">Official ESDC TFW Portal →</a>
+              <a href="copilot.html" class="btn btn-ghost btn-sm" style="margin-left:8px;">Ask AI Copilot →</a>
+            </div>
+          </div>
+          <div>
+            <div class="card mb-16">
+              <div class="card-header"><span class="card-title">⚡ SAWP Key Facts</span></div>
+              <div class="card-body" style="font-size:13px;color:var(--text);line-height:1.8;">
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <div>📍 <strong>Countries:</strong> Mexico, Jamaica, Barbados, Trinidad &amp; Tobago, and 9 other Caribbean nations</div>
+                  <div>📅 <strong>Max stay:</strong> 8 months per year</div>
+                  <div>💰 <strong>Employer pays:</strong> Return airfare, housing arrangement</div>
+                  <div>✈️ <strong>Worker pays:</strong> Nothing — illegal to charge fees</div>
+                  <div>📋 <strong>Sectors:</strong> Horticulture, livestock, grain, greenhouse</div>
+                  <div>⏱ <strong>LMIA processing:</strong> 10–20 business days (priority)</div>
+                  <div>📞 <strong>ESDC Helpline:</strong> 1-800-367-5693</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">🏛️ Provincial TFW Contacts</span></div>
+              <div class="card-body" style="font-size:13px;padding:8px 18px;">
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div><strong>Ontario:</strong> OMAFRA — 1-877-424-1300</div>
+                  <div><strong>Alberta:</strong> AAFC Prairie Region — 310-3276</div>
+                  <div><strong>BC:</strong> BC Agriculture — 1-888-221-7141</div>
+                  <div><strong>Saskatchewan:</strong> SARM — 1-306-757-3637</div>
+                  <div><strong>Manitoba:</strong> Manitoba Ag — 204-726-6136</div>
+                  <div><strong>Quebec:</strong> MAPAQ — 1-888-222-6272</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── WAGE REFERENCE ── -->
+      <div id="view-wages" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header">
+            <span class="card-title">💰 Canadian Farm Wage Reference — 2026</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">StatsCan + provincial minimums</span>
+          </div>
+          <div class="card-body">
+            <div id="wage-table-wrap" style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;min-width:600px;" id="wage-table"></table>
+            </div>
+          </div>
+          <div class="card-footer" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);">
+            Source: Statistics Canada, provincial labour ministries. Verify with ESDC before setting LMIA wages.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('labour');
+  document.getElementById('lab-sub').textContent = `Farm labour matching and TFW guidance · ${profile.province}`;
+
+  // ── Tab switching ────────────────────────────────────
+  function showTab(t) {
+    ['find','post','tfw','wages'].forEach(id => {
+      document.getElementById('view-' + id).style.display = id === t ? '' : 'none';
+      const btn = document.getElementById('tab-' + id);
+      if (btn) btn.classList.toggle('active', id === t);
+    });
+  }
+
+  // ── Sample jobs ──────────────────────────────────────
+  const JOBS = [
+    { id:1, title:'Seasonal Harvest Hand', farm:'Thompson Grain Farm', prov:'Saskatchewan', type:'Seasonal', wage:'$22/hr', start:'May 1', urgent:true,  tfw:true,  desc:'Join our family grain operation for spring seeding through harvest. No experience needed — training provided. Housing available on-site.', posted:'2 days ago' },
+    { id:2, title:'Dairy Farm Worker',     farm:'Meadowbrook Dairy',   prov:'Ontario',      type:'Full-Time',wage:'$24/hr', start:'Immediate', urgent:true, tfw:false, desc:'Full-time year-round position. Milking, feeding, and herd health monitoring. Must be comfortable with early morning shifts.', posted:'5 days ago' },
+    { id:3, title:'Vegetable Picker',      farm:'Fraser Valley Farms', prov:'British Columbia', type:'Seasonal', wage:'$19/hr', start:'Jun 15', urgent:false, tfw:true, desc:'Greenhouse vegetable picking and grading. 8-month SAWP eligible. Housing provided. Good fitness required.', posted:'1 week ago' },
+    { id:4, title:'Equipment Operator',    farm:'Prairieview Holdings', prov:'Alberta',     type:'Seasonal', wage:'$28/hr', start:'Apr 20', urgent:true, tfw:false, desc:'Experienced tractor and combine operator for seeding and harvest season. Class 1 licence an asset.', posted:'3 days ago' },
+    { id:5, title:'Fruit Picker',         farm:'Okanagan Orchards',   prov:'British Columbia', type:'Seasonal', wage:'$18/hr', start:'Aug 1', urgent:false, tfw:true, desc:'Apple, cherry, and peach harvest. SAWP program available. Bunkhouse accommodation included. 2–4 month contracts.', posted:'1 week ago' },
+    { id:6, title:'Livestock Handler',    farm:'Northern Beef Co.',   prov:'Alberta',      type:'Part-Time', wage:'$21/hr', start:'Flexible', urgent:false, tfw:false, desc:'Cattle handling, feeding, and general ranch maintenance. Weekends and holidays required. Experience preferred.', posted:'4 days ago' },
+  ];
+
+  let userJobs = JSON.parse(localStorage.getItem('labourJobs') || '[]');
+
+  function renderJobs() {
+    const search = document.getElementById('job-search').value.toLowerCase();
+    const prov   = document.getElementById('job-prov').value;
+    const type   = document.getElementById('job-type').value;
+    const all    = [...JOBS, ...userJobs];
+    const list   = all.filter(j =>
+      (!search || j.title.toLowerCase().includes(search) || j.desc.toLowerCase().includes(search)) &&
+      (!prov   || j.prov === prov) &&
+      (!type   || j.type === type)
+    );
+    document.getElementById('stat-jobs').textContent = list.length;
+    const el = document.getElementById('job-list');
+    if (!list.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">No positions match your filters.</div>'; return; }
+    el.innerHTML = list.map(j => `
+      <div class="job-card">
+        <div class="job-card-header">
+          <div>
+            <div class="job-title">${j.title}</div>
+            <div class="job-farm">🏡 ${j.farm}</div>
+          </div>
+          ${j.urgent ? '<span class="badge badge-red">⚡ Urgent</span>' : ''}
+        </div>
+        <div class="job-meta">
+          <span class="job-tag jt-prov">📍 ${j.prov}</span>
+          <span class="job-tag jt-type">${j.type}</span>
+          <span class="job-tag jt-pay">💰 ${j.wage}</span>
+          <span class="job-tag jt-type">📅 Start: ${j.start}</span>
+          ${j.tfw ? '<span class="job-tag" style="background:rgba(41,128,185,.1);color:#1a5276;">🌐 TFW Eligible</span>' : ''}
+        </div>
+        <div class="job-desc">${j.desc}</div>
+        <div class="job-actions">
+          <button class="btn btn-primary btn-sm" onclick="alert('Contact feature coming soon. Use the AI Copilot to draft your response.')">Apply / Contact</button>
+          <button class="btn btn-ghost btn-sm" onclick="alert('Job saved to your planner.')">Save</button>
+          <a href="copilot.html" class="btn btn-ghost btn-sm">Ask AI →</a>
+          <span class="job-posted">Posted ${j.posted}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+  renderJobs();
+
+  // ── Submit job ───────────────────────────────────────
+  window.submitJob = function() {
+    const title = document.getElementById('pf-title').value.trim();
+    const prov  = document.getElementById('pf-prov').value;
+    const desc  = document.getElementById('pf-desc').value.trim();
+    if (!title || !prov || !desc) { alert('Please fill in all required fields (*).'); return; }
+    const newJob = {
+      id: Date.now(), title,
+      farm:   document.getElementById('pf-farm').value || 'My Farm',
+      prov, type:  document.getElementById('pf-type').value,
+      wage:  '$' + (document.getElementById('pf-wage').value || '—') + '/hr',
+      start: document.getElementById('pf-start').value || 'Flexible',
+      urgent: false, tfw: document.getElementById('pf-tfw').checked,
+      desc, posted: 'Just now',
+    };
+    userJobs.push(newJob);
+    localStorage.setItem('labourJobs', JSON.stringify(userJobs));
+    showTab('find');
+    renderJobs();
+    alert('✓ Position posted! It will appear in the board immediately.');
+  };
+
+  // ── Wage table ───────────────────────────────────────
+  const WAGES = [
+    ['Role','Alberta','BC','Manitoba','Ontario','Quebec','Saskatchewan'],
+    ['General Farm Worker','$17.35','$17.40','$15.80','$17.20','$15.75','$14.00'],
+    ['Seasonal Picker','$18–22','$19–22','$16–18','$18–21','$16–18','$15–17'],
+    ['Equipment Operator','$22–32','$24–34','$21–28','$23–30','$20–28','$20–28'],
+    ['Livestock Handler','$18–26','$19–27','$17–24','$19–26','$17–24','$17–24'],
+    ['Dairy Farm Worker','$21–28','$22–30','$20–26','$22–28','$19–26','$19–26'],
+    ['Farm Supervisor','$28–40','$30–45','$26–38','$28–42','$25–38','$25–38'],
+    ['TFW Min. (LMIA)','Prevailing wage','Prevailing wage','Prevailing wage','Prevailing wage','Prevailing wage','Prevailing wage'],
+  ];
+  const tbl = document.getElementById('wage-table');
+  tbl.innerHTML = WAGES.map((row, i) => `
+    <tr style="${i===0?'background:rgba(27,53,40,.06);':''}${i%2===0&&i>0?'background:rgba(0,0,0,.02);':''}">
+      ${row.map((cell, j) => i === 0
+        ? `<th style="padding:11px 14px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(27,53,40,.5);text-align:${j===0?'left':'center'};border-bottom:1.5px solid var(--border);">${cell}</th>`
+        : `<td style="paddin

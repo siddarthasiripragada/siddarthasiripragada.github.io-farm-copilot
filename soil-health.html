@@ -1,0 +1,219 @@
+<!-- SOIL HEALTH DASHBOARD — soil-health.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soil Health Dashboard — Canadian Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css"><link rel="manifest" href="manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .tab-bar{display:flex;gap:4px;padding:0 0 20px;border-bottom:1px solid var(--border);margin-bottom:22px;flex-wrap:wrap;}
+    .pg-tab{padding:9px 18px;border-radius:20px;border:1.5px solid var(--border);background:white;font-family:'Sora',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;}
+    .pg-tab.active{background:var(--forest);color:var(--wheat);border-color:var(--forest);}
+    .pg-tab:hover:not(.active){border-color:var(--sage);color:var(--forest);}
+    .soil-meter{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .sm-label{font-size:12.5px;color:var(--text);width:120px;flex-shrink:0;}
+    .sm-bar{flex:1;height:10px;background:var(--border);border-radius:5px;overflow:hidden;}
+    .sm-fill{height:100%;border-radius:5px;transition:width .6s;}
+    .sm-val{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--forest);font-weight:600;width:50px;text-align:right;}
+    .sm-status{font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 8px;border-radius:5px;flex-shrink:0;}
+    .ss-low{background:rgba(192,57,43,.1);color:#c0392b;}
+    .ss-ok{background:rgba(184,114,14,.1);color:#8a5800;}
+    .ss-good{background:rgba(74,200,120,.1);color:#1e8449;}
+    .field-card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow-sm);transition:all .15s;}
+    .field-card:hover{box-shadow:var(--shadow);}
+    .fc-name{font-family:'DM Serif Display',serif;font-size:16px;color:var(--forest);margin-bottom:3px;}
+    .fc-sub{font-size:12px;color:var(--muted);margin-bottom:12px;}
+    .rec-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+    .rec-item:last-child{border-bottom:none;}
+    .rec-icon{font-size:18px;flex-shrink:0;}
+    .rec-body h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+    .rec-body p{font-size:12.5px;color:var(--muted);line-height:1.55;}
+    .rec-amt{margin-left:auto;flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(184,114,14,.1);color:#8a5800;white-space:nowrap;}
+    .input-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    @media(max-width:900px){.input-grid-3{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><div class="page-title">🌱 Soil Health Dashboard</div><div class="page-subtitle" id="sh-sub">Track soil test results, nutrient balance, and amendment recommendations</div></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="dashboard.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">← Dashboard</a>
+          <a href="copilot.html" class="btn btn-primary btn-sm">✦ Ask AI Copilot</a>
+        </div>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="planner-stats anim-fade-up">
+        <div class="stat-card"><div class="stat-label">Fields Tracked</div><div class="stat-value" id="stat-fields">0</div><div class="stat-change">Add fields below</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Soil pH</div><div class="stat-value" id="stat-ph">—</div><div class="stat-change neutral">Target: 6.0–7.0</div></div>
+        <div class="stat-card"><div class="stat-label">Organic Matter</div><div class="stat-value" id="stat-om">—</div><div class="stat-change">% by weight</div></div>
+        <div class="stat-card"><div class="stat-label">Precision Ag Efficiency Gain</div><div class="stat-value">23%</div><div class="stat-change">Forecast by 2027</div></div>
+      </div>
+      <div class="tab-bar anim-fade-up anim-delay-1">
+        <button class="pg-tab active" id="shtab-add"    onclick="showShTab('add')">➕ Enter Soil Test</button>
+        <button class="pg-tab"        id="shtab-fields"  onclick="showShTab('fields')">🌾 My Fields</button>
+        <button class="pg-tab"        id="shtab-calc"    onclick="showShTab('calc')">🧪 Amendment Calculator</button>
+        <button class="pg-tab"        id="shtab-labs"    onclick="showShTab('labs')">🔬 Soil Test Labs</button>
+      </div>
+
+      <!-- ADD SOIL TEST -->
+      <div id="shview-add">
+        <div class="card anim-fade-up">
+          <div class="card-header"><span class="card-title">➕ Enter Soil Test Results</span></div>
+          <div class="card-body">
+            <div class="input-grid-3">
+              <div class="form-group"><label class="form-label">Field Name *</label><input class="form-input" id="sf-name" placeholder="North Quarter, Field 3A…"></div>
+              <div class="form-group"><label class="form-label">Acreage</label><input class="form-input form-mono" id="sf-acres" type="number" placeholder="80"></div>
+              <div class="form-group"><label class="form-label">Primary Crop</label><select class="form-input" id="sf-crop"><option>Canola</option><option>Wheat</option><option>Corn</option><option>Soybeans</option><option>Barley</option><option>Vegetables</option></select></div>
+              <div class="form-group"><label class="form-label">Soil pH</label><span class="form-hint">Ideal: 6.0–7.0 for most crops</span><input class="form-input form-mono" id="sf-ph" type="number" step="0.1" placeholder="6.5" min="4" max="9" oninput="previewRecs()"></div>
+              <div class="form-group"><label class="form-label">Organic Matter (%)</label><span class="form-hint">Ideal: 3–5% for cropland</span><input class="form-input form-mono" id="sf-om" type="number" step="0.1" placeholder="3.2" min="0" max="15" oninput="previewRecs()"></div>
+              <div class="form-group"><label class="form-label">Available Phosphorus (ppm)</label><span class="form-hint">P — Ideal: 20–40 ppm</span><input class="form-input form-mono" id="sf-p" type="number" placeholder="18" oninput="previewRecs()"></div>
+              <div class="form-group"><label class="form-label">Potassium (ppm)</label><span class="form-hint">K — Ideal: 120–200 ppm</span><input class="form-input form-mono" id="sf-k" type="number" placeholder="145" oninput="previewRecs()"></div>
+              <div class="form-group"><label class="form-label">Nitrate Nitrogen (ppm)</label><span class="form-hint">NO3-N — Varies by crop</span><input class="form-input form-mono" id="sf-n" type="number" placeholder="22" oninput="previewRecs()"></div>
+              <div class="form-group"><label class="form-label">Test Date</label><input class="form-input" id="sf-date" type="date"></div>
+            </div>
+            <div id="sf-preview" style="display:none;margin-top:16px;"></div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+              <button class="btn btn-secondary btn-sm" onclick="saveField()">Save Field →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY FIELDS -->
+      <div id="shview-fields" style="display:none;">
+        <div id="fields-list" class="anim-fade-up"></div>
+      </div>
+
+      <!-- AMENDMENT CALCULATOR -->
+      <div id="shview-calc" style="display:none;">
+        <div class="grid-2 anim-fade-up">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🧪 Lime &amp; Amendment Calculator</span></div>
+            <div class="card-body">
+              <div class="form-group"><label class="form-label">Current pH</label><input class="form-input form-mono" id="ca-ph" type="number" step="0.1" value="5.8" oninput="calcAmendment()"></div>
+              <div class="form-group"><label class="form-label">Target pH</label><select class="form-input" id="ca-target" onchange="calcAmendment()"><option value="6.5">6.5 (General crops)</option><option value="7.0">7.0 (Alfalfa)</option><option value="6.0">6.0 (Blueberries)</option><option value="6.8">6.8 (Corn/Soybeans)</option></select></div>
+              <div class="form-group"><label class="form-label">Soil Texture</label><select class="form-input" id="ca-texture" onchange="calcAmendment()"><option>Sandy loam</option><option>Loam</option><option>Clay loam</option><option>Clay</option></select></div>
+              <div class="form-group"><label class="form-label">Field Area (acres)</label><input class="form-input form-mono" id="ca-acres" type="number" value="80" oninput="calcAmendment()"></div>
+            </div>
+          </div>
+          <div id="amendment-result" class="card">
+            <div class="card-header"><span class="card-title">💡 Lime Recommendation</span></div>
+            <div class="card-body" id="amendment-body"><div style="font-size:13px;color:var(--muted);padding:10px 0;">Fill in the form to see your lime recommendation.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LABS -->
+      <div id="shview-labs" style="display:none;">
+        <div class="card anim-fade-up">
+          <div class="card-header"><span class="card-title">🔬 Provincial Soil Testing Laboratories</span></div>
+          <div class="card-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+            <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;"><div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">SGS Agri-Food Labs (National)</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6;">Full NPK + micronutrients + pH. $25–$80/sample. Results in 5–7 business days.</div><a href="https://www.sgs.com/en/agriculture" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);margin-top:6px;display:inline-block;">sgs.com ↗</a></div>
+            <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;"><div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">AGAT Laboratories (Prairie)</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6;">Prairie-specific soil chemistry. EC, salinity, sodium absorption ratio included.</div><a href="https://www.agatlabs.com" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);margin-top:6px;display:inline-block;">agatlabs.com ↗</a></div>
+            <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;"><div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">A&L Canada Laboratories (ON/QC)</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6;">Eastern Canada specialist. Same-day processing available. Certified for CanadaGAP.</div><a href="https://www.alcanada.com" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);margin-top:6px;display:inline-block;">alcanada.com ↗</a></div>
+            <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;"><div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">OMAFRA Soil Lab (Ontario)</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6;">Government lab — low cost for Ontario producers. $12–$22/sample.</div><a href="https://www.ontario.ca/page/agriculture" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);margin-top:6px;display:inline-block;">ontario.ca/agri ↗</a></div>
+            <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;"><div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">Richardson Centre (BC)</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6;">BC and Pacific Northwest specialist. Heavy metals screening available for organic certification.</div><a href="https://www.parc.ca" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);margin-top:6px;display:inline-block;">parc.ca ↗</a></div>
+            <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;"><div style="font-family:'DM Serif Display',serif;font-size:14px;color:var(--forest);margin-bottom:5px;">Norwest Labs (AB/SK)</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6;">Alberta/Saskatchewan specialist with farm pickup services available in some regions.</div><a href="https://www.norwestlabs.com" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);margin-top:6px;display:inline-block;">norwestlabs.com ↗</a></div>
+          </div>
+          <div class="card-footer"><div style="font-size:12.5px;color:var(--muted);">Tip: Test every 3–4 years, or annually on intensive vegetable land. Sample in the same season each year for consistent results.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/data.js"></script>
+<script src="js/nav-patch.js"></script>
+<script>
+  const profile = Profile.requireOrRedirect();
+  if (!profile) throw new Error('no profile');
+  document.getElementById('sidebar-mount').innerHTML = renderSidebar('soil-health');
+  document.getElementById('sh-sub').textContent = `Soil test tracker and nutrient recommendations · ${profile.province}`;
+
+  function showShTab(t){['add','fields','calc','labs'].forEach(id=>{document.getElementById('shview-'+id).style.display=id===t?'':'none';document.getElementById('shtab-'+id).classList.toggle('active',id===t);});if(t==='fields')renderFields();if(t==='calc')calcAmendment();}
+
+  let fields = JSON.parse(localStorage.getItem('soilFields')||'[]');
+
+  function phStatus(ph){if(ph<5.5)return{cls:'ss-low',txt:'Too Acidic'};if(ph<6.0)return{cls:'ss-ok',txt:'Slightly Low'};if(ph<=7.2)return{cls:'ss-good',txt:'Ideal'};return{cls:'ss-ok',txt:'Alkaline'};}
+  function omStatus(om){if(om<2)return{cls:'ss-low',txt:'Low'};if(om<3)return{cls:'ss-ok',txt:'Fair'};if(om<=5)return{cls:'ss-good',txt:'Good'};return{cls:'ss-good',txt:'High'};}
+
+  function previewRecs(){
+    const ph=parseFloat(document.getElementById('sf-ph').value)||0;
+    const om=parseFloat(document.getElementById('sf-om').value)||0;
+    const p=parseFloat(document.getElementById('sf-p').value)||0;
+    const k=parseFloat(document.getElementById('sf-k').value)||0;
+    if(!ph)return;
+    const recs=[];
+    if(ph<6.0) recs.push({icon:'🪨',title:'Apply Agricultural Lime',body:`pH ${ph} is too acidic for most crops. Apply 2–4 t/acre of agricultural lime to raise to 6.5.`,amt:'2–4 t/acre'});
+    if(om<3) recs.push({icon:'♻️',title:'Increase Organic Matter',body:'Low organic matter reduces water retention, nutrient availability, and biological activity. Apply compost or manure, use cover crops.',amt:'+1% target'});
+    if(p<15) recs.push({icon:'🔵',title:'Apply Phosphorus (MAP/DAP)',body:`P level of ${p} ppm is below the 20 ppm threshold. Apply 20–30 kg P2O5/acre at seeding.`,amt:'20–30 kg P2O5/ac'});
+    if(k<100) recs.push({icon:'🟣',title:'Apply Potash (K2O)',body:`Potassium ${k} ppm is low. Apply 60–80 kg K2O/acre, preferably fall-incorporated.`,amt:'60–80 kg K2O/ac'});
+    const el=document.getElementById('sf-preview');
+    if(recs.length){el.style.display='';el.innerHTML='<div style="font-family:\'IBM Plex Mono\',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Preliminary Recommendations</div>'+recs.map(r=>`<div class="rec-item"><div class="rec-icon">${r.icon}</div><div class="rec-body"><h4>${r.title}</h4><p>${r.body}</p></div><div class="rec-amt">${r.amt}</div></div>`).join('');}
+    else{el.style.display='';el.innerHTML='<div style="color:var(--sage);font-size:13px;">✅ Soil nutrient levels look good based on inputs entered.</div>';}
+  }
+
+  function saveField(){
+    const name=document.getElementById('sf-name').value.trim();
+    if(!name){alert('Please enter a field name.');return;}
+    fields.push({id:'f-'+Date.now(),name,acres:document.getElementById('sf-acres').value||'—',crop:document.getElementById('sf-crop').value,ph:parseFloat(document.getElementById('sf-ph').value)||0,om:parseFloat(document.getElementById('sf-om').value)||0,p:parseFloat(document.getElementById('sf-p').value)||0,k:parseFloat(document.getElementById('sf-k').value)||0,n:parseFloat(document.getElementById('sf-n').value)||0,date:document.getElementById('sf-date').value||new Date().toISOString().slice(0,10)});
+    localStorage.setItem('soilFields',JSON.stringify(fields));
+    updateSoilStats();showShTab('fields');
+  }
+
+  function updateSoilStats(){document.getElementById('stat-fields').textContent=fields.length;if(fields.length){const avgPh=(fields.reduce((s,f)=>s+f.ph,0)/fields.length).toFixed(1);const avgOm=(fields.reduce((s,f)=>s+f.om,0)/fields.length).toFixed(1);document.getElementById('stat-ph').textContent=avgPh;document.getElementById('stat-om').textContent=avgOm+'%';}}
+  updateSoilStats();
+
+  function renderFields(){
+    const el=document.getElementById('fields-list');
+    if(!fields.length){el.innerHTML='<div class="card"><div class="card-body" style="text-align:center;padding:40px;color:var(--muted);">No fields yet. Click "Enter Soil Test" to add your first field.</div></div>';return;}
+    el.innerHTML=fields.map(f=>{
+      const ph=phStatus(f.ph);const om=omStatus(f.om);
+      return `<div class="field-card">
+        <div class="fc-name">${f.name}</div>
+        <div class="fc-sub">${f.acres} acres · ${f.crop} · Tested: ${f.date}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+          <div class="soil-meter"><span class="sm-label">pH</span><div class="sm-bar"><div class="sm-fill" style="width:${Math.min(100,f.ph/9*100)}%;background:${f.ph<6?'#c0392b':f.ph<=7.2?'#27ae60':'#e67e22'};"></div></div><span class="sm-val">${f.ph}</span><span class="sm-status ${ph.cls}">${ph.txt}</span></div>
+          <div class="soil-meter"><span class="sm-label">Organic Matter</span><div class="sm-bar"><div class="sm-fill" style="width:${Math.min(100,f.om/8*100)}%;background:#8e44ad;"></div></div><span class="sm-val">${f.om}%</span><span class="sm-status ${om.cls}">${om.txt}</span></div>
+          <div class="soil-meter"><span class="sm-label">Phosphorus</span><div class="sm-bar"><div class="sm-fill" style="width:${Math.min(100,f.p/60*100)}%;background:#2980b9;"></div></div><span class="sm-val">${f.p}</span><span class="sm-status ${f.p>=20?'ss-good':f.p>=10?'ss-ok':'ss-low'}">${f.p>=20?'Good':f.p>=10?'Fair':'Low'}</span></div>
+          <div class="soil-meter"><span class="sm-label">Potassium</span><div class="sm-bar"><div class="sm-fill" style="width:${Math.min(100,f.k/300*100)}%;background:#e67e22;"></div></div><span class="sm-val">${f.k}</span><span class="sm-status ${f.k>=120?'ss-good':f.k>=80?'ss-ok':'ss-low'}">${f.k>=120?'Good':f.k>=80?'Fair':'Low'}</span></div>
+        </div>
+        <div style="display:flex;gap:8px;"><a href="copilot.html" class="btn btn-ghost btn-sm">✦ Ask AI about this field</a><button class="btn btn-ghost btn-sm" onclick="deleteField('${f.id}')">Delete</button></div>
+      </div>`;
+    }).join('');
+  }
+
+  window.deleteField=function(id){fields=fields.filter(f=>f.id!==id);localStorage.setItem('soilFields',JSON.stringify(fields));updateSoilStats();renderFields();};
+
+  function calcAmendment(){
+    const curPh=parseFloat(document.getElementById('ca-ph').value)||5.8;
+    const targetPh=parseFloat(document.getElementById('ca-target').value)||6.5;
+    const texture=document.getElementById('ca-texture').value;
+    const acres=parseFloat(document.getElementById('ca-acres').value)||80;
+    const bufferFactor={Sandy loam:1.2,Loam:1.6,'Clay loam':2.0,Clay:2.4}[texture]||1.6;
+    const limePerAcre=Math.max(0,(targetPh-curPh)*bufferFactor).toFixed(2);
+    const totalLime=(limePerAcre*acres).toFixed(0);
+    const cost=(totalLime*160).toFixed(0);
+    document.getElementById('amendment-body').innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:var(--cream);border-radius:var(--r-sm);padding:14px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Lime Recommendation</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--forest);">${limePerAcre} t/acre</div>
+          <div style="font-size:13px;color:var(--muted);">Total: ${totalLime} tonnes · Est. cost: $${parseInt(cost).toLocaleString()} CAD</div>
+        </div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7;">
+          <div>✅ Apply agricultural lime (CaCO₃) — 95% neutralizing value or higher</div>
+          <div>✅ Incorporate by tillage if possible — surface applications work slower</div>
+          <div>✅ Allow 3–6 months before resampling to assess response</div>
+          <div>✅ Split application: 50% now, 50% in 12 months if &gt; 3 t/acre needed</div>
+        </div>
+        <a href="copilot.html" class="btn btn-secondary btn-sm">Ask AI for fertilizer plan →</a>
+      </div>`;
+  }
+</script>
+</body>
+</html>

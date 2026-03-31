@@ -186,12 +186,28 @@
 
     <div class="page-body">
 
-      <!-- Location bar -->
+      <!-- Location bar — province switcher + GPS -->
       <div class="wx-loc-bar anim-fade-up">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;">📍</span>
-        <span class="wx-loc-name" id="wx-loc-name">Loading…</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;flex-shrink:0;">📍</span>
+        <select id="wx-prov-select" onchange="switchProvince(this.value)"
+          style="padding:7px 12px;border:1.5px solid var(--border-md);border-radius:var(--r-sm);
+                 font-family:'Sora',sans-serif;font-size:13px;color:var(--text);
+                 background:white;cursor:pointer;outline:none;min-width:200px;">
+          <option value="">Select a province…</option>
+          <option value="Alberta">Alberta — Calgary</option>
+          <option value="British Columbia">British Columbia — Vancouver</option>
+          <option value="Manitoba">Manitoba — Winnipeg</option>
+          <option value="New Brunswick">New Brunswick — Fredericton</option>
+          <option value="Newfoundland & Labrador">Newfoundland — St. John's</option>
+          <option value="Nova Scotia">Nova Scotia — Halifax</option>
+          <option value="Ontario">Ontario — Toronto</option>
+          <option value="Prince Edward Island">PEI — Charlottetown</option>
+          <option value="Quebec">Quebec — Montreal</option>
+          <option value="Saskatchewan">Saskatchewan — Regina</option>
+        </select>
         <button class="wx-geo-btn" onclick="useGPS()">📡 Use My GPS</button>
         <span class="wx-geo-status" id="wx-geo-status"></span>
+        <span class="wx-loc-name" id="wx-loc-name" style="display:none;"></span>
       </div>
 
       <!-- Error / notice -->
@@ -254,7 +270,8 @@
 </div>
 
 <script src="js/data.js"></script>
-<script>
+  <script src="js/nav-patch.js"></script>
+  <script>
   /* ──────────────────────────────────────
      Bootstrap
   ────────────────────────────────────── */
@@ -297,17 +314,24 @@
      Page init
   ────────────────────────────────────── */
   function init() {
-    const coords = PROVINCE_COORDS[profile.province] || PROVINCE_COORDS['Ontario'];
+    // Use nav-patch coords table as primary, fall back to data.js PROVINCE_COORDS
+    const COORDS = window.CP_PROVINCE_COORDS || window.PROVINCE_COORDS || {};
+    const coords = COORDS[profile.province]
+                || COORDS['Ontario']
+                || { lat: 43.7001, lon: -79.4163, city: 'Toronto', tz: 'America/Toronto' };
     curLat  = coords.lat;
     curLon  = coords.lon;
     curCity = coords.city;
 
-    document.getElementById('wx-loc-name').textContent   = curCity + ', ' + profile.province;
+    // Set the province dropdown to the profile's province
+    const sel = document.getElementById('wx-prov-select');
+    if (sel) sel.value = profile.province;
+
     document.getElementById('wx-subtitle').textContent    = 'Live conditions & crop intelligence · ' + profile.province;
     document.getElementById('crop-sub').textContent       = MNAMES[new Date().getMonth()] + ' recommendations for ' + profile.province + ' · ' + profile.farmType;
     document.getElementById('cal-sub').textContent        = 'Annual planting & harvest timeline for ' + profile.province;
 
-    // Show cached weather instantly, then fetch live in background
+    // Show cached weather instantly, then fetch live
     const cached = readCache();
     if (cached?.current) {
       renderCurrent(cached.current, true);
@@ -322,12 +346,10 @@
       renderGDD(null);
     }
 
-    // Static sections — no network needed
     renderCropSection();
     renderFrostCard();
     renderMonthGrid();
 
-    // Go live
     loadWeather();
   }
 
@@ -358,9 +380,14 @@
     btn.disabled = true;
     document.getElementById('wx-notice').style.display = 'none';
 
+    const COORDS = window.CP_PROVINCE_COORDS || window.PROVINCE_COORDS || {};
     const lat = curLat;
     const lon = curLon;
-    const tz  = (PROVINCE_COORDS[profile.province] || PROVINCE_COORDS['Ontario']).tz;
+    // Determine timezone from active province/coords
+    let tz = 'America/Toronto';
+    Object.values(COORDS).forEach(function(c) {
+      if (Math.abs(c.lat - lat) < 0.5 && Math.abs(c.lon - lon) < 0.5) tz = c.tz;
+    });
 
     // Build both URLs
     const baseUrl   = 'https://api.open-meteo.com/v1/forecast'
@@ -458,7 +485,7 @@
       <div class="wx-current">
         <div class="wx-top">
           <div>
-            <div class="wx-city">${curCity}, ${profile.province} · ${srcLabel}</div>
+            <div class="wx-city">${curCity !== 'My Location' ? curCity + ', ' + (document.getElementById('wx-prov-select')?.options[document.getElementById('wx-prov-select')?.selectedIndex]?.text?.split(' —')[0] || 'Canada') : 'GPS Location'} · ${srcLabel}</div>
             <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;">
               <div class="wx-main-temp">${temp}°C</div>
               <div class="wx-condition">${wmo.label}</div>
@@ -660,6 +687,33 @@
   }
 
   /* ──────────────────────────────────────
+     Province switcher
+  ────────────────────────────────────── */
+  window.switchProvince = function(prov) {
+    if (!prov) return;
+    const COORDS = window.CP_PROVINCE_COORDS || window.PROVINCE_COORDS || {};
+    const coords = COORDS[prov] || { lat: 43.7001, lon: -79.4163, city: 'Toronto', tz: 'America/Toronto' };
+    curLat  = coords.lat;
+    curLon  = coords.lon;
+    curCity = coords.city;
+
+    document.getElementById('wx-geo-status').textContent = '';
+    document.getElementById('wx-subtitle').textContent   = 'Live conditions & crop intelligence · ' + prov;
+    document.getElementById('crop-sub').textContent      = MNAMES[new Date().getMonth()] + ' recommendations for ' + prov;
+    document.getElementById('cal-sub').textContent       = 'Annual planting & harvest timeline for ' + prov;
+    document.getElementById('forecast-sub').textContent  = 'Loading live forecast for ' + coords.city + '…';
+
+    // Invalidate old cache for new location
+    localStorage.removeItem('wx:' + profile.province + ':prov');
+    isFetching = false;
+
+    renderFallbackCurrent();
+    renderFallbackForecast();
+    renderGDD(null);
+    loadWeather();
+  };
+
+  /* ──────────────────────────────────────
      GPS
   ────────────────────────────────────── */
   function useGPS() {
@@ -669,7 +723,7 @@
       st.style.color = 'var(--amber)';
       return;
     }
-    st.textContent = 'Requesting location…';
+    st.textContent = 'Requesting GPS location…';
     st.style.color = 'var(--muted)';
 
     navigator.geolocation.getCurrentPosition(
@@ -677,15 +731,17 @@
         curLat  = pos.coords.latitude;
         curLon  = pos.coords.longitude;
         curCity = 'My Location';
-        document.getElementById('wx-loc-name').textContent =
-          'GPS — ' + curLat.toFixed(3) + '°N, ' + Math.abs(curLon).toFixed(3) + '°W';
-        st.textContent = '✓ GPS active';
-        st.style.color = 'var(--green)';
+        // Clear province dropdown — GPS overrides it
+        const sel = document.getElementById('wx-prov-select');
+        if (sel) sel.value = '';
+        document.getElementById('wx-geo-status').textContent = '✓ GPS · ' + curLat.toFixed(2) + '°N ' + Math.abs(curLon).toFixed(2) + '°W';
+        document.getElementById('wx-geo-status').style.color = 'var(--green)';
+        document.getElementById('wx-subtitle').textContent = 'Live GPS conditions · Your exact location';
         isFetching = false;
         loadWeather();
       },
       () => {
-        st.textContent = 'Location denied — using province centre';
+        st.textContent = 'Location access denied — select a province above';
         st.style.color = 'var(--amber)';
       },
       { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 }

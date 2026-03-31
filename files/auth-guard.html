@@ -1,0 +1,89 @@
+<!--
+═══════════════════════════════════════════════════════════
+  FARM COPILOT — SUPABASE AUTH GUARD
+  Paste the <script> block below into ANY page that
+  requires the user to be signed in.
+  If not signed in → redirects to auth.html automatically.
+═══════════════════════════════════════════════════════════
+-->
+
+<!-- 1. Load Supabase CDN (add once in <head>) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- 2. Auth guard — paste this near top of <body> -->
+<script>
+  // ── YOUR KEYS (same as auth.html) ──────────────────
+  const SUPABASE_URL  = 'https://YOUR_PROJECT_ID.supabase.co';
+  const SUPABASE_ANON = 'YOUR_ANON_PUBLIC_KEY';
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  // ── Guard: redirect if not logged in ───────────────
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (!session) {
+      window.location.href = 'auth.html';
+      return;
+    }
+
+    // User is logged in — make their info available globally
+    window.FARM_USER = {
+      id:    session.user.id,
+      email: session.user.email,
+      name:  session.user.user_metadata?.full_name
+           || session.user.email.split('@')[0]
+    };
+
+    // Update any nav "Sign In" buttons to show name
+    document.querySelectorAll('[data-user-name]').forEach(el => {
+      el.textContent = window.FARM_USER.name;
+    });
+    document.querySelectorAll('[data-user-email]').forEach(el => {
+      el.textContent = window.FARM_USER.email;
+    });
+
+    // Dispatch custom event so page JS can react
+    document.dispatchEvent(new CustomEvent('farm:user-ready', {
+      detail: window.FARM_USER
+    }));
+  })();
+
+  // ── Sign out helper — call from any page ───────────
+  window.farmSignOut = async function() {
+    await sb.auth.signOut();
+    localStorage.removeItem('sb_user');
+    window.location.href = 'auth.html';
+  };
+</script>
+
+<!--
+═══════════════════════════════════════════════════════════
+  USAGE EXAMPLES
+═══════════════════════════════════════════════════════════
+
+  1. Show user name anywhere in HTML:
+     <span data-user-name></span>
+
+  2. React when user is ready:
+     document.addEventListener('farm:user-ready', (e) => {
+       console.log('Logged in as', e.detail.name);
+       // load their farm profile, etc.
+     });
+
+  3. Sign out button:
+     <button onclick="farmSignOut()">Sign Out</button>
+
+  4. Nav bar Sign In → Sign In / Name swap:
+     Replace your existing nav CTA with:
+     <a href="auth.html" class="ln-nav-cta" id="nav-auth-btn">Sign In →</a>
+
+     Then add this JS:
+     document.addEventListener('farm:user-ready', (e) => {
+       const btn = document.getElementById('nav-auth-btn');
+       btn.textContent = e.detail.name;
+       btn.href = '#';
+       btn.onclick = () => farmSignOut();
+     });
+═══════════════════════════════════════════════════════════
+-->
