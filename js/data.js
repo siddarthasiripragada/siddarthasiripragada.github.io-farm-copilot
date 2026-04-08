@@ -18,6 +18,29 @@ const Profile = {
   }
 };
 
+/* ── User identity helpers (profile + auth fallbacks) ── */
+function getStoredJSON(key) {
+  try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+}
+
+function getUserContext() {
+  const profile = getStoredJSON('farmProfile') || {};
+  const authSession = getStoredJSON('farmCopilotAuth') || {};
+  const authUser = getStoredJSON('authUser') || {};
+
+  const fullName = [
+    profile.firstName || authSession.firstName || '',
+    profile.lastName || authSession.lastName || '',
+  ].join(' ').trim();
+  const email = profile.email || authSession.email || authUser.email || '';
+  const emailPrefix = email ? email.split('@')[0] : '';
+  const firstName = (profile.firstName || authSession.firstName || fullName.split(' ')[0] || emailPrefix || 'Farmer').trim();
+  const regionContext = profile.province || profile.region || profile.location || 'your region';
+  const farmType = profile.farmType || '';
+
+  return { profile, firstName, fullName, email, regionContext, farmType };
+}
+
 /* ── Province & farm data ── */
 const PROVINCES = [
   'Alberta','British Columbia','Manitoba','New Brunswick',
