@@ -1227,23 +1227,34 @@
       document.getElementById('sidebar-mount').innerHTML = renderSidebar('dashboard');
       if (localStorage.getItem('preDemo')) document.getElementById('demo-banner').style.display = 'flex';
 
+<<<<<<< HEAD
       const ctx = typeof getUserContext === 'function'
         ? getUserContext()
         : { firstName: profile.firstName || 'Farmer', regionContext: profile.province || 'your region', farmType: profile.farmType || '', email: profile.email || '' };
       const firstName = ctx.firstName || 'Farmer';
       const regionContext = ctx.regionContext || profile.province || 'your region';
+=======
+      const ctx = typeof getUserContext === 'function' ? getUserContext() : { firstName: 'Farmer', regionContext: 'your region', farmType: profile.farmType || '' };
+      const firstName = ctx.firstName || 'Farmer';
+      const regionContext = ctx.regionContext || 'your region';
+>>>>>>> origin/main
       const farmTypeContext = ctx.farmType ? `${ctx.farmType.toLowerCase()} ` : '';
 
       const today = new Date().toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
       document.getElementById('page-subtitle').textContent = `${today} · ${regionContext}`;
       document.getElementById('date-badge').textContent = new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});
       document.getElementById('welcome-h').textContent = `Welcome, ${firstName} 🌾`;
+<<<<<<< HEAD
       document.getElementById('welcome-sub').textContent = `Personalized insights for your ${regionContext} ${farmTypeContext}operation`;
       document.getElementById('profile-context-pill').textContent = ctx.farmType ? `${ctx.farmType} operations` : `${regionContext} operations`;
       document.getElementById('snap-name').textContent = `${firstName}${ctx.email ? ` · ${ctx.email}` : ''}`;
       document.getElementById('snap-region').textContent = `Region: ${regionContext}`;
       document.getElementById('snap-farm-type').textContent = `Farm type: ${ctx.farmType || 'Not set yet'}`;
       document.getElementById('snap-size').textContent = `Size: ${profile.size || 'Not set yet'}`;
+=======
+      document.getElementById('welcome-sub').textContent = `Personalized AI insights for your ${regionContext} ${farmTypeContext}operation`;
+      document.getElementById('profile-context-pill').textContent = ctx.farmType ? `${ctx.farmType} operations` : `${regionContext} operations`;
+>>>>>>> origin/main
 
       // Profile completeness
       const checks = [
