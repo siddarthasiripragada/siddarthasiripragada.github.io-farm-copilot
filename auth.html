@@ -300,6 +300,16 @@ body { font-family: 'Outfit', sans-serif; background: var(--forest);
   color: var(--cream);
   border-color: var(--forest);
 }
+.new-auth-bn {
+  border: 1px solid rgba(41,128,185,.28);
+  background: rgba(41,128,185,.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #1a5276;
+}
+.new-auth-bn a { color: #1a5276; font-weight: 700; text-decoration: none; margin-right: 8px; }
 
 /* ════════════════════════════ RESPONSIVE ════════════════════════════ */
 @media (max-width: 960px) {
@@ -391,6 +401,11 @@ body { font-family: 'Outfit', sans-serif; background: var(--forest);
       </a>
 
       <!-- Demo banner -->
+      <div class="new-auth-bn">
+        New auth experience:
+        <a href="login.html">Log in →</a>
+        <a href="signup.html">Sign up →</a>
+      </div>
       <div class="demo-bn" id="demo-bn">⚡ Demo mode — enter any email + password (6+ chars) to continue.</div>
       <div class="session-bn" id="session-bn">
         <div class="session-bn-title" id="session-bn-title"></div>

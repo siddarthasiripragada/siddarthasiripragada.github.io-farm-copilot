@@ -507,7 +507,7 @@
     if (!confirm('Sign out of Farm Copilot?')) return;
     localStorage.removeItem('authUser');
     localStorage.removeItem('authSession');
-    window.location.href = 'auth.html';
+    window.location.href = 'login.html';
   };
 
   /* ═══════════════════════════════════════════════════════
