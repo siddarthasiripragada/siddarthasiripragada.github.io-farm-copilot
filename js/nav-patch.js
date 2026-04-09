@@ -21,6 +21,7 @@
     // Farm Tools
     calculator:     { label: 'ROI Calculator',  icon: '🧮', href: 'calculator.html'    },
     planner:        { label: 'Season Planner',  icon: '📋', href: 'planner.html'       },
+    'tariff-impact':{ label: 'Tariff Calculator', icon: '📊', href: 'tariff-impact.html' },
     'soil-health':  { label: 'Soil Health',     icon: '🌱', href: 'soil-health.html'   },
     'equipment-share':{ label: 'Equipment',     icon: '🚜', href: 'equipment-share.html'},
     'farm-safety':  { label: 'Farm Safety',     icon: '⛑', href: 'farm-safety.html'   },
@@ -52,7 +53,7 @@
     },
     {
       id: 'tools', label: 'Farm Tools', icon: '🚜',
-      keys: ['calculator', 'planner', 'soil-health', 'equipment-share', 'farm-safety'],
+      keys: ['calculator', 'planner', 'tariff-impact', 'soil-health', 'equipment-share', 'farm-safety'],
     },
     {
       id: 'biz', label: 'Business', icon: '💼',
