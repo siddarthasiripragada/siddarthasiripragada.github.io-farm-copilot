@@ -65,6 +65,17 @@
       font-size: 14px;
       color: var(--forest);
     }
+    .field .range-input {
+      margin-top: 6px;
+      width: 100%;
+      accent-color: #2c7e4f;
+    }
+    .field-hint {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+    }
     .rate-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
     .rate-badge {
       font-size: 11px;
@@ -189,13 +200,13 @@
                     <option>Grain</option><option>Oilseed</option><option>Beef</option><option>Pork</option><option>Mixed</option>
                   </select>
                 </div>
-                <div class="field"><label for="canola_tonnes">Canola sold to US (tonnes/yr)</label><input id="canola_tonnes" type="number" min="0" step="1" value="0"></div>
-                <div class="field"><label for="canola_price">Canola price (CAD/tonne)</label><input id="canola_price" type="number" min="0" step="1" value="680"></div>
-                <div class="field"><label for="beef_lbs">Beef sold to US (lbs/yr)</label><input id="beef_lbs" type="number" min="0" step="100" value="0"></div>
-                <div class="field"><label for="beef_price">Beef price (CAD/lb)</label><input id="beef_price" type="number" min="0" step="0.01" value="4.20"></div>
-                <div class="field"><label for="pork_lbs">Pork sold to US (lbs/yr)</label><input id="pork_lbs" type="number" min="0" step="100" value="0"></div>
-                <div class="field"><label for="pork_price">Pork price (CAD/lb)</label><input id="pork_price" type="number" min="0" step="0.01" value="2.85"></div>
-                <div class="field full"><label for="other_exempt">Pulse / Other exempt revenue (CAD)</label><input id="other_exempt" type="number" min="0" step="1000" value="0"></div>
+                <div class="field"><label for="canola_tonnes">Canola sold to US (tonnes/yr)</label><input id="canola_tonnes" type="number" min="0" step="1" value="0"><input id="canola_tonnes_rng" class="range-input" type="range" min="0" max="10000" step="10" value="0"></div>
+                <div class="field"><label for="canola_price">Canola price (CAD/tonne)</label><input id="canola_price" type="number" min="0" step="1" value="680"><input id="canola_price_rng" class="range-input" type="range" min="300" max="1200" step="5" value="680"></div>
+                <div class="field"><label for="beef_lbs">Beef sold to US (lbs/yr)</label><input id="beef_lbs" type="number" min="0" step="100" value="0"><input id="beef_lbs_rng" class="range-input" type="range" min="0" max="3000000" step="1000" value="0"></div>
+                <div class="field"><label for="beef_price">Beef price (CAD/lb)</label><input id="beef_price" type="number" min="0" step="0.01" value="4.20"><input id="beef_price_rng" class="range-input" type="range" min="1" max="10" step="0.05" value="4.20"></div>
+                <div class="field"><label for="pork_lbs">Pork sold to US (lbs/yr)</label><input id="pork_lbs" type="number" min="0" step="100" value="0"><input id="pork_lbs_rng" class="range-input" type="range" min="0" max="3000000" step="1000" value="0"></div>
+                <div class="field"><label for="pork_price">Pork price (CAD/lb)</label><input id="pork_price" type="number" min="0" step="0.01" value="2.85"><input id="pork_price_rng" class="range-input" type="range" min="0.5" max="8" step="0.05" value="2.85"></div>
+                <div class="field full"><label for="other_exempt">Pulse / Other exempt revenue (CAD)</label><input id="other_exempt" type="number" min="0" step="1000" value="0"><input id="other_exempt_rng" class="range-input" type="range" min="0" max="5000000" step="10000" value="0"><div class="field-hint">✅ CUSMA protected (displayed for context only)</div></div>
               </div>
               <div class="rate-badges">
                 <span class="rate-badge">Canola tariff: 25%</span>
@@ -209,9 +220,9 @@
           <div class="card anim-fade-up">
             <div class="card-body">
               <div class="card-head">💸 Estimated Annual Revenue at Risk</div>
-              <div class="impact-row"><span>Canola</span><span class="impact-hit" id="canola_hit">$0</span></div>
-              <div class="impact-row"><span>Beef</span><span class="impact-hit" id="beef_hit">$0</span></div>
-              <div class="impact-row"><span>Pork</span><span class="impact-hit" id="pork_hit">$0</span></div>
+              <div class="impact-row"><span>Canola <small style="color:var(--muted);">(25% on <span id="canola_rev">$0</span>)</small></span><span class="impact-hit" id="canola_hit">$0</span></div>
+              <div class="impact-row"><span>Beef <small style="color:var(--muted);">(10% on <span id="beef_rev">$0</span>)</small></span><span class="impact-hit" id="beef_hit">$0</span></div>
+              <div class="impact-row"><span>Pork <small style="color:var(--muted);">(10% on <span id="pork_rev">$0</span>)</small></span><span class="impact-hit" id="pork_hit">$0</span></div>
               <div class="impact-total">
                 <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">TOTAL AT RISK / YEAR</div>
                 <div class="impact-total-num" id="total_hit">$0</div>
@@ -294,6 +305,15 @@
   <script>
     const TARIFF = { canola: 0.25, beef: 0.10, pork: 0.10 };
     const IDS = ['province','farm_type','canola_tonnes','canola_price','beef_lbs','beef_price','pork_lbs','pork_price','other_exempt'];
+    const RANGE_PAIRS = [
+      ['canola_tonnes', 'canola_tonnes_rng'],
+      ['canola_price', 'canola_price_rng'],
+      ['beef_lbs', 'beef_lbs_rng'],
+      ['beef_price', 'beef_price_rng'],
+      ['pork_lbs', 'pork_lbs_rng'],
+      ['pork_price', 'pork_price_rng'],
+      ['other_exempt', 'other_exempt_rng'],
+    ];
     const profile = Profile.requireOrRedirect();
     if (profile) document.getElementById('sidebar-mount').innerHTML = renderSidebar('tariff-impact');
 
@@ -378,6 +398,9 @@
       const porkHit = porkRev * TARIFF.pork;
       const totalHit = canolaHit + beefHit + porkHit;
 
+      animateNumber('canola_rev', canolaRev);
+      animateNumber('beef_rev', beefRev);
+      animateNumber('pork_rev', porkRev);
       animateNumber('canola_hit', canolaHit);
       animateNumber('beef_hit', beefHit);
       animateNumber('pork_hit', porkHit);
@@ -394,6 +417,14 @@
       updateURLParams();
     }
 
+    RANGE_PAIRS.forEach(([numId, rngId]) => {
+      const num = document.getElementById(numId);
+      const rng = document.getElementById(rngId);
+      if (!num || !rng) return;
+      const sync = (from, to) => { to.value = from.value; calcImpact(); };
+      num.addEventListener('input', () => sync(num, rng));
+      rng.addEventListener('input', () => sync(rng, num));
+    });
     IDS.forEach(id => document.getElementById(id).addEventListener('input', calcImpact));
     window.addEventListener('DOMContentLoaded', () => {
       loadFromURLParams();
