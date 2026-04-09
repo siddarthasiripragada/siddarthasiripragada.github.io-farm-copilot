@@ -404,12 +404,9 @@
      3. RENDER SIDEBAR (desktop)
   ═══════════════════════════════════════════════════════ */
   window.renderSidebar = function (active) {
-    const profile = (() => {
-      try { return JSON.parse(localStorage.getItem('farmProfile')); } catch { return null; }
-    })();
-
-    const name  = profile ? (profile.farmType || 'My Farm')    : 'Farm Copilot';
-    const sub   = profile ? (profile.province  || 'Canada')     : 'Setup required';
+    const ctx = typeof getUserContext === 'function' ? getUserContext() : { profile: null, firstName: 'Farmer', regionContext: 'Canada', farmType: '' };
+    const name = ctx.firstName || 'Farmer';
+    const sub = ctx.regionContext || ctx.farmType || 'Canada';
     const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
     const groupsHTML = SIDEBAR_GROUPS.map(g => {

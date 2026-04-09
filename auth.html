@@ -274,6 +274,32 @@ body { font-family: 'Outfit', sans-serif; background: var(--forest);
   border-radius:10px; padding:10px 14px; font-size:12px; color:#7a5a1a; margin-bottom:18px;
   line-height:1.55; font-family:'IBM Plex Mono',monospace; letter-spacing:.1px; }
 .demo-bn.on { display:block; }
+.session-bn {
+  display: none;
+  background: rgba(61,122,90,.08);
+  border: 1px solid rgba(61,122,90,.24);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.session-bn.on { display: block; }
+.session-bn-title { font-size: 12.5px; color: var(--ink); margin-bottom: 8px; }
+.session-bn-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.session-bn-btn {
+  border: 1px solid var(--ink-4);
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 11px;
+  font-size: 12px;
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+}
+.session-bn-btn.primary {
+  background: var(--forest);
+  color: var(--cream);
+  border-color: var(--forest);
+}
 
 /* ════════════════════════════ RESPONSIVE ════════════════════════════ */
 @media (max-width: 960px) {
@@ -366,6 +392,13 @@ body { font-family: 'Outfit', sans-serif; background: var(--forest);
 
       <!-- Demo banner -->
       <div class="demo-bn" id="demo-bn">⚡ Demo mode — enter any email + password (6+ chars) to continue.</div>
+      <div class="session-bn" id="session-bn">
+        <div class="session-bn-title" id="session-bn-title"></div>
+        <div class="session-bn-actions">
+          <a href="dashboard.html" class="session-bn-btn primary">Continue to dashboard</a>
+          <button type="button" class="session-bn-btn" onclick="switchAccount()">Use different account</button>
+        </div>
+      </div>
 
       <!-- Global alert -->
       <div class="auth-alert" id="auth-alert" role="alert" aria-live="assertive">
@@ -501,7 +534,7 @@ body { font-family: 'Outfit', sans-serif; background: var(--forest);
 
       <!-- ════ VIEW: SIGNUP STEP 2 ════ -->
       <div id="v-signup-2" class="vfade" style="display:none;">
-        <button class="auth-back" onclick="sv('signup-1')">
+        <button class="auth-back" id="signup2-back" onclick="sv('signup-1')">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Back
         </button>
@@ -512,8 +545,12 @@ body { font-family: 'Outfit', sans-serif; background: var(--forest);
         </div>
 
         <div class="auth-eyebrow">Almost there</div>
-        <h2 class="auth-heading">Tell us about your farm</h2>
-        <p class="auth-sub">Personalizes your dashboard and funding recommendations.</p>
+        <h2 class="auth-heading" id="signup2-heading">Tell us about your farm</h2>
+        <p class="auth-sub" id="signup2-sub">Personalizes your dashboard and funding recommendations.</p>
+        <div class="auth-alert info" id="oauth-hint" style="display:none;margin-top:-8px;margin-bottom:14px;">
+          <span class="auth-alert-icon">✓</span>
+          <span id="oauth-hint-text">Google account connected</span>
+        </div>
 
         <div class="frow">
           <div class="fg">
@@ -608,15 +645,25 @@ const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
 const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 const DEMO = !SUPABASE_URL || SUPABASE_URL.startsWith('YOUR_');
 let _sb = null, lastEmail = '';
+let oauthDraft = null;
 
 /* ══ BOOT ══ */
 async function boot() {
+  const params = new URLSearchParams(location.search);
+  const forceAuth = params.get('forceAuth') === '1';
+  const requestedTab = params.get('tab');
+
+  if (forceAuth) {
+    localStorage.removeItem('authSession');
+    localStorage.removeItem('authUser');
+  }
+
   G('demo-bn').classList.toggle('on', DEMO);
   if (window.innerWidth < 960) {
     document.querySelectorAll('.mobile-logo').forEach(el => el.style.display = 'flex');
   }
   // ?tab=signup param
-  if (new URLSearchParams(location.search).get('tab') === 'signup') sv('signup-1');
+  if (requestedTab === 'signup') sv('signup-1');
   // Auto-focus
   setTimeout(() => G('si-email')?.focus(), 300);
 
@@ -625,11 +672,15 @@ async function boot() {
       await ldScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js');
       _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       const { data: { session } } = await _sb.auth.getSession();
-      if (session) { storeSess(session.user, false); go(); return; }
+      if (session && !forceAuth) {
+        storeSess(session.user, false);
+        showSessionBanner(session.user.email || '');
+      }
       _sb.auth.onAuthStateChange((e, s) => { if (e === 'SIGNED_IN' && s) { storeSess(s.user, false); go(); } });
     } catch (e) { console.warn('Supabase failed:', e); G('demo-bn').classList.add('on'); }
   } else {
-    const s = getSess(); if (s?.email) go();
+    const s = getSess();
+    if (s?.email && !forceAuth) showSessionBanner(s.email);
   }
 }
 
@@ -686,6 +737,8 @@ function goStep2() {
   clrAlert();
   if (!chk('su-email','su-email-e', isEm(G('su-email').value.trim()))) return;
   if (!chk('su-pass', 'su-pass-e',  G('su-pass').value.length >= 8)) return;
+  oauthDraft = null;
+  setSignupStep2Mode(false);
   sv('signup-2');
   setTimeout(() => G('su-first')?.focus(), 200);
 }
@@ -694,7 +747,7 @@ async function handleSignUp() {
   clrAlert();
   const first = G('su-first').value.trim(), last = G('su-last').value.trim();
   const prov  = G('su-prov').value;
-  const email = G('su-email').value.trim(), pass = G('su-pass').value;
+  const email = (oauthDraft?.email || G('su-email').value.trim()).trim(), pass = G('su-pass').value;
   const ok = [
     chk('su-first','su-first-e', first.length > 0),
     chk('su-last', 'su-last-e',  last.length > 0),
@@ -704,7 +757,8 @@ async function handleSignUp() {
   ld('btn-su', true); lastEmail = email;
   try {
     if (_sb) {
-      const { data, error } = await _sb.auth.signUp({ email, password: pass,
+      const generatedPassword = crypto.randomUUID().replace(/-/g, '').slice(0, 10) + 'Aa1!';
+      const { data, error } = await _sb.auth.signUp({ email, password: pass || generatedPassword,
         options: { data: { firstName: first, lastName: last, province: prov } } });
       ld('btn-su', false);
       if (error) { showAl(fErr(error.message), 'error'); return; }
@@ -712,9 +766,15 @@ async function handleSignUp() {
       if (data.session) { storeSess(data.user, false); go(); }
     } else {
       await wait(900); ld('btn-su', false);
-      storeSess({ email }, false);
+      storeSess({ email, firstName: first, lastName: last }, false);
       const p = JSON.parse(localStorage.getItem('farmProfile') || '{}');
-      if (!p.province) { p.province = prov; localStorage.setItem('farmProfile', JSON.stringify(p)); }
+      p.firstName = first;
+      p.lastName = last;
+      p.email = email;
+      p.province = prov || p.province;
+      localStorage.setItem('farmProfile', JSON.stringify(p));
+      oauthDraft = null;
+      setSignupStep2Mode(false);
       sv('success');
     }
   } catch { ld('btn-su', false); showAl('Connection error. Please try again.', 'error'); }
@@ -738,7 +798,19 @@ async function handleForgot() {
 }
 
 async function handleOAuth(provider) {
-  if (!_sb) { showAl('Add Supabase keys to enable Google & Apple sign-in.', 'info'); return; }
+  if (!_sb) {
+    if (provider !== 'google') {
+      showAl('Apple sign-up is coming soon. Use Google or email sign-up.', 'info');
+      return;
+    }
+    const seed = Math.floor(Math.random() * 90000) + 10000;
+    oauthDraft = { provider: 'google', email: `farmer${seed}@gmail.com` };
+    setSignupStep2Mode(true, oauthDraft.email);
+    showAl('Google account connected. Complete your farm profile to finish sign-up.', 'success');
+    sv('signup-2');
+    setTimeout(() => G('su-first')?.focus(), 180);
+    return;
+  }
   try {
     const { error } = await _sb.auth.signInWithOAuth({ provider, options: { redirectTo: location.origin + '/dashboard.html' } });
     if (error) showAl(fErr(error.message), 'error');
@@ -818,6 +890,41 @@ function fErr(m = '') {
   if (/rate.*limit|too many/i.test(m))                 return 'Too many attempts. Wait a few minutes.';
   if (/weak.*password/i.test(m))                       return 'Choose a stronger password (8+ chars, mix of letters & numbers).';
   return m || 'Something went wrong. Please try again.';
+}
+
+function showSessionBanner(email = '') {
+  const wrap = G('session-bn');
+  const title = G('session-bn-title');
+  if (!wrap || !title) return;
+  const safeEmail = email || 'an existing account';
+  title.textContent = `You are already signed in as ${safeEmail}.`;
+  wrap.classList.add('on');
+}
+
+function switchAccount() {
+  localStorage.removeItem('authSession');
+  localStorage.removeItem('authUser');
+  localStorage.removeItem('guestMode');
+  const wrap = G('session-bn');
+  if (wrap) wrap.classList.remove('on');
+  showAl('Session cleared. You can now sign in with another account.', 'success');
+  sv('signin');
+}
+
+function setSignupStep2Mode(isOAuth = false, email = '') {
+  const heading = G('signup2-heading');
+  const subtitle = G('signup2-sub');
+  const hint = G('oauth-hint');
+  const hintText = G('oauth-hint-text');
+  const back = G('signup2-back');
+  if (!heading || !subtitle || !hint || !hintText || !back) return;
+  heading.textContent = isOAuth ? 'Finish your Google sign-up' : 'Tell us about your farm';
+  subtitle.textContent = isOAuth
+    ? 'You are almost done. Add your farm profile to unlock a personalized dashboard.'
+    : 'Personalizes your dashboard and funding recommendations.';
+  hint.style.display = isOAuth ? 'flex' : 'none';
+  hintText.textContent = isOAuth ? `Google account connected: ${email}` : 'Google account connected';
+  back.textContent = isOAuth ? 'Back to sign up' : 'Back';
 }
 
 /* ══ GUEST MODE ══ */
