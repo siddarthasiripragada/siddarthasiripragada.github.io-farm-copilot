@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up — Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    .auth-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--cream); }
+    .auth-card-lite { width: 100%; max-width: 540px; background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 22px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .fg { margin-bottom: 12px; }
+    .fg label { display: block; margin-bottom: 4px; font-size: 12px; color: var(--muted); font-family:'IBM Plex Mono', monospace; }
+    .fg input, .fg select { width: 100%; padding: 10px 11px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; }
+    .status { min-height: 18px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .danger { color: #b23729; }
+    @media (max-width: 680px) { .row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card-lite">
+      <div style="margin-bottom:14px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;">Step 1 — Account</div>
+        <h1 style="font-family:'DM Serif Display',serif;font-size:30px;color:var(--forest);">Create your account</h1>
+      </div>
+      <div class="row">
+        <div class="fg"><label for="email">Email</label><input id="email" type="email" placeholder="you@farm.ca"></div>
+        <div class="fg"><label for="password">Password</label><input id="password" type="password" placeholder="Minimum 8 characters"></div>
+      </div>
+      <div class="fg">
+        <label for="role">I'm a</label>
+        <select id="role">
+          <option value="operator">Farm Operator</option>
+          <option value="consultant">Agri Consultant</option>
+          <option value="lender">Lender/Advisor</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="continueSignup()">Continue to farm identity →</button>
+        <button class="btn btn-secondary" onclick="googleSignup()">Sign up with Google</button>
+      </div>
+      <div class="status" id="status"></div>
+      <div style="margin-top:10px;font-size:13px;">Already have an account? <a href="login.html">Log in →</a></div>
+    </div>
+  </div>
+  <script>
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const DEMO = !SUPABASE_URL || SUPABASE_URL.startsWith('YOUR_');
+    let sb = null;
+    function setStatus(msg, err = false) { const s = document.getElementById('status'); s.textContent = msg; s.className = 'status' + (err ? ' danger' : ''); }
+    function persistDraft(email) {
+      localStorage.setItem('signupDraft', JSON.stringify({ email, role: document.getElementById('role').value, createdAt: Date.now() }));
+    }
+    async function init() {
+      if (!DEMO) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+          s.onload = resolve; s.onerror = reject; document.head.appendChild(s);
+        });
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    }
+    async function continueSignup() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      if (!email || password.length < 8) return setStatus('Enter a valid email and 8+ char password.', true);
+      persistDraft(email);
+      if (!sb) return window.location.href = 'onboarding.html';
+      const { error } = await sb.auth.signUp({ email, password });
+      if (error) return setStatus(error.message, true);
+      localStorage.setItem('authUser', JSON.stringify({ email, signedIn: true }));
+      window.location.href = 'onboarding.html';
+    }
+    async function googleSignup() {
+      const fake = 'google.signup@farmcopilot.ca';
+      persistDraft(fake);
+      if (!sb) {
+        localStorage.setItem('authUser', JSON.stringify({ email: fake, signedIn: true }));
+        setStatus('Demo Google sign-up started. Redirecting…');
+        return setTimeout(() => window.location.href = 'onboarding.html', 350);
+      }
+      const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/onboarding.html' } });
+      if (error) setStatus(error.message, true);
+    }
+    init().catch(() => setStatus('Supabase unavailable. Demo sign-up is active.'));
+  </script>
+</body>
+</html>

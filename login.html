@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log In — Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2d6a2d">
+  <style>
+    .auth-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--cream); }
+    .auth-card-lite { width: 100%; max-width: 460px; background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 22px; }
+    .auth-top { margin-bottom: 16px; }
+    .auth-top h1 { font-family: 'DM Serif Display', serif; font-size: 30px; color: var(--forest); margin-bottom: 4px; }
+    .auth-top p { color: var(--muted); font-size: 14px; }
+    .fg { margin-bottom: 12px; }
+    .fg label { display: block; margin-bottom: 4px; font-size: 12px; color: var(--muted); font-family:'IBM Plex Mono', monospace; }
+    .fg input { width: 100%; padding: 10px 11px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; }
+    .oauth-btn { width: 100%; border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 10px 11px; cursor: pointer; margin-bottom: 10px; }
+    .status { min-height: 18px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .danger { color: #b23729; }
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card-lite">
+      <div class="auth-top">
+        <h1>Welcome back</h1>
+        <p>Log in to your personalized Canadian Farm Copilot dashboard.</p>
+      </div>
+      <button class="oauth-btn" onclick="googleLogin()">Continue with Google</button>
+      <div class="fg">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@farm.ca">
+      </div>
+      <div class="fg">
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="login()">Log In →</button>
+      <div class="status" id="status"></div>
+      <div style="margin-top:10px;font-size:13px;">New here? <a href="signup.html">Create account →</a></div>
+    </div>
+  </div>
+  <script>
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const DEMO = !SUPABASE_URL || SUPABASE_URL.startsWith('YOUR_');
+    let sb = null;
+
+    async function init() {
+      if (!DEMO) {
+        await loadSdk();
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    }
+    function setStatus(msg, err = false) {
+      const s = document.getElementById('status');
+      s.textContent = msg;
+      s.className = 'status' + (err ? ' danger' : '');
+    }
+    function loadSdk() {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    async function googleLogin() {
+      if (!sb) {
+        localStorage.setItem('authSession', JSON.stringify({ email: 'google.demo@farmcopilot.ca', expires: Date.now() + 86400000 }));
+        localStorage.setItem('authUser', JSON.stringify({ email: 'google.demo@farmcopilot.ca', signedIn: true }));
+        setStatus('Demo Google login complete. Redirecting…');
+        setTimeout(() => window.location.href = 'onboarding.html', 500);
+        return;
+      }
+      const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/onboarding.html' } });
+      if (error) setStatus(error.message, true);
+    }
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      if (!email || !password) return setStatus('Enter email and password.', true);
+      if (!sb) {
+        localStorage.setItem('authSession', JSON.stringify({ email, expires: Date.now() + 86400000 }));
+        localStorage.setItem('authUser', JSON.stringify({ email, signedIn: true }));
+        setStatus('Logged in. Redirecting…');
+        return setTimeout(() => window.location.href = localStorage.getItem('farmProfile') ? 'dashboard.html' : 'onboarding.html', 500);
+      }
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) return setStatus(error.message, true);
+      localStorage.setItem('authSession', JSON.stringify({ email: data.user.email, expires: Date.now() + 86400000 }));
+      localStorage.setItem('authUser', JSON.stringify({ email: data.user.email, signedIn: true }));
+      window.location.href = localStorage.getItem('farmProfile') ? 'dashboard.html' : 'onboarding.html';
+    }
+    init().catch(() => setStatus('Supabase unavailable. Demo mode enabled.'));
+  </script>
+</body>
+</html>
