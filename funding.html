@@ -86,6 +86,21 @@
       gap: 14px;
       margin-bottom: 24px;
     }
+    .tariff-banner {
+      background: linear-gradient(135deg, #1a2e24, #254737);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #f2ead8;
+      border-radius: var(--r-lg);
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .tariff-banner a { color: #ffd37a; text-decoration: none; font-weight: 600; }
+    .tariff-banner a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -109,6 +124,10 @@
       </div>
 
       <div class="page-body">
+        <div class="tariff-banner anim-fade-up">
+          <span>⚠ Seeing US tariff exposure in your operation?</span>
+          <a href="tariff-impact.html">📊 Calculate yours now →</a>
+        </div>
 
         <!-- Stats -->
         <div class="stats-bar anim-fade-up">

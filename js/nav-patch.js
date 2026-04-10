@@ -21,6 +21,7 @@
     // Farm Tools
     calculator:     { label: 'ROI Calculator',  icon: '🧮', href: 'calculator.html'    },
     planner:        { label: 'Season Planner',  icon: '📋', href: 'planner.html'       },
+    'tariff-impact':{ label: 'Tariff Calculator', icon: '📊', href: 'tariff-impact.html' },
     'soil-health':  { label: 'Soil Health',     icon: '🌱', href: 'soil-health.html'   },
     'equipment-share':{ label: 'Equipment',     icon: '🚜', href: 'equipment-share.html'},
     'farm-safety':  { label: 'Farm Safety',     icon: '⛑', href: 'farm-safety.html'   },
@@ -52,7 +53,7 @@
     },
     {
       id: 'tools', label: 'Farm Tools', icon: '🚜',
-      keys: ['calculator', 'planner', 'soil-health', 'equipment-share', 'farm-safety'],
+      keys: ['calculator', 'planner', 'tariff-impact', 'soil-health', 'equipment-share', 'farm-safety'],
     },
     {
       id: 'biz', label: 'Business', icon: '💼',
@@ -404,12 +405,9 @@
      3. RENDER SIDEBAR (desktop)
   ═══════════════════════════════════════════════════════ */
   window.renderSidebar = function (active) {
-    const profile = (() => {
-      try { return JSON.parse(localStorage.getItem('farmProfile')); } catch { return null; }
-    })();
-
-    const name  = profile ? (profile.farmType || 'My Farm')    : 'Farm Copilot';
-    const sub   = profile ? (profile.province  || 'Canada')     : 'Setup required';
+    const ctx = typeof getUserContext === 'function' ? getUserContext() : { profile: null, firstName: 'Farmer', regionContext: 'Canada', farmType: '' };
+    const name = ctx.firstName || 'Farmer';
+    const sub = ctx.regionContext || ctx.farmType || 'Canada';
     const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
     const groupsHTML = SIDEBAR_GROUPS.map(g => {
@@ -509,7 +507,7 @@
     if (!confirm('Sign out of Farm Copilot?')) return;
     localStorage.removeItem('authUser');
     localStorage.removeItem('authSession');
-    window.location.href = 'auth.html';
+    window.location.href = 'login.html';
   };
 
   /* ═══════════════════════════════════════════════════════

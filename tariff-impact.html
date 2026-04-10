@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>US Tariff Revenue Impact Calculator — Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    html, body { min-height: 100%; }
+    body { -webkit-text-size-adjust: 100%; }
+    .hero {
+      background: linear-gradient(135deg, #0a1f0e 0%, #1a3a1a 100%);
+      border-radius: var(--r-lg);
+      padding: 24px 22px;
+      color: #f6efdf;
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 8px 8px;
+      opacity: .28;
+      pointer-events: none;
+      animation: noiseShift 16s linear infinite;
+    }
+    @keyframes noiseShift { from { transform: translate(0, 0); } to { transform: translate(60px, 30px); } }
+    .hero > * { position: relative; z-index: 1; }
+    .hero h1 { font-family: 'DM Serif Display', serif; font-size: 28px; margin-bottom: 8px; }
+    .hero p { color: rgba(246,239,223,0.82); max-width: 760px; line-height: 1.6; }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .card-head {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+    }
+    .inputs-grid .full { grid-column: 1 / -1; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .field input, .field select {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 14px;
+      color: var(--forest);
+    }
+    .rate-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .rate-badge {
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(192,57,43,0.28);
+      background: rgba(192,57,43,0.08);
+      color: #9c2d22;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .impact-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 7px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 14px;
+    }
+    .impact-row:last-child { border-bottom: none; }
+    .impact-hit { font-weight: 700; color: #c0392b; }
+    .impact-total {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .impact-total-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 34px;
+      color: #b23729;
+      line-height: 1.1;
+      letter-spacing: -0.4px;
+    }
+    .disclaimer-box {
+      margin-top: 10px;
+      background: rgba(184,114,14,0.07);
+      border: 1px solid rgba(184,114,14,0.2);
+      border-radius: 8px;
+      padding: 10px 11px;
+      font-size: 12px;
+      color: #6b4b12;
+    }
+    .program-list { display: grid; gap: 10px; }
+    .program-card {
+      border: 1px solid var(--border);
+      border-left: 4px solid #2c7e4f;
+      border-radius: 10px;
+      padding: 12px;
+      background: #fff;
+    }
+    .program-card h4 { margin-bottom: 6px; color: var(--forest); font-size: 14px; }
+    .program-card p { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+    .program-card a { display: inline-block; margin-top: 8px; font-size: 12px; }
+    .gauge-wrap { margin-top: 14px; }
+    .gauge-track {
+      height: 10px; border-radius: 999px; background: var(--border); overflow: hidden;
+    }
+    .gauge-fill { height: 100%; width: 0; transition: width .24s ease; }
+    .next-action {
+      margin-top: 14px;
+      background: rgba(41,128,185,0.08);
+      border: 1px solid rgba(41,128,185,0.2);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .share-panel { margin-top: 16px; }
+    .share-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .footer-note {
+      margin-top: 16px;
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    @media (max-width: 980px) {
+      .calc-grid { grid-template-columns: 1fr; }
+      .inputs-grid { grid-template-columns: 1fr; }
+      .field input, .field select { font-size: 16px; }
+    }
+    @media print {
+      .sidebar, .mob-nav, .more-overlay, .more-drawer, .page-header, .share-btns { display: none !important; }
+      .main-content { margin: 0 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-mount"></div>
+    <div class="main-content">
+      <div class="page-header">
+        <div class="page-header-row">
+          <div>
+            <div class="page-title">Tariff Impact Calculator 🇨🇦</div>
+            <div class="page-subtitle">Personalized 2025–2026 US tariff exposure estimate</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <a href="dashboard.html" class="btn btn-ghost btn-sm">← Dashboard</a>
+            <a href="copilot.html" class="btn btn-primary btn-sm">Ask AI Copilot</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-body">
+        <section class="hero anim-fade-up">
+          <h1>🇨🇦 US Tariff Revenue Impact Calculator</h1>
+          <p>How much are the 2025–2026 US tariffs costing your operation? Enter your numbers to get your personal annual impact estimate and matched recovery programs in under 60 seconds.</p>
+        </section>
+
+        <section class="calc-grid">
+          <div class="card anim-fade-up">
+            <div class="card-body">
+              <div class="card-head">Your Farm Profile</div>
+              <div class="inputs-grid">
+                <div class="field">
+                  <label for="province">Province</label>
+                  <select id="province">
+                    <option>Ontario</option><option>Quebec</option><option>Alberta</option><option>Saskatchewan</option>
+                    <option>Manitoba</option><option>British Columbia</option><option>New Brunswick</option>
+                    <option>Nova Scotia</option><option>Prince Edward Island</option><option>Newfoundland & Labrador</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="farm_type">Farm Type</label>
+                  <select id="farm_type">
+                    <option>Grain</option><option>Oilseed</option><option>Beef</option><option>Pork</option><option>Mixed</option>
+                  </select>
+                </div>
+                <div class="field"><label for="canola_tonnes">Canola sold to US (tonnes/yr)</label><input id="canola_tonnes" type="number" min="0" step="1" value="0"></div>
+                <div class="field"><label for="canola_price">Canola price (CAD/tonne)</label><input id="canola_price" type="number" min="0" step="1" value="680"></div>
+                <div class="field"><label for="beef_lbs">Beef sold to US (lbs/yr)</label><input id="beef_lbs" type="number" min="0" step="100" value="0"></div>
+                <div class="field"><label for="beef_price">Beef price (CAD/lb)</label><input id="beef_price" type="number" min="0" step="0.01" value="4.20"></div>
+                <div class="field"><label for="pork_lbs">Pork sold to US (lbs/yr)</label><input id="pork_lbs" type="number" min="0" step="100" value="0"></div>
+                <div class="field"><label for="pork_price">Pork price (CAD/lb)</label><input id="pork_price" type="number" min="0" step="0.01" value="2.85"></div>
+                <div class="field full"><label for="other_exempt">Pulse / Other exempt revenue (CAD)</label><input id="other_exempt" type="number" min="0" step="1000" value="0"></div>
+              </div>
+              <div class="rate-badges">
+                <span class="rate-badge">Canola tariff: 25%</span>
+                <span class="rate-badge">Beef tariff: 10%</span>
+                <span class="rate-badge">Pork tariff: 10%</span>
+                <span class="rate-badge" style="border-color:rgba(39,174,96,.25);background:rgba(39,174,96,.08);color:#1e8449;">✅ CUSMA protected: pulse/other</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card anim-fade-up">
+            <div class="card-body">
+              <div class="card-head">💸 Estimated Annual Revenue at Risk</div>
+              <div class="impact-row"><span>Canola</span><span class="impact-hit" id="canola_hit">$0</span></div>
+              <div class="impact-row"><span>Beef</span><span class="impact-hit" id="beef_hit">$0</span></div>
+              <div class="impact-row"><span>Pork</span><span class="impact-hit" id="pork_hit">$0</span></div>
+              <div class="impact-total">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">TOTAL AT RISK / YEAR</div>
+                <div class="impact-total-num" id="total_hit">$0</div>
+              </div>
+              <div class="disclaimer-box">⚠ This estimate models revenue at risk from tariff absorption, price discounting, or lost market access. Planning estimate only.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card anim-fade-up">
+          <div class="card-body">
+            <div class="card-head">Recovery Programs Matched</div>
+            <div class="program-list">
+              <div class="program-card" id="card_app_canola" style="display:none;">
+                <h4>◈ Advance Payments Program — Canola</h4>
+                <p>Up to $500,000 interest-free advance on canola inventory to bridge tariff-depressed price periods.</p>
+                <a href="https://agriculture.canada.ca/en/agricultural-programs-and-services/advance-payments-program" target="_blank" rel="noopener">Apply at AAFC.gc.ca →</a>
+              </div>
+              <div class="program-card" id="card_lpi" style="display:none;">
+                <h4>🐄 Livestock Price Insurance (LPI)</h4>
+                <p>Available in AB, SK, MB, BC. Helps protect fed cattle and hog pricing downside from trade disruption.</p>
+                <a href="funding.html">Check eligibility →</a>
+              </div>
+              <div class="program-card" id="card_agrimarketing" style="display:none;">
+                <h4>◈ AgriMarketing Diversification Stream</h4>
+                <p>Up to $500,000 to build new market access in Japan, Mexico, and the Philippines.</p>
+                <a href="funding.html">Explore →</a>
+              </div>
+              <div class="program-card" id="card_agristability">
+                <h4>◈ AgriStability</h4>
+                <p>Covers margin losses greater than 30% below reference margin. Deadline: April 30, 2026.</p>
+                <a href="funding.html">Enroll now →</a>
+              </div>
+              <div class="program-card" id="card_prov" style="display:none;">
+                <h4>🏛 Ontario / Quebec Provincial Top-Up Programs</h4>
+                <p>Provincial support streams may add tariff relief options for ON/QC operators.</p>
+                <a href="funding.html">See provincial programs →</a>
+              </div>
+            </div>
+
+            <div class="gauge-wrap">
+              <div style="font-size:13px;font-weight:600;">Recovery Potential: <span id="recovery_pct">0%</span></div>
+              <div class="gauge-track"><div id="recovery_fill" class="gauge-fill"></div></div>
+              <div style="margin-top:5px;font-size:12px;color:var(--muted);" id="recovery_sub">Programs available can offset an estimated 0% of tariff impact.</div>
+            </div>
+
+            <div class="next-action">
+              <div class="card-head" style="margin-bottom:6px;">🎯 Your #1 Action Right Now</div>
+              <div id="next_action_text" style="font-size:13.5px;color:var(--forest);margin-bottom:10px;">Enter your farm data to get your action plan.</div>
+              <a id="copilot_link" class="btn btn-primary btn-sm" href="copilot.html?context=tariff_calc">Ask AI Copilot About My Situation →</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="card share-panel anim-fade-up">
+          <div class="card-body">
+            <div class="card-head">📤 Share Your Results</div>
+            <div class="share-btns">
+              <button class="btn btn-secondary btn-sm" onclick="copyShareLink()">Copy Link with Pre-filled Numbers</button>
+              <button class="btn btn-ghost btn-sm" onclick="window.print()">Download PDF Summary</button>
+              <a class="btn btn-primary btn-sm" href="copilot.html?context=tariff_calc">Ask AI Copilot →</a>
+              <a class="btn btn-ghost btn-sm" id="share_x" target="_blank" rel="noopener">Share on X</a>
+              <a class="btn btn-ghost btn-sm" id="share_fb" target="_blank" rel="noopener">Share on Facebook</a>
+              <a class="btn btn-ghost btn-sm" id="share_email">Share via Email</a>
+            </div>
+            <div id="copy_status" style="margin-top:8px;font-size:12px;color:var(--muted);"></div>
+          </div>
+        </section>
+
+        <div class="footer-note">
+          ⚠ Estimates are for planning purposes only. Tariff rates reflect publicly reported 2025–2026 US trade actions. Actual program limits and eligibility vary. Confirm details at AAFC.gc.ca before making financial decisions.<br>
+          Data sources: USDA/AAFC tariff notices · Advance Payments Program · AgriStability guidelines · Last updated: March 2026.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/nav-patch.js"></script>
+  <script>
+    const TARIFF = { canola: 0.25, beef: 0.10, pork: 0.10 };
+    const IDS = ['province','farm_type','canola_tonnes','canola_price','beef_lbs','beef_price','pork_lbs','pork_price','other_exempt'];
+    const profile = Profile.requireOrRedirect();
+    if (profile) document.getElementById('sidebar-mount').innerHTML = renderSidebar('tariff-impact');
+
+    function getVal(id) {
+      const el = document.getElementById(id);
+      if (!el) return 0;
+      return el.tagName === 'SELECT' ? el.value : Number(el.value || 0);
+    }
+    function fmt(n) { return new Intl.NumberFormat('en-CA', { style:'currency', currency:'CAD', maximumFractionDigits:0 }).format(n); }
+    function animateNumber(id, target) {
+      const el = document.getElementById(id);
+      const start = Number((el.dataset.val || 0));
+      const diff = target - start;
+      const t0 = performance.now();
+      const duration = 300;
+      function tick(now) {
+        const p = Math.min(1, (now - t0) / duration);
+        const v = start + diff * p;
+        el.textContent = fmt(v);
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      el.dataset.val = target;
+      requestAnimationFrame(tick);
+    }
+    function calcRecoveryPct(totalHit, canolaTonnes, province) {
+      if (totalHit <= 0) return 0;
+      let recoverable = 0;
+      if (canolaTonnes > 0) recoverable += Math.min(canolaTonnes * 680 * 0.25, 500000);
+      recoverable += (totalHit - recoverable) * 0.30;
+      if (province === 'Ontario' || province === 'Quebec') recoverable += totalHit * 0.08;
+      return Math.min(Math.round((recoverable / totalHit) * 100), 95);
+    }
+    function updateGauge(pct) {
+      const fill = document.getElementById('recovery_fill');
+      fill.style.width = pct + '%';
+      fill.style.background = pct > 60 ? '#27ae60' : (pct >= 30 ? '#d4920a' : '#c0392b');
+      document.getElementById('recovery_pct').textContent = pct + '%';
+      document.getElementById('recovery_sub').textContent = `Programs available can offset an estimated ${pct}% of your tariff impact.`;
+    }
+    function updateCTA(total, canolaTonnes, province, beefLbs, porkLbs) {
+      let text = 'Enroll in AgriStability before April 30 — your margin exposure likely qualifies.';
+      if (canolaTonnes > 0) text = 'Apply for the $500K canola advance payment before harvest.';
+      else if (beefLbs > 0 || porkLbs > 0) text = 'Check Livestock Price Insurance eligibility before your next contract cycle.';
+      else if (total <= 0) text = 'Enter your volumes to calculate your exposure and recovery options.';
+      if ((province === 'Ontario' || province === 'Quebec') && total > 0) text += ' Also review provincial top-up streams.';
+      document.getElementById('next_action_text').textContent = text;
+      document.getElementById('copilot_link').href = `copilot.html?context=tariff_calc&impact=${Math.round(total)}`;
+    }
+    function updateURLParams() {
+      const p = new URLSearchParams();
+      IDS.forEach(id => p.set(id, getVal(id)));
+      history.replaceState({}, '', `${location.pathname}?${p.toString()}`);
+      updateShareLinks();
+    }
+    function loadFromURLParams() {
+      const p = new URLSearchParams(location.search);
+      IDS.forEach(id => {
+        if (p.has(id)) document.getElementById(id).value = p.get(id);
+      });
+    }
+    function updateShareLinks() {
+      const shareUrl = location.href;
+      const msg = encodeURIComponent('I calculated my US tariff exposure on Farm Copilot — Canadian farmers need to see this.');
+      document.getElementById('share_x').href = `https://twitter.com/intent/tweet?text=${msg}&url=${encodeURIComponent(shareUrl)}`;
+      document.getElementById('share_fb').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+      document.getElementById('share_email').href = `mailto:?subject=${encodeURIComponent('My Tariff Exposure Estimate')}&body=${msg}%0A${encodeURIComponent(shareUrl)}`;
+    }
+    function copyShareLink() {
+      navigator.clipboard.writeText(location.href).then(() => {
+        document.getElementById('copy_status').textContent = 'Link copied — share with another farmer.';
+      }).catch(() => {
+        document.getElementById('copy_status').textContent = 'Copy failed — manually copy the URL from the address bar.';
+      });
+    }
+    function calcImpact() {
+      const canolaRev = getVal('canola_tonnes') * getVal('canola_price');
+      const beefRev = getVal('beef_lbs') * getVal('beef_price');
+      const porkRev = getVal('pork_lbs') * getVal('pork_price');
+
+      const canolaHit = canolaRev * TARIFF.canola;
+      const beefHit = beefRev * TARIFF.beef;
+      const porkHit = porkRev * TARIFF.pork;
+      const totalHit = canolaHit + beefHit + porkHit;
+
+      animateNumber('canola_hit', canolaHit);
+      animateNumber('beef_hit', beefHit);
+      animateNumber('pork_hit', porkHit);
+      animateNumber('total_hit', totalHit);
+
+      document.getElementById('card_app_canola').style.display = getVal('canola_tonnes') > 0 ? 'block' : 'none';
+      document.getElementById('card_lpi').style.display = (getVal('beef_lbs') > 0 || getVal('pork_lbs') > 0) ? 'block' : 'none';
+      document.getElementById('card_agrimarketing').style.display = totalHit > 50000 ? 'block' : 'none';
+      document.getElementById('card_prov').style.display = (getVal('province') === 'Ontario' || getVal('province') === 'Quebec') ? 'block' : 'none';
+
+      const pct = calcRecoveryPct(totalHit, getVal('canola_tonnes'), getVal('province'));
+      updateGauge(pct);
+      updateCTA(totalHit, getVal('canola_tonnes'), getVal('province'), getVal('beef_lbs'), getVal('pork_lbs'));
+      updateURLParams();
+    }
+
+    IDS.forEach(id => document.getElementById(id).addEventListener('input', calcImpact));
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFromURLParams();
+      updateShareLinks();
+      calcImpact();
+    });
+  </script>
+</body>
+</html>

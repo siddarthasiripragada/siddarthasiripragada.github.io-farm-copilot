@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Onboarding — Farm Copilot</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    html, body { min-height: 100%; }
+    body { -webkit-text-size-adjust: 100%; }
+    .wrap {
+      min-height: 100dvh;
+      min-height: -webkit-fill-available;
+      display: grid;
+      place-items: center;
+      padding: calc(24px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px));
+      background: var(--cream);
+    }
+    .cardx { width: 100%; max-width: 680px; background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 22px; }
+    .fg { margin-bottom: 12px; }
+    .fg label { display: block; margin-bottom: 4px; font-size: 12px; color: var(--muted); font-family:'IBM Plex Mono', monospace; }
+    .fg input, .fg select { width: 100%; padding: 10px 11px; border-radius: 8px; border: 1px solid var(--border); font-size: 16px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .chips { display:flex;gap:8px;flex-wrap:wrap; }
+    .chip { border:1px solid var(--border); border-radius:999px; padding:7px 11px; cursor:pointer; font-size:13px; }
+    .chip.on { background: rgba(39,174,96,.11); border-color: rgba(39,174,96,.35); color:#1e8449; }
+    .steps { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; }
+    .status { min-height: 18px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+    @media (max-width: 760px) { .row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="cardx">
+      <div class="steps" id="step-label">Step 2 of 4 — Farm Identity</div>
+      <h1 style="font-family:'DM Serif Display',serif;font-size:30px;color:var(--forest);margin-bottom:6px;" id="step-title">Tell us about your farm</h1>
+      <p style="color:var(--muted);margin-bottom:12px;" id="step-sub">This personalizes funding, risk, and tariff intelligence.</p>
+
+      <div id="step2">
+        <div class="row">
+          <div class="fg"><label for="farm_name">Farm name (optional)</label><input id="farm_name" type="text" placeholder="Maple Ridge Farms"></div>
+          <div class="fg"><label for="province">Province</label>
+            <select id="province">
+              <option>Ontario</option><option>Quebec</option><option>Alberta</option><option>Saskatchewan</option>
+              <option>Manitoba</option><option>British Columbia</option><option>New Brunswick</option>
+              <option>Nova Scotia</option><option>Prince Edward Island</option><option>Newfoundland & Labrador</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Primary commodity (multi-select)</label>
+          <div class="chips" id="commodity-chips"></div>
+        </div>
+        <div class="fg"><label for="farm_size">Farm size</label>
+          <select id="farm_size">
+            <option value="<100 ac">&lt;100 ac</option><option value="100–500">100–500</option>
+            <option value="500–2000">500–2000</option><option value="2000+">2000+</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="step3" style="display:none;">
+        <div class="fg">
+          <label for="top_challenge">Your top challenge right now</label>
+          <select id="top_challenge">
+            <option value="US tariff exposure">US tariff exposure</option>
+            <option value="Finding funding / grants">Finding funding / grants</option>
+            <option value="Succession planning">Succession planning</option>
+            <option value="Input cost pressure">Input cost pressure</option>
+            <option value="Scaling up / land acquisition">Scaling up / land acquisition</option>
+            <option value="Just exploring">Just exploring</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="step4" style="display:none;">
+        <div style="padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--cream);">
+          <strong>Your personalized Farm Copilot is ready.</strong>
+          <div style="font-size:13px;color:var(--muted);margin-top:6px;">Dashboard modules will now prioritize your province, commodities, and current challenge.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-secondary" id="back-btn" onclick="prevStep()" style="display:none;">Back</button>
+        <button class="btn btn-primary" id="next-btn" onclick="nextStep()">Continue →</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+  <script>
+    let step = 2;
+    const selected = new Set();
+    const commodities = ['Grain', 'Canola', 'Beef', 'Pork', 'Dairy', 'Vegetables', 'Mixed'];
+    function initChips() {
+      const root = document.getElementById('commodity-chips');
+      root.innerHTML = commodities.map(c => `<button type="button" class="chip" data-v="${c}">${c}</button>`).join('');
+      root.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+        const v = ch.dataset.v;
+        selected.has(v) ? selected.delete(v) : selected.add(v);
+        ch.classList.toggle('on', selected.has(v));
+      }));
+    }
+    function render() {
+      document.getElementById('step2').style.display = step === 2 ? '' : 'none';
+      document.getElementById('step3').style.display = step === 3 ? '' : 'none';
+      document.getElementById('step4').style.display = step === 4 ? '' : 'none';
+      document.getElementById('back-btn').style.display = step > 2 ? '' : 'none';
+      document.getElementById('next-btn').textContent = step === 4 ? 'Go to Dashboard →' : 'Continue →';
+      const labels = { 2: 'Step 2 of 4 — Farm Identity', 3: 'Step 3 of 4 — Challenge', 4: 'Step 4 of 4 — Unlock' };
+      document.getElementById('step-label').textContent = labels[step];
+      document.getElementById('step-title').textContent = step === 4 ? 'All set' : (step === 3 ? 'What is your top challenge?' : 'Tell us about your farm');
+      document.getElementById('step-sub').textContent = step === 4 ? 'We saved your profile preferences.' : 'This personalizes funding, risk, and tariff intelligence.';
+    }
+    function persistProfile() {
+      const draft = JSON.parse(localStorage.getItem('signupDraft') || '{}');
+      const auth = JSON.parse(localStorage.getItem('authUser') || '{}');
+      const email = draft.email || auth.email || '';
+      const firstName = email ? email.split('@')[0].split('.')[0] : 'Farmer';
+      const profile = {
+        firstName: firstName.charAt(0).toUpperCase() + firstName.slice(1),
+        email,
+        farmName: document.getElementById('farm_name').value.trim(),
+        province: document.getElementById('province').value,
+        commodities: [...selected],
+        farmType: selected.values().next().value || 'Mixed Farm',
+        size: document.getElementById('farm_size').value,
+        topChallenge: document.getElementById('top_challenge').value,
+        role: draft.role || 'operator',
+      };
+      localStorage.setItem('farmProfile', JSON.stringify(profile));
+      localStorage.setItem('authSession', JSON.stringify({ email, expires: Date.now() + 86400000 }));
+    }
+    function nextStep() {
+      if (step === 2 && selected.size === 0) {
+        document.getElementById('status').textContent = 'Select at least one commodity.';
+        return;
+      }
+      if (step < 4) {
+        if (step === 3) persistProfile();
+        step += 1;
+        document.getElementById('status').textContent = '';
+        return render();
+      }
+      window.location.href = 'dashboard.html';
+    }
+    function prevStep() { if (step > 2) { step -= 1; render(); } }
+    initChips();
+    render();
+  </script>
+</body>
+</html>

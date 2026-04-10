@@ -495,6 +495,15 @@
           </div>
         </div>
 
+        <div class="card dashboard-inline-card anim-fade-up">
+          <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+            <span class="mini-source-pill" id="snap-name">Farmer</span>
+            <span class="mini-source-pill" id="snap-region">Region not set</span>
+            <span class="mini-source-pill" id="snap-farm-type">Farm type not set</span>
+            <span class="mini-source-pill" id="snap-size">Farm size not set</span>
+          </div>
+        </div>
+
         <!-- Trusted data sources -->
         <div class="card dashboard-inline-card anim-fade-up">
           <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
@@ -574,7 +583,7 @@
           </div>
           <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;">
             <span class="mini-source-pill">Grain farms</span>
-            <span class="mini-source-pill">Dairy operations</span>
+            <span class="mini-source-pill" id="profile-context-pill">Canadian operations</span>
             <span class="mini-source-pill">Vegetable growers</span>
             <span class="mini-source-pill">Agribusiness consultants</span>
           </div>
@@ -912,7 +921,10 @@
                     <span style="font-size:12px;background:rgba(184,114,14,.08);color:#8a5800;border:1px solid rgba(184,114,14,.2);padding:4px 10px;border-radius:6px;">+ AgriMarketing</span>
                   </div>
                   <p style="font-size:11px;color:var(--muted);margin-top:9px;line-height:1.55;">AgriMarketing Diversification Stream (Feb 2026) supports expanding into non-US markets. Up to $500K per applicant — rolling deadline.</p>
-                  <a href="funding.html" class="btn btn-primary btn-sm" style="margin-top:10px;display:inline-block;">Explore AgriMarketing →</a>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                    <a href="tariff-impact.html" class="btn btn-primary btn-sm">📊 Calculate My Exposure →</a>
+                    <a href="funding.html" class="btn btn-secondary btn-sm">Explore AgriMarketing →</a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1215,11 +1227,23 @@
       document.getElementById('sidebar-mount').innerHTML = renderSidebar('dashboard');
       if (localStorage.getItem('preDemo')) document.getElementById('demo-banner').style.display = 'flex';
 
+      const ctx = typeof getUserContext === 'function'
+        ? getUserContext()
+        : { firstName: profile.firstName || 'Farmer', regionContext: profile.province || 'your region', farmType: profile.farmType || '', email: profile.email || '' };
+      const firstName = ctx.firstName || 'Farmer';
+      const regionContext = ctx.regionContext || profile.province || 'your region';
+      const farmTypeContext = ctx.farmType ? `${ctx.farmType.toLowerCase()} ` : '';
+
       const today = new Date().toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-      document.getElementById('page-subtitle').textContent = `${today} · ${profile.province}`;
+      document.getElementById('page-subtitle').textContent = `${today} · ${regionContext}`;
       document.getElementById('date-badge').textContent = new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});
-      document.getElementById('welcome-h').textContent = `Welcome, ${profile.farmType} 🌾`;
-      document.getElementById('welcome-sub').textContent = `Personalized insights for your ${profile.province} operation`;
+      document.getElementById('welcome-h').textContent = `Welcome, ${firstName} 🌾`;
+      document.getElementById('welcome-sub').textContent = `Personalized insights for your ${regionContext} ${farmTypeContext}operation`;
+      document.getElementById('profile-context-pill').textContent = ctx.farmType ? `${ctx.farmType} operations` : `${regionContext} operations`;
+      document.getElementById('snap-name').textContent = `${firstName}${ctx.email ? ` · ${ctx.email}` : ''}`;
+      document.getElementById('snap-region').textContent = `Region: ${regionContext}`;
+      document.getElementById('snap-farm-type').textContent = `Farm type: ${ctx.farmType || 'Not set yet'}`;
+      document.getElementById('snap-size').textContent = `Size: ${profile.size || 'Not set yet'}`;
 
       // Profile completeness
       const checks = [
