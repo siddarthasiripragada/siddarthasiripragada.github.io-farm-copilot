@@ -652,6 +652,15 @@ async function boot() {
   const params = new URLSearchParams(location.search);
   const forceAuth = params.get('forceAuth') === '1';
   const requestedTab = params.get('tab');
+  const mode = params.get('mode');
+  const legacy = params.get('legacy') === '1';
+
+  // New primary auth entry points
+  if (!legacy && !mode) {
+    if (requestedTab === 'signup') { window.location.replace('signup.html'); return; }
+    window.location.replace('login.html');
+    return;
+  }
 
   if (forceAuth) {
     localStorage.removeItem('authSession');
