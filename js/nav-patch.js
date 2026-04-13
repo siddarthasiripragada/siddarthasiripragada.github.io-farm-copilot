@@ -512,12 +512,44 @@
 
   window.sbLogout = function () {
     if (!confirm('Sign out of Farm Copilot?')) return;
+    localStorage.removeItem('farmCopilotAuth');
     localStorage.removeItem('authUser');
     localStorage.removeItem('authSession');
     localStorage.removeItem('guestMode');
     localStorage.removeItem('farmProfile');
     window.location.replace('auth.html');
   };
+
+  function hasActiveSession() {
+    try {
+      const auth = JSON.parse(localStorage.getItem('farmCopilotAuth') || 'null');
+      if (auth && (!auth.expiresAt || Date.now() < auth.expiresAt)) return true;
+    } catch (_) {}
+    try {
+      const session = JSON.parse(localStorage.getItem('authSession') || 'null');
+      if (session && (!session.expires || Date.now() < session.expires)) return true;
+    } catch (_) {}
+    try {
+      const user = JSON.parse(localStorage.getItem('authUser') || 'null');
+      if (user && (user.signedIn || user.email)) return true;
+    } catch (_) {}
+    return false;
+  }
+
+  function renderMobileAccountActions() {
+    const host = document.getElementById('mob-account-actions');
+    if (!host) return;
+    const isSignedIn = hasActiveSession();
+    host.innerHTML = isSignedIn
+      ? `
+        <button class="sb-foot-item danger" onclick="sbLogout()">
+          <span class="sb-foot-icon">↩</span> Sign Out
+        </button>`
+      : `
+        <a href="auth.html" class="sb-foot-item" onclick="mobMoreClose()">
+          <span class="sb-foot-icon">🌾</span> Sign In
+        </a>`;
+  }
 
   /* ═══════════════════════════════════════════════════════
      5. MOBILE BOTTOM NAV
@@ -595,6 +627,7 @@
     drawer.innerHTML = `
       <div class="more-drawer-handle"></div>
       ${drawerContent}
+<<<<<<< HEAD
       <div class="more-drawer-section" style="padding-top:4px;">
         <div class="more-drawer-section-label">👤&ensp;Account</div>
         <div class="more-tools-grid">
@@ -609,10 +642,16 @@
                </button>`
           }
         </div>
+=======
+      <div class="more-drawer-section">
+        <div class="more-drawer-section-label">👤&ensp;Account</div>
+        <div id="mob-account-actions"></div>
+>>>>>>> 7693e3789e82cac8538875578f1135dd4cd58497
       </div>
       <div style="height:12px;"></div>`;
 
     document.body.appendChild(drawer);
+    renderMobileAccountActions();
   }
 
   window.mobMoreToggle = function (e) {
@@ -621,6 +660,7 @@
     const drawer  = document.getElementById('fc-more-drawer');
     const btn     = document.getElementById('mob-more-btn');
     if (!overlay || !drawer) return;
+    renderMobileAccountActions();
     const isOpen = drawer.classList.contains('open');
     overlay.classList.toggle('open', !isOpen);
     drawer.classList.toggle('open', !isOpen);
