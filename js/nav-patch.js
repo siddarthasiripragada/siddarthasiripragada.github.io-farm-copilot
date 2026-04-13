@@ -73,6 +73,7 @@
     .app-shell {
       display: flex;
       min-height: 100vh;
+      min-height: 100dvh;
       background: var(--cream, #FAF8F2);
     }
 
@@ -84,6 +85,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      height: 100dvh;
       position: sticky;
       top: 0;
       overflow-y: auto;
@@ -318,7 +320,7 @@
 
     .more-drawer {
       position: fixed;
-      bottom: 62px; left: 0; right: 0;
+      bottom: calc(62px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0;
       max-height: 75vh;
       background: #162C1F;
       border-top: 1px solid rgba(255,255,255,.1);
@@ -467,9 +469,14 @@
           <a href="support.html" class="sb-foot-item">
             <span class="sb-foot-icon">🆘</span> Help &amp; Support
           </a>
-          <button class="sb-foot-item danger" onclick="sbLogout()">
-            <span class="sb-foot-icon">↩</span> Sign Out
-          </button>
+          ${localStorage.getItem('guestMode') === '1'
+            ? `<a href="auth.html" class="sb-foot-item">
+                 <span class="sb-foot-icon">🔑</span> Sign In / Sign Up
+               </a>`
+            : `<button class="sb-foot-item danger" onclick="sbLogout()">
+                 <span class="sb-foot-icon">↩</span> Sign Out
+               </button>`
+          }
         </div>
       </aside>`;
   };
@@ -507,7 +514,9 @@
     if (!confirm('Sign out of Farm Copilot?')) return;
     localStorage.removeItem('authUser');
     localStorage.removeItem('authSession');
-    window.location.href = 'auth.html';
+    localStorage.removeItem('guestMode');
+    localStorage.removeItem('farmProfile');
+    window.location.replace('auth.html');
   };
 
   /* ═══════════════════════════════════════════════════════
@@ -586,6 +595,21 @@
     drawer.innerHTML = `
       <div class="more-drawer-handle"></div>
       ${drawerContent}
+      <div class="more-drawer-section" style="padding-top:4px;">
+        <div class="more-drawer-section-label">👤&ensp;Account</div>
+        <div class="more-tools-grid">
+          ${localStorage.getItem('guestMode') === '1'
+            ? `<a href="auth.html" class="more-tool-tile" style="grid-column:1/-1;flex-direction:row;justify-content:center;gap:8px;">
+                 <span class="more-tool-icon">🔑</span>
+                 <span class="more-tool-label" style="font-size:12px;">Sign In / Sign Up</span>
+               </a>`
+            : `<button onclick="mobMoreClose();sbLogout();" class="more-tool-tile" style="grid-column:1/-1;flex-direction:row;justify-content:center;gap:8px;background:rgba(192,57,43,.1);border-color:rgba(192,57,43,.2);">
+                 <span class="more-tool-icon">↩</span>
+                 <span class="more-tool-label" style="font-size:12px;color:#ff9999;">Sign Out</span>
+               </button>`
+          }
+        </div>
+      </div>
       <div style="height:12px;"></div>`;
 
     document.body.appendChild(drawer);

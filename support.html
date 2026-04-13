@@ -217,6 +217,16 @@
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="js/data.js"></script>
   <script src="js/nav-patch.js"></script>
 <script>
+  // Auth guard — redirect to auth if no valid session and not guest
+  (function authGuard() {
+    if (localStorage.getItem('guestMode') === '1') return;
+    try {
+      const s = JSON.parse(localStorage.getItem('authSession') || 'null');
+      if (s && s.signedIn && (!s.expires || Date.now() < s.expires)) return;
+    } catch (_) {}
+    window.location.replace('auth.html');
+  })();
+
   const profile = Profile.requireOrRedirect();
   if (!profile) throw new Error('no profile');
 

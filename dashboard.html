@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Dashboard — Canadian Farm Copilot</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
@@ -1222,6 +1222,28 @@
   <script src="js/data.js"></script>
   <script src="js/nav-patch.js"></script>
   <script>
+    // Auth guard — redirect to auth if no valid session and not guest
+    (function authGuard() {
+      if (localStorage.getItem('guestMode') === '1') return;
+      try {
+        const s = JSON.parse(localStorage.getItem('authSession') || 'null');
+        if (s && s.signedIn && (!s.expires || Date.now() < s.expires)) return;
+      } catch (_) {}
+      window.location.replace('auth.html');
+    })();
+
+    // bfcache guard — iOS Safari restores pages from memory on back-nav,
+    // skipping JS re-execution. Re-check auth every time page becomes visible.
+    window.addEventListener('pageshow', function (event) {
+      if (!event.persisted) return;
+      if (localStorage.getItem('guestMode') === '1') return;
+      try {
+        const s = JSON.parse(localStorage.getItem('authSession') || 'null');
+        if (s && s.signedIn && (!s.expires || Date.now() < s.expires)) return;
+      } catch (_) {}
+      window.location.replace('auth.html');
+    });
+
     const profile = Profile.requireOrRedirect();
     if (profile) {
       document.getElementById('sidebar-mount').innerHTML = renderSidebar('dashboard');

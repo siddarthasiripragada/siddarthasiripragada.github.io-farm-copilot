@@ -305,7 +305,7 @@ body { font-family: 'Outfit', sans-serif; background: var(--forest);
 @media (max-width: 960px) {
   .auth-root { grid-template-columns: 1fr; }
   .brand-panel { display: none; }
-  .auth-panel { padding:40px 28px 56px; min-height:100vh; justify-content:flex-start; padding-top:52px; }
+  .auth-panel { padding:40px 28px 56px; min-height: 100vh; min-height: 100dvh; justify-content:flex-start; padding-top:52px; padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
   .auth-panel::after { display:block; }
   .mobile-logo { display:flex !important; }
 }
@@ -737,10 +737,40 @@ function goStep2() {
   clrAlert();
   if (!chk('su-email','su-email-e', isEm(G('su-email').value.trim()))) return;
   if (!chk('su-pass', 'su-pass-e',  G('su-pass').value.length >= 8)) return;
+
+  // If already signed in, don't allow re-signup
+  const existingSess = getSess();
+  if (existingSess?.signedIn) {
+    showAl('You are already signed in. Head to your dashboard or use a different account.', 'info');
+    return;
+  }
+
+  // Demo mode: block duplicate email
+  if (DEMO) {
+    const email = G('su-email').value.trim().toLowerCase();
+    const registeredEmails = getRegisteredEmails();
+    if (registeredEmails.includes(email)) {
+      showAl('An account already exists for this email. Please sign in instead.', 'error');
+      G('si-email').value = G('su-email').value.trim();
+      setTimeout(() => sv('signin'), 1800);
+      return;
+    }
+  }
+
   oauthDraft = null;
   setSignupStep2Mode(false);
   sv('signup-2');
   setTimeout(() => G('su-first')?.focus(), 200);
+}
+
+/* ══ DEMO REGISTERED EMAILS ══ */
+function getRegisteredEmails() {
+  try { return JSON.parse(localStorage.getItem('demoRegisteredEmails') || '[]'); } catch { return []; }
+}
+function addRegisteredEmail(email) {
+  const list = getRegisteredEmails();
+  const lc = email.toLowerCase();
+  if (!list.includes(lc)) { list.push(lc); localStorage.setItem('demoRegisteredEmails', JSON.stringify(list)); }
 }
 
 async function handleSignUp() {
@@ -762,10 +792,27 @@ async function handleSignUp() {
         options: { data: { firstName: first, lastName: last, province: prov } } });
       ld('btn-su', false);
       if (error) { showAl(fErr(error.message), 'error'); return; }
+      // Supabase v2: existing confirmed user returns user with empty identities array
+      if (data.user?.identities?.length === 0) {
+        showAl('An account already exists for this email. Please sign in instead.', 'error');
+        G('si-email').value = email;
+        setTimeout(() => sv('signin'), 1800);
+        return;
+      }
       if (data.user && !data.session) { G('vi-email').textContent = email; sv('verify'); return; }
       if (data.session) { storeSess(data.user, false); go(); }
     } else {
+      // Demo mode duplicate check
+      const registeredEmails = getRegisteredEmails();
+      if (registeredEmails.includes(email.toLowerCase())) {
+        ld('btn-su', false);
+        showAl('An account already exists for this email. Please sign in instead.', 'error');
+        G('si-email').value = email;
+        setTimeout(() => sv('signin'), 1800);
+        return;
+      }
       await wait(900); ld('btn-su', false);
+      addRegisteredEmail(email);
       storeSess({ email, firstName: first, lastName: last }, false);
       const p = JSON.parse(localStorage.getItem('farmProfile') || '{}');
       p.firstName = first;
@@ -905,6 +952,7 @@ function switchAccount() {
   localStorage.removeItem('authSession');
   localStorage.removeItem('authUser');
   localStorage.removeItem('guestMode');
+  localStorage.removeItem('farmProfile');
   const wrap = G('session-bn');
   if (wrap) wrap.classList.remove('on');
   showAl('Session cleared. You can now sign in with another account.', 'success');
@@ -933,6 +981,7 @@ function exploreAsGuest() {
   localStorage.setItem('guestMode', '1');
   localStorage.removeItem('authSession');
   localStorage.removeItem('authUser');
+  localStorage.removeItem('farmProfile'); 
   // Send to landing/dashboard in read-only preview
   window.location.href = 'landing.html?guest=1';
 }
